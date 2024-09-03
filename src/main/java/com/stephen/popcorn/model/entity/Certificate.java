@@ -1,0 +1,103 @@
+package com.stephen.popcorn.model.entity;
+
+import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Date;
+
+/**
+ * 证书表
+ *
+ * @author stephen qiu
+ * @TableName certificate
+ */
+@TableName(value = "certificate")
+@Data
+public class Certificate implements Serializable {
+	/**
+	 * id
+	 */
+	@TableId(type = IdType.ASSIGN_ID)
+	private Long id;
+	
+	/**
+	 * 证书编号
+	 */
+	private String certificateId;
+	
+	/**
+	 * 证书名称
+	 */
+	private String certificateName;
+	
+	/**
+	 * 证书类型(0-干部培训,1-其他)
+	 */
+	private Integer certificateType;
+	
+	/**
+	 * 证书获得时间
+	 */
+	private String certificateYear;
+	
+	/**
+	 * 证书获得情况(0-有,1-没有)
+	 */
+	private Integer certificateSituation;
+	
+	/**
+	 * 证书状态(0-待审核,1-通过,2-拒绝)
+	 */
+	private Integer reviewStatus;
+	
+	/**
+	 * 审核信息
+	 */
+	private String reviewMessage;
+	
+	/**
+	 * 审核人id
+	 */
+	private Long reviewerId;
+	
+	/**
+	 * 审核时间
+	 */
+	private Date reviewTime;
+	
+	/**
+	 * 获得人姓名
+	 */
+	private Long gainUserId;
+	
+	/**
+	 * 证书地址
+	 */
+	private String certificateUrl;
+	
+	/**
+	 * 创建用户id
+	 */
+	private Long userId;
+	
+	
+	/**
+	 * 创建时间
+	 */
+	private Date createTime;
+	
+	/**
+	 * 更新时间
+	 */
+	private Date updateTime;
+	
+	/**
+	 * 是否删除(0-正常,1删除)
+	 */
+	@TableLogic
+	private Integer isDelete;
+	
+	@TableField(exist = false)
+	private static final long serialVersionUID = 1L;
+}

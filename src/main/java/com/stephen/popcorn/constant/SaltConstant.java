@@ -1,0 +1,18 @@
+package com.stephen.popcorn.constant;
+
+/**
+ * @author: stephen qiu
+ * @create: 2024-04-29 14:13
+ **/
+public interface SaltConstant {
+	
+	/**
+	 * 盐值，混淆密码
+	 */
+	String SALT = "stephen";
+	
+	/**
+	 * 盐值长度
+	 */
+	int SALT_LENGTH = 6;
+}
