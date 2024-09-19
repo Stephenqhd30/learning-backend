@@ -2,9 +2,9 @@
 <!DOCTYPE mapper
 		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.stephen.popcorn.mapper.CertificateMapper">
+<mapper namespace="com.kc.learning.mapper.CertificateMapper">
 
-	<resultMap id="BaseResultMap" type="com.stephen.popcorn.model.entity.Certificate">
+	<resultMap id="BaseResultMap" type="com.kc.learning.model.entity.Certificate">
 		<id property="id" column="id" jdbcType="BIGINT"/>
 		<result property="certificateName" column="certificateName" jdbcType="VARCHAR"/>
 		<result property="certificateType" column="certificateType" jdbcType="TINYINT"/>

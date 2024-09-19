@@ -19,9 +19,9 @@ spring:
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${popcorn.datasource.url}
-    username: ${popcorn.datasource.username}
-    password: ${popcorn.datasource.password}
+    url: ${learning.datasource.url}
+    username: ${learning.datasource.username}
+    password: ${learning.datasource.password}
   # Redis 配置
   # todo 需替换配置，然后取消注释
   redis:
@@ -55,10 +55,10 @@ mybatis-plus:
 # 对象存储
 cos:
   client:
-    accessKey: ${popcorn.cos.client.accessKey}
-    secretKey: ${popcorn.cos.client.secretKey}
-    region: ${popcorn.cos.client.region}
-    bucket: ${popcorn.cos.client.bucket}
+    accessKey: ${learning.cos.client.accessKey}
+    secretKey: ${learning.cos.client.secretKey}
+    region: ${learning.cos.client.region}
+    bucket: ${learning.cos.client.bucket}
 # 接口文档配置
 knife4j:
   enable: true
@@ -67,13 +67,13 @@ knife4j:
     version: 1.0
     description: "StephenQiu的接口文档信息。"
     concat: "Stephen Qiu"
-    email: "popcornqhd@gmail.com"
+    email: "learningqhd@gmail.com"
     url: "https://github.com/Stephenqhd30"
     group:
       default:
         api-rule: package
         api-rule-resources:
-          - com.stephen.popcorn.controller
+          - com.kc.learning.controller
 
 
 
