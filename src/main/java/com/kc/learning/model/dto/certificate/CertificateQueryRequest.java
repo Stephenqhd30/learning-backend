@@ -23,7 +23,7 @@ public class CertificateQueryRequest extends PageRequest implements Serializable
 	/**
 	 * 证书编号
 	 */
-	private String certificateId;
+	private String certificateNumber;
 	
 	/**
 	 * 证书名称

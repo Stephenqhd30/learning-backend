@@ -31,6 +31,11 @@ public class UserCertificateQueryRequest extends PageRequest implements Serializ
     private Long certificateId;
     
     /**
+     * 证书编号
+     */
+    private String certificateNumber;
+    
+    /**
      * 获得时间
      */
     private String gainTime;

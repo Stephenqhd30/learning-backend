@@ -11,10 +11,12 @@ import java.io.Serializable;
  */
 @Data
 public class CertificateAddRequest implements Serializable {
+	
 	/**
 	 * 证书编号
 	 */
-	private String certificateId;
+	private String certificateNumber;
+	
 	/**
 	 * 证书名称
 	 */

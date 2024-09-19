@@ -55,7 +55,7 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		ThrowUtils.throwIf(userCertificate == null, ErrorCode.PARAMS_ERROR);
 		// todo 从对象中取值
 		Long userId = userCertificate.getUserId();
-		Long certificateId = userCertificate.getCertificateId();
+		Long certificateNumber = userCertificate.getCertificateId();
 		String gainTime = userCertificate.getGainTime();
 		String certificateName = userCertificate.getCertificateName();
 		String gainUserName = userCertificate.getGainUserName();
@@ -78,8 +78,8 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 			ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
 		}
 		
-		if (ObjectUtils.isNotEmpty(certificateId)) {
-			Certificate certificate = certificateService.getById(certificateId);
+		if (ObjectUtils.isNotEmpty(certificateNumber)) {
+			Certificate certificate = certificateService.getById(certificateNumber);
 			ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书不存在");
 		}
 		
@@ -102,6 +102,7 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		Long userId = userCertificateQueryRequest.getUserId();
 		Long certificateId = userCertificateQueryRequest.getCertificateId();
 		String gainTime = userCertificateQueryRequest.getGainTime();
+		String certificateNumber = userCertificateQueryRequest.getCertificateNumber();
 		String certificateName = userCertificateQueryRequest.getCertificateName();
 		String gainUserName = userCertificateQueryRequest.getGainUserName();
 		String sortField = userCertificateQueryRequest.getSortField();
@@ -112,6 +113,7 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		// 模糊查询
 		queryWrapper.like(StringUtils.isNotBlank(certificateName), "certificateName", certificateName);
 		queryWrapper.like(StringUtils.isNotBlank(gainUserName), "gainUserName", gainUserName);
+		queryWrapper.like(StringUtils.isNotBlank(certificateNumber), "certificateNumber", certificateNumber);
 		// 精确查询
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
@@ -158,12 +160,13 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		return userCertificateVO;
 	}
 	
+	
 	/**
 	 * 分页获取用户证书封装
 	 *
-	 * @param userCertificatePage
-	 * @param request
-	 * @return
+	 * @param userCertificatePage userCertificatePage
+	 * @param request             request
+	 * @return Page<UserCertificateVO>
 	 */
 	@Override
 	public Page<UserCertificateVO> getUserCertificateVOPage(Page<UserCertificate> userCertificatePage, HttpServletRequest request) {
@@ -179,10 +182,10 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		// region 可选
 		// 1. 关联查询用户信息
 		Set<Long> userIdSet = userCertificateList.stream().map(UserCertificate::getUserId).collect(Collectors.toSet());
-		Set<Long> certificateIdSet = userCertificateList.stream().map(UserCertificate::getCertificateId).collect(Collectors.toSet());
+		Set<Long> certificateNumberSet = userCertificateList.stream().map(UserCertificate::getCertificateId).collect(Collectors.toSet());
 		Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
 				.collect(Collectors.groupingBy(User::getId));
-		Map<Long, List<Certificate>> certificateIdCertificateListMap = certificateService.listByIds(certificateIdSet).stream()
+		Map<Long, List<Certificate>> certificateNumberCertificateListMap = certificateService.listByIds(certificateNumberSet).stream()
 				.collect(Collectors.groupingBy(Certificate::getId));
 		// 填充信息
 		userCertificateVOList.forEach(userCertificateVO -> {
@@ -193,8 +196,8 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 			if (userIdUserListMap.containsKey(userId)) {
 				user = userIdUserListMap.get(userId).get(0);
 			}
-			if (certificateIdCertificateListMap.containsKey(certificateId)) {
-				certificate = certificateIdCertificateListMap.get(certificateId).get(0);
+			if (certificateNumberCertificateListMap.containsKey(certificateId)) {
+				certificate = certificateNumberCertificateListMap.get(certificateId).get(0);
 			}
 			userCertificateVO.setUserVO(userService.getUserVO(user, request));
 			userCertificateVO.setCertificateVO(certificateService.getCertificateVO(certificate, request));
@@ -205,20 +208,27 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 	}
 	
 	/**
+	 *
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @param current                     current
+	 * @param size                        size
+	 * @return Page<UserCertificate>
+	 */
+	/**
 	 * 分页获取用户证书封装（通过审核）
 	 *
-	 * @param request
-	 * @param current
-	 * @param size
-	 * @return
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @param current                     current
+	 * @param size                        size
+	 * @return Page<UserCertificate>
 	 */
 	@Override
-	public Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest request, long current, long size) {
+	public Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest userCertificateQueryRequest, long current, long size) {
 		QueryWrapper<UserCertificate> queryWrapper = new QueryWrapper<>();
 		
 		// 如果传入了 certificateId，进一步过滤
-		if (ObjectUtils.isNotEmpty(request.getCertificateId())) {
-			queryWrapper.eq("certificateId", request.getCertificateId());
+		if (ObjectUtils.isNotEmpty(userCertificateQueryRequest.getCertificateId())) {
+			queryWrapper.eq("certificateId", userCertificateQueryRequest.getCertificateId());
 		}
 		
 		// 关联查询 Certificate 表，过滤掉 review_status 不等于 1 的记录

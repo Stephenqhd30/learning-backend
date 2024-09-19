@@ -10,6 +10,7 @@ import com.kc.learning.mapper.CertificateMapper;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
+import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.vo.CertificateVO;
@@ -56,7 +57,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Integer certificateSituation = certificate.getCertificateSituation();
 		Long gainUserId = certificate.getGainUserId();
 		String certificateUrl = certificate.getCertificateUrl();
-		String certificateId = certificate.getCertificateId();
+		String certificateNumber = certificate.getCertificateNumber();
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
@@ -66,7 +67,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateType), ErrorCode.PARAMS_ERROR, "证书类型不能为空");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateSituation), ErrorCode.PARAMS_ERROR, "证书获得情况不能为空");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(gainUserId), ErrorCode.PARAMS_ERROR, "获得人id不能为空");
-			ThrowUtils.throwIf(StringUtils.isBlank(certificateId), ErrorCode.PARAMS_ERROR, "证书编号不能为空");
+			ThrowUtils.throwIf(StringUtils.isBlank(certificateNumber), ErrorCode.PARAMS_ERROR, "证书编号不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
@@ -100,7 +101,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// todo 从对象中取值
 		Long id = certificateQueryRequest.getId();
 		Integer noId = certificateQueryRequest.getNoId();
-		String certificateId = certificateQueryRequest.getCertificateId();
+		String certificateNumber = certificateQueryRequest.getCertificateNumber();
 		String certificateName = certificateQueryRequest.getCertificateName();
 		Integer certificateType = certificateQueryRequest.getCertificateType();
 		String certificateYear = certificateQueryRequest.getCertificateYear();
@@ -115,12 +116,11 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		String sortOrder = certificateQueryRequest.getSortOrder();
 		
 		
-		
 		// todo 补充需要的查询条件
 		// 模糊查询
 		queryWrapper.like(StringUtils.isNotBlank(certificateName), "certificateName", certificateName);
 		queryWrapper.like(StringUtils.isNotBlank(reviewMessage), "reviewMessage", reviewMessage);
-		queryWrapper.like(StringUtils.isNotBlank(certificateId), "certificateId", certificateId);
+		queryWrapper.like(StringUtils.isNotBlank(certificateNumber), "certificateNumber", certificateNumber);
 		// 精确查询
 		queryWrapper.ne(ObjectUtils.isNotEmpty(noId), "reviewStatus", noId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
@@ -169,8 +169,8 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 	 * 分页获取证书封装
 	 *
 	 * @param certificatePage certificatePage
-	 * @param request request
-	 * @return
+	 * @param request         request
+	 * @return Page<CertificateVO>
 	 */
 	@Override
 	public Page<CertificateVO> getCertificateVOPage(Page<Certificate> certificatePage, HttpServletRequest request) {
@@ -202,5 +202,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;
 	}
+	
 	
 }

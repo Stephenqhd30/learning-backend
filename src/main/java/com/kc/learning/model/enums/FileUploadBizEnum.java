@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 @Getter
 public enum FileUploadBizEnum {
 	
-	USER_AVATAR("用户头像", "user_avatar"),
-	CERTIFICATE("证书", "certificate");
+	USER_AVATAR("用户头像", "kc:learning:user_avatar"),
+	CERTIFICATE("证书", "kc:learning:certificate");
 	
 	private final String text;
 	
@@ -30,7 +30,7 @@ public enum FileUploadBizEnum {
 	/**
 	 * 获取值列表
 	 *
-	 * @return
+	 * @return List<String>
 	 */
 	public static List<String> getValues() {
 		return Arrays.stream(values()).map(item -> item.value).collect(Collectors.toList());
@@ -39,8 +39,8 @@ public enum FileUploadBizEnum {
 	/**
 	 * 根据 value 获取枚举
 	 *
-	 * @param value
-	 * @return
+	 * @param value value
+	 * @return FileUploadBizEnum
 	 */
 	public static FileUploadBizEnum getEnumByValue(String value) {
 		if (ObjectUtils.isEmpty(value)) {

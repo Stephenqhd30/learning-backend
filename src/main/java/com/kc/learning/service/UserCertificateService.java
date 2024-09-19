@@ -15,47 +15,49 @@ import javax.servlet.http.HttpServletRequest;
  * @author stephen qiu
  */
 public interface UserCertificateService extends IService<UserCertificate> {
-
-    /**
-     * 校验数据
-     *
-     * @param userCertificate
-     * @param add 对创建的数据进行校验
-     */
-    void validUserCertificate(UserCertificate userCertificate, boolean add);
-
-    /**
-     * 获取查询条件
-     *
-     * @param userCertificateQueryRequest
-     * @return
-     */
-    QueryWrapper<UserCertificate> getQueryWrapper(UserCertificateQueryRequest userCertificateQueryRequest);
-
-    /**
-     * 获取用户证书封装
-     *
-     * @param userCertificate
-     * @param request
-     * @return
-     */
-    UserCertificateVO getUserCertificateVO(UserCertificate userCertificate, HttpServletRequest request);
-
-    /**
-     * 分页获取用户证书封装
-     *
-     * @param userCertificatePage
-     * @param request
-     * @return
-     */
-    Page<UserCertificateVO> getUserCertificateVOPage(Page<UserCertificate> userCertificatePage, HttpServletRequest request);
-    
-    /**
-     * 分页获取用户证书（过审核）
-     * @param request
-     * @param current
-     * @param size
-     * @return
-     */
-    Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest request, long current, long size);
+	
+	/**
+	 * 校验数据
+	 *
+	 * @param userCertificate
+	 * @param add             对创建的数据进行校验
+	 */
+	void validUserCertificate(UserCertificate userCertificate, boolean add);
+	
+	/**
+	 * 获取查询条件
+	 *
+	 * @param userCertificateQueryRequest
+	 * @return
+	 */
+	QueryWrapper<UserCertificate> getQueryWrapper(UserCertificateQueryRequest userCertificateQueryRequest);
+	
+	/**
+	 * 获取用户证书封装
+	 *
+	 * @param userCertificate
+	 * @param request
+	 * @return
+	 */
+	UserCertificateVO getUserCertificateVO(UserCertificate userCertificate, HttpServletRequest request);
+	
+	/**
+	 * 分页获取用户证书封装
+	 *
+	 * @param userCertificatePage
+	 * @param request
+	 * @return
+	 */
+	Page<UserCertificateVO> getUserCertificateVOPage(Page<UserCertificate> userCertificatePage, HttpServletRequest request);
+	
+	/**
+	 * 分页获取用户证书
+	 *
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @param current                     current
+	 * @param size                        size
+	 * @return Page<UserCertificate>
+	 */
+	Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest userCertificateQueryRequest, long current, long size);
+	
 }

@@ -23,7 +23,7 @@ public class CertificateVO implements Serializable {
 	/**
 	 * 证书编号
 	 */
-	private String certificateId;
+	private String certificateNumber;
 	
 	/**
 	 * 证书名称
@@ -99,8 +99,8 @@ public class CertificateVO implements Serializable {
 	/**
 	 * 封装类转对象
 	 *
-	 * @param certificateVO
-	 * @return
+	 * @param certificateVO certificateVO
+	 * @return Certificate
 	 */
 	public static Certificate voToObj(CertificateVO certificateVO) {
 		if (certificateVO == null) {
@@ -114,8 +114,8 @@ public class CertificateVO implements Serializable {
 	/**
 	 * 对象转封装类
 	 *
-	 * @param certificate
-	 * @return
+	 * @param certificate certificate
+	 * @return CertificateVO
 	 */
 	public static CertificateVO objToVo(Certificate certificate) {
 		if (certificate == null) {

@@ -1,6 +1,7 @@
 package com.kc.learning.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
@@ -53,11 +54,11 @@ public class CertificateController {
 	// region 增删改查
 	
 	/**
-	 * 创建证书
+	 * 创建证书（在创建证书的时候指定用户证书关系）
 	 *
 	 * @param certificateAddRequest certificateAddRequest
 	 * @param request               request
-	 * @return
+	 * @return BaseResponse<Long>
 	 */
 	@PostMapping("/add")
 	@Transactional(rollbackFor = Exception.class)
@@ -76,14 +77,15 @@ public class CertificateController {
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 		// 返回新写入的数据 id
 		long newCertificateId = certificate.getId();
-		// 将信息保存到用户证书表中
+		// 关联用户证书关系
 		UserCertificate userCertificate = new UserCertificate();
 		userCertificate.setUserId(certificate.getGainUserId());
-		userCertificate.setCertificateId(newCertificateId);
+		userCertificate.setCertificateId(certificate.getId());
 		userCertificate.setGainTime(certificate.getCertificateYear());
+		userCertificate.setCertificateNumber(certificate.getCertificateNumber());
 		userCertificate.setCertificateName(certificate.getCertificateName());
-		userCertificate.setGainUserName(userService.getById(certificate.getGainUserId()).getUserName());
-		// 写入数据库
+		userCertificate.setGainUserName(userService.getById(certificate.getGainUserId()).getUserName());        // 写入数据库
+		
 		boolean save = userCertificateService.save(userCertificate);
 		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
 		return ResultUtils.success(newCertificateId);
@@ -111,10 +113,10 @@ public class CertificateController {
 		if (!oldCertificate.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
 			throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
 		}
-		QueryWrapper<UserCertificate> userCertificateQueryWrapper = new QueryWrapper<>();
-		userCertificateQueryWrapper.eq("certificateId", id);
-		userCertificateQueryWrapper.eq("userId", oldCertificate.getGainUserId());
-		UserCertificate userCertificate = userCertificateService.getOne(userCertificateQueryWrapper);
+		LambdaQueryWrapper<UserCertificate> queryWrapper = Wrappers.lambdaQuery(UserCertificate.class)
+				.eq(UserCertificate::getCertificateId, id)
+				.eq(UserCertificate::getUserId, oldCertificate.getGainUserId());
+		UserCertificate userCertificate = userCertificateService.getOne(queryWrapper);
 		// 操作数据库
 		boolean result = certificateService.removeById(id);
 		boolean save = userCertificateService.removeById(userCertificate.getId());

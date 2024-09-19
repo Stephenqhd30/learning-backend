@@ -1,10 +1,14 @@
 package com.kc.learning.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.model.entity.Certificate;
+import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
@@ -115,7 +119,12 @@ public class UserCertificateController {
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
+		// Page<UserCertificate> userCertificatePage = userCertificateService.page(new Page<>(current, size),
+		// 		userCertificateService.getQueryWrapper(userCertificateQueryRequest));
+		
+		// 查询数据库
 		Page<UserCertificate> userCertificatePage = userCertificateService.getUserCertificates(userCertificateQueryRequest, current, size);
+		
 		// 获取封装类
 		return ResultUtils.success(userCertificateService.getUserCertificateVOPage(userCertificatePage, request));
 	}

@@ -6,6 +6,7 @@
 
 	<resultMap id="BaseResultMap" type="com.kc.learning.model.entity.Certificate">
 		<id property="id" column="id" jdbcType="BIGINT"/>
+		<result property="certificateNumber" column="certificateNumber" jdbcType="VARCHAR"/>
 		<result property="certificateName" column="certificateName" jdbcType="VARCHAR"/>
 		<result property="certificateType" column="certificateType" jdbcType="TINYINT"/>
 		<result property="certificateYear" column="certificateYear" jdbcType="VARCHAR"/>
@@ -22,7 +23,7 @@
 	</resultMap>
 
 	<sql id="Base_Column_List">
-		id
+		id,certificateNumber
 		,certificateName,certificateType,userId, certificateYear,gainUserId,
 		reviewStatus, reviewMessage, reviewerId, reviewTime,certificateSituation,
         createTime,updateTime,isDelete

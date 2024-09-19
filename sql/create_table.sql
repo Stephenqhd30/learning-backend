@@ -31,7 +31,7 @@ create table certificate
 (
     id                   bigint auto_increment comment 'id'
         primary key,
-    certificateId        varchar(512)                       not null comment '证书编号',
+    certificateNumber        varchar(512)                       not null comment '证书编号',
     certificateName      varchar(512)                       not null comment '证书名称',
     certificateType      tinyint                            not null comment '证书类型(0-干部培训,1-其他)',
     certificateYear      varchar(128)                       not null comment '证书获得时间',
@@ -54,7 +54,7 @@ create table user_certificate
     id              bigint auto_increment comment 'id'
         primary key,
     userId          bigint                             not null comment '用户id',
-    certificateId   bigint                             not null comment '证书id',
+    certificateNumber   bigint                             not null comment '证书id',
     gainTime        varchar(128)                       not null comment '获得时间',
     certificateName varchar(256)                       not null comment '证书名称',
     gainUserName    varchar(256)                       not null comment '获得人姓名',

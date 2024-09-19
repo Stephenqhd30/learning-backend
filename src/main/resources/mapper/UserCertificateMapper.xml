@@ -1,22 +1,25 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kc.learning.mapper.UserCertificateMapper">
 
-    <resultMap id="BaseResultMap" type="com.kc.learning.model.entity.UserCertificate">
-            <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="userId" column="userId" jdbcType="BIGINT"/>
-            <result property="certificateId" column="certificateId" jdbcType="BIGINT"/>
-            <result property="gainTime" column="gainTime" jdbcType="VARCHAR"/>
-            <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-            <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-    </resultMap>
+	<resultMap id="BaseResultMap" type="com.kc.learning.model.entity.UserCertificate">
+		<id property="id" column="id" jdbcType="BIGINT"/>
+		<result property="userId" column="userId" jdbcType="BIGINT"/>
+		<result property="certificateId" column="certificateId" jdbcType="BIGINT"/>
+		<result property="certificateNumber" column="certificateNumber" jdbcType="BIGINT"/>
+		<result property="gainTime" column="gainTime" jdbcType="VARCHAR"/>
+		<result property="certificateName" column="certificateName" jdbcType="VARCHAR"/>
+		<result property="gainUserName" column="gainUserName" jdbcType="VARCHAR"/>
+		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+		<result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+	</resultMap>
 
-    <sql id="Base_Column_List">
-        id,userId,certificateId,
-        gainTime,createTime,updateTime,
-        isDelete
-    </sql>
+	<sql id="Base_Column_List">
+		id
+		,certificateName,gainUserName
+		,userId,certificateId,certificateNumber,
+        gainTime,createTime,updateTime
+	</sql>
 </mapper>

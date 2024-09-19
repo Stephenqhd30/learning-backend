@@ -31,11 +31,6 @@ public class UserVO implements Serializable {
 	 */
 	private Integer userGender;
 	
-	/**
-	 * 用户身份证号
-	 */
-	private String userIdCard;
-	
 	
 	/**
 	 * 用户头像
@@ -83,8 +78,8 @@ public class UserVO implements Serializable {
 	/**
 	 * 封装类转对象
 	 *
-	 * @param userVO
-	 * @return
+	 * @param userVO userVO
+	 * @return User
 	 */
 	public static User voToObj(UserVO userVO) {
 		if (userVO == null) {
@@ -93,15 +88,14 @@ public class UserVO implements Serializable {
 		// todo 需要进行转换
 		User user = new User();
 		BeanUtils.copyProperties(userVO, user);
-		user.setUserIdCard(EncryptionUtil.encrypt(userVO.getUserIdCard()));
 		return user;
 	}
 	
 	/**
 	 * 对象转封装类
 	 *
-	 * @param user
-	 * @return
+	 * @param user user
+	 * @return UserVO
 	 */
 	public static UserVO objToVo(User user) {
 		if (user == null) {
@@ -110,7 +104,6 @@ public class UserVO implements Serializable {
 		// todo 需要进行转换
 		UserVO userVO = new UserVO();
 		BeanUtils.copyProperties(user, userVO);
-		userVO.setUserIdCard(EncryptionUtil.decrypt(user.getUserIdCard()));
 		return userVO;
 	}
 }

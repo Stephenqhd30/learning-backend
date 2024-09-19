@@ -18,11 +18,6 @@ public class CertificateUpdateRequest implements Serializable {
 	private Long id;
 	
 	/**
-	 * 证书编号
-	 */
-	private String certificateId;
-	
-	/**
 	 * 证书名称
 	 */
 	private String certificateName;

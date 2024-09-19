@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
+import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.vo.CertificateVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -44,9 +45,10 @@ public interface CertificateService extends IService<Certificate> {
 	/**
 	 * 分页获取证书封装
 	 *
-	 * @param certificatePage
-	 * @param request
-	 * @return
+	 * @param certificatePage certificatePage
+	 * @param request request
+	 * @return Page<CertificateVO>
 	 */
 	Page<CertificateVO> getCertificateVOPage(Page<Certificate> certificatePage, HttpServletRequest request);
+	
 }

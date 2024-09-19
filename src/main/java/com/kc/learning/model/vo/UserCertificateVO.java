@@ -36,6 +36,11 @@ public class UserCertificateVO implements Serializable {
 	private String gainTime;
 	
 	/**
+	 * 证书编号
+	 */
+	private String certificateNumber;
+	
+	/**
 	 * 证书名称
 	 */
 	private String certificateName;
@@ -68,8 +73,8 @@ public class UserCertificateVO implements Serializable {
 	/**
 	 * 封装类转对象
 	 *
-	 * @param userCertificateVO
-	 * @return
+	 * @param userCertificateVO userCertificateVO
+	 * @return UserCertificate
 	 */
 	public static UserCertificate voToObj(UserCertificateVO userCertificateVO) {
 		if (userCertificateVO == null) {
@@ -83,8 +88,8 @@ public class UserCertificateVO implements Serializable {
 	/**
 	 * 对象转封装类
 	 *
-	 * @param userCertificate
-	 * @return
+	 * @param userCertificate userCertificate
+	 * @return UserCertificateVO
 	 */
 	public static UserCertificateVO objToVo(UserCertificate userCertificate) {
 		if (userCertificate == null) {

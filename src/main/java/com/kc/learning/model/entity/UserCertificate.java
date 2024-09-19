@@ -36,6 +36,11 @@ public class UserCertificate implements Serializable {
     private String gainTime;
     
     /**
+     * 证书编号
+     */
+    private String certificateNumber;
+    
+    /**
      * 证书名称
      */
     private String certificateName;
@@ -54,12 +59,6 @@ public class UserCertificate implements Serializable {
      * 更新时间
      */
     private Date updateTime;
-
-    /**
-     * 是否删除(0-正常,1-删除)
-     */
-    @TableLogic
-    private Integer isDelete;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
