@@ -1,6 +1,7 @@
 package com.kc.learning.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
@@ -77,17 +78,6 @@ public class CertificateController {
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 		// 返回新写入的数据 id
 		long newCertificateId = certificate.getId();
-		// 关联用户证书关系
-		UserCertificate userCertificate = new UserCertificate();
-		userCertificate.setUserId(certificate.getGainUserId());
-		userCertificate.setCertificateId(certificate.getId());
-		userCertificate.setGainTime(certificate.getCertificateYear());
-		userCertificate.setCertificateNumber(certificate.getCertificateNumber());
-		userCertificate.setCertificateName(certificate.getCertificateName());
-		userCertificate.setGainUserName(userService.getById(certificate.getGainUserId()).getUserName());        // 写入数据库
-		
-		boolean save = userCertificateService.save(userCertificate);
-		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
 		return ResultUtils.success(newCertificateId);
 	}
 	
@@ -202,7 +192,9 @@ public class CertificateController {
 	                                                                 HttpServletRequest request) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		certificateQueryRequest.setReviewStatus(1);
+		if (certificateQueryRequest.getReviewStatus() == null) {
+			certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+		}
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
@@ -272,6 +264,22 @@ public class CertificateController {
 		certificate.setReviewTime(new Date());
 		boolean result = certificateService.updateById(certificate);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		// 如果审核通过，则关联用户证书关系
+		if (ReviewStatusEnum.PASS.getValue().equals(reviewStatus)) {
+			// 获取更新完之后的信息
+			Certificate newCertificate = certificateService.getById(id);
+			// 如果审核通过，则关联用户证书关系
+			UserCertificate userCertificate = new UserCertificate();
+			userCertificate.setUserId(newCertificate.getGainUserId());
+			userCertificate.setCertificateId(newCertificate.getId());
+			userCertificate.setGainTime(newCertificate.getCertificateYear());
+			userCertificate.setCertificateNumber(newCertificate.getCertificateNumber());
+			userCertificate.setCertificateName(newCertificate.getCertificateName());
+			userCertificate.setGainUserName(userService.getById(newCertificate.getGainUserId()).getUserName());
+			// 写入数据库
+			boolean save = userCertificateService.save(userCertificate);
+			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
+		}
 		return ResultUtils.success(true);
 	}
 }

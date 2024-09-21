@@ -1,6 +1,7 @@
 package com.kc.learning.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,6 +21,7 @@ import com.kc.learning.service.UserService;
 import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -64,6 +66,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateName), ErrorCode.PARAMS_ERROR, "证书名称不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateUrl), ErrorCode.PARAMS_ERROR, "证书存放地址不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateYear), ErrorCode.PARAMS_ERROR, "获得证书年份不能为空");
+			ThrowUtils.throwIf(Integer.parseInt(certificateYear) > DateUtil.year(DateUtil.date()), ErrorCode.PARAMS_ERROR, "获得证书年份不能超过当前年份");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateType), ErrorCode.PARAMS_ERROR, "证书类型不能为空");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateSituation), ErrorCode.PARAMS_ERROR, "证书获得情况不能为空");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(gainUserId), ErrorCode.PARAMS_ERROR, "获得人id不能为空");

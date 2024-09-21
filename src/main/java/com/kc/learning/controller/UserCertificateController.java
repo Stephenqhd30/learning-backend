@@ -1,5 +1,6 @@
 package com.kc.learning.controller;
 
+import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -9,6 +10,7 @@ import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.enums.ReviewStatusEnum;
+import com.kc.learning.service.CertificateService;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
@@ -24,6 +26,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 用户证书接口
@@ -38,9 +44,11 @@ public class UserCertificateController {
 	@Resource
 	private UserCertificateService userCertificateService;
 	
-	
 	@Resource
 	private UserService userService;
+	
+	@Resource
+	private CertificateService certificateService;
 	
 	// region 增删改查
 	
@@ -89,8 +97,8 @@ public class UserCertificateController {
 	/**
 	 * 分页获取用户证书列表（仅管理员可用）
 	 *
-	 * @param userCertificateQueryRequest
-	 * @return
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @return {@Link BaseResponse<Page < UserCertificate>>}
 	 */
 	@PostMapping("/list/page")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -107,9 +115,9 @@ public class UserCertificateController {
 	 * 分页获取用户证书列表（封装类）
 	 * 只查看已经过审核了的证书
 	 *
-	 * @param userCertificateQueryRequest
-	 * @param request
-	 * @return
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @param request                     request
+	 * @return BaseResponse<Page < UserCertificateVO>>
 	 */
 	@PostMapping("/list/page/vo")
 	public BaseResponse<Page<UserCertificateVO>> listUserCertificateVOByPage(@RequestBody UserCertificateQueryRequest userCertificateQueryRequest,
@@ -119,12 +127,8 @@ public class UserCertificateController {
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
-		// Page<UserCertificate> userCertificatePage = userCertificateService.page(new Page<>(current, size),
-		// 		userCertificateService.getQueryWrapper(userCertificateQueryRequest));
-		
-		// 查询数据库
-		Page<UserCertificate> userCertificatePage = userCertificateService.getUserCertificates(userCertificateQueryRequest, current, size);
-		
+		Page<UserCertificate> userCertificatePage = userCertificateService.page(new Page<>(current, size),
+				userCertificateService.getQueryWrapper(userCertificateQueryRequest));
 		// 获取封装类
 		return ResultUtils.success(userCertificateService.getUserCertificateVOPage(userCertificatePage, request));
 	}
