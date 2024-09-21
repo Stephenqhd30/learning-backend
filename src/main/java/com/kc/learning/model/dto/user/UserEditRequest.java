@@ -13,10 +13,6 @@ import java.io.Serializable;
 public class UserEditRequest implements Serializable {
 	
 	private static final long serialVersionUID = 402901746420005392L;
-	/**
-	 * 身份证号
-	 */
-	private String userIdCard;
 	
 	/**
 	 * 用户昵称

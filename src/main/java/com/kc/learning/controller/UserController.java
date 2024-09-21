@@ -174,6 +174,7 @@ public class UserController {
 	 * @return BaseResponse<Boolean>
 	 */
 	@PostMapping("/update")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
 	                                        HttpServletRequest request) {
 		if (userUpdateRequest == null || userUpdateRequest.getId() <= 0) {
@@ -185,8 +186,15 @@ public class UserController {
 		// 数据校验
 		userService.validUser(user, false);
 		// 对数据进行加密
-		String userIdCard = userUpdateRequest.getUserIdCard();
-		user.setUserIdCard(EncryptionUtil.encrypt(userIdCard));
+		if (userUpdateRequest.getUserIdCard() != null) {
+			String userIdCard = userUpdateRequest.getUserIdCard();
+			try {
+				String decryptUserIdCard = EncryptionUtil.decrypt(userIdCard);
+				user.setUserIdCard(decryptUserIdCard);
+			} catch (Exception e) {
+				throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证信息有误");
+			}
+		}
 		// 判断是否存在
 		long id = userUpdateRequest.getId();
 		User oldUser = userService.getById(id);
@@ -296,13 +304,6 @@ public class UserController {
 		// todo 在此处将实体类和 DTO 进行转换
 		User user = new User();
 		BeanUtils.copyProperties(userEditRequest, user);
-		String userIdCard = userEditRequest.getUserIdCard();
-		try {
-			String decryptUserIdCard = EncryptionUtil.decrypt(userIdCard);
-			user.setUserIdCard(decryptUserIdCard);
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证信息有误");
-		}
 		user.setId(loginUser.getId());
 		boolean result = userService.updateById(user);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

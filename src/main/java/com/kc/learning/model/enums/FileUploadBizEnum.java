@@ -15,8 +15,8 @@ import java.util.stream.Collectors;
 @Getter
 public enum FileUploadBizEnum {
 	
-	USER_AVATAR("用户头像", "kc:learning:user_avatar"),
-	CERTIFICATE("证书", "kc:learning:certificate");
+	USER_AVATAR("用户头像", "user_avatar"),
+	CERTIFICATE("证书", "certificate");
 	
 	private final String text;
 	
