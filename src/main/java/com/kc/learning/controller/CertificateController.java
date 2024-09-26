@@ -123,7 +123,7 @@ public class CertificateController {
 	 */
 	@PostMapping("/update")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public BaseResponse<Boolean> updateCertificate(@RequestBody CertificateUpdateRequest certificateUpdateRequest) {
+	public BaseResponse<Boolean> updateCertificate(@RequestBody CertificateUpdateRequest certificateUpdateRequest, HttpServletRequest request) {
 		if (certificateUpdateRequest == null || certificateUpdateRequest.getId() <= 0) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
 		}
@@ -138,9 +138,9 @@ public class CertificateController {
 		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
 		// 更新审核状态为待审核
 		certificate.setReviewStatus(ReviewStatusEnum.REVIEWING.getValue());
-		certificate.setReviewMessage(null);
-		certificate.setReviewerId(null);
-		certificate.setReviewTime(null);
+		certificate.setReviewMessage("证书信息发生改变");
+		certificate.setReviewerId(userService.getLoginUser(request).getId());
+		certificate.setReviewTime(new Date());
 		// 操作数据库
 		boolean result = certificateService.updateById(certificate);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
