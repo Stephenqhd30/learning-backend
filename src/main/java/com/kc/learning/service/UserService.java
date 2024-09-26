@@ -6,9 +6,11 @@ import com.kc.learning.model.dto.user.UserQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.vo.LoginUserVO;
 import com.kc.learning.model.vo.UserVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户服务
@@ -40,7 +42,7 @@ public interface UserService extends IService<User> {
 	 *
 	 * @param userName   用户账户
 	 * @param userIdCard 身份证号
-	 * @param request
+	 * @param request    request
 	 * @return 脱敏后的用户信息
 	 */
 	LoginUserVO userLogin(String userName, String userIdCard, HttpServletRequest request);
@@ -48,48 +50,48 @@ public interface UserService extends IService<User> {
 	/**
 	 * 获取当前登录用户
 	 *
-	 * @param request
-	 * @return
+	 * @param request request
+	 * @return {@link User}
 	 */
 	User getLoginUser(HttpServletRequest request);
 	
 	/**
 	 * 是否为管理员
 	 *
-	 * @param request
-	 * @return
+	 * @param request request
+	 * @return {@link boolean}
 	 */
 	boolean isAdmin(HttpServletRequest request);
 	
 	/**
 	 * 是否为管理员
 	 *
-	 * @param user
-	 * @return
+	 * @param user user
+	 * @return {@link boolean}
 	 */
 	boolean isAdmin(User user);
 	
 	/**
 	 * 用户注销
 	 *
-	 * @param request
-	 * @return
+	 * @param request request
+	 * @return {@link boolean}
 	 */
 	boolean userLogout(HttpServletRequest request);
 	
 	/**
 	 * 获取脱敏的已登录用户信息
 	 *
-	 * @return
+	 * @return {@link LoginUserVO}
 	 */
 	LoginUserVO getLoginUserVO(User user);
 	
 	/**
 	 * 获取脱敏的用户信息
 	 *
-	 * @param user
-	 * @param request
-	 * @return
+	 * @param user    user
+	 * @param request request
+	 * @return {@link UserVO}
 	 */
 	UserVO getUserVO(User user, HttpServletRequest request);
 	
@@ -97,17 +99,24 @@ public interface UserService extends IService<User> {
 	/**
 	 * 获取脱敏的用户信息
 	 *
-	 * @param userList
-	 * @return
+	 * @param userList userList
+	 * @return {@link List}<{@link UserVO}>
 	 */
 	List<UserVO> getUserVO(List<User> userList, HttpServletRequest request);
 	
 	/**
 	 * 获取查询条件
 	 *
-	 * @param userQueryRequest
-	 * @return
+	 * @param userQueryRequest userQueryRequest
+	 * @return {@link QueryWrapper}<{@link User}>
 	 */
 	QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 	
+	/**
+	 * 导入用户
+	 *
+	 * @param file file
+	 * @return {@link Map}<{@link String}, {@link Object}>
+	 */
+	Map<String, Object> importUsers(MultipartFile file);
 }

@@ -6,7 +6,7 @@ import cn.hutool.crypto.symmetric.AES;
 /**
  * @author stephen qiu
  */
-public class EncryptionUtil {
+public class EncryptionUtils {
 	// 固定密钥或盐值，长度必须为 16, 24 或 32 字符
 	private static final String KEY = "1234567890abcdef";
 	

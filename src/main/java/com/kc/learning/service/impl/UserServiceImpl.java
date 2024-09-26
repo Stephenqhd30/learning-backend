@@ -1,8 +1,11 @@
 package com.kc.learning.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.exception.ExcelAnalysisException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kc.learning.aop.UserExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constant.CommonConstant;
 import com.kc.learning.constant.UserConstant;
@@ -15,7 +18,7 @@ import com.kc.learning.model.enums.UserRoleEnum;
 import com.kc.learning.model.vo.LoginUserVO;
 import com.kc.learning.model.vo.UserVO;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.EncryptionUtil;
+import com.kc.learning.utils.EncryptionUtils;
 import com.kc.learning.utils.RegexUtils;
 import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
@@ -24,10 +27,14 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -39,6 +46,7 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+	
 	/**
 	 * 校验数据
 	 *
@@ -112,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 			// 2. 加密
 			String encryptIdCard = null;
 			try {
-				encryptIdCard = EncryptionUtil.encrypt(userIdCard);
+				encryptIdCard = EncryptionUtils.encrypt(userIdCard);
 			} catch (Exception e) {
 				throw new BusinessException(ErrorCode.SYSTEM_ERROR);
 			}
@@ -141,7 +149,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		// 2. 加密
 		String encryptIdCard = null;
 		try {
-			encryptIdCard = EncryptionUtil.encrypt(userIdCard);
+			encryptIdCard = EncryptionUtils.encrypt(userIdCard);
 		} catch (Exception e) {
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR);
 		}
@@ -252,7 +260,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		Long id = userQueryRequest.getId();
 		String encryptedUserIdCard = null;
 		if (StringUtils.isNotBlank(userQueryRequest.getUserIdCard())) {
-			encryptedUserIdCard = EncryptionUtil.encrypt(userQueryRequest.getUserIdCard());
+			encryptedUserIdCard = EncryptionUtils.encrypt(userQueryRequest.getUserIdCard());
 		}
 		String userName = userQueryRequest.getUserName();
 		Integer userGender = userQueryRequest.getUserGender();
@@ -281,5 +289,38 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
 				sortField);
 		return queryWrapper;
+	}
+	
+	/**
+	 * 导入用户数据
+	 *
+	 * @param file 上传的 Excel 文件
+	 * @return 返回成功和错误信息
+	 */
+	@Override
+	public Map<String, Object> importUsers(MultipartFile file) {
+		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.OPERATION_ERROR, "上传的文件为空");
+		
+		// 传递 userService 实例给 UserExcelListener
+		UserExcelListener listener = new UserExcelListener(this);
+		
+		try {
+			EasyExcel.read(file.getInputStream(), User.class, listener).sheet().doRead();
+		} catch (IOException e) {
+			log.error("文件读取失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件读取失败");
+		} catch (ExcelAnalysisException e) {
+			log.error("Excel解析失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "Excel解析失败");
+		}
+		
+		// 返回处理结果，包括成功和异常的数据
+		Map<String, Object> result = new HashMap<>();
+		// 获取异常记录
+		result.put("errorRecords", listener.getErrorRecords());
+		
+		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
+		
+		return result;
 	}
 }

@@ -1,5 +1,6 @@
 package com.kc.learning.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
@@ -9,20 +10,33 @@ import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
+import com.kc.learning.model.enums.UserGenderEnum;
+import com.kc.learning.model.enums.UserRoleEnum;
 import com.kc.learning.model.vo.LoginUserVO;
+import com.kc.learning.model.vo.UserExcelVO;
 import com.kc.learning.model.vo.UserVO;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.EncryptionUtil;
+import com.kc.learning.utils.EncryptionUtils;
+import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.URLEncoder;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static com.kc.learning.constant.UserConstant.USER_AVATAR;
 
@@ -130,7 +144,7 @@ public class UserController {
 		// 数据校验
 		userService.validUser(user, true);
 		String userIdCard = userAddRequest.getUserIdCard();
-		user.setUserIdCard(EncryptionUtil.encrypt(userIdCard));
+		user.setUserIdCard(EncryptionUtils.encrypt(userIdCard));
 		// todo 填充默认值
 		// 设置一个默认的头像
 		user.setUserAvatar(USER_AVATAR);
@@ -189,7 +203,7 @@ public class UserController {
 		if (userUpdateRequest.getUserIdCard() != null) {
 			String userIdCard = userUpdateRequest.getUserIdCard();
 			try {
-				String decryptUserIdCard = EncryptionUtil.decrypt(userIdCard);
+				String decryptUserIdCard = EncryptionUtils.decrypt(userIdCard);
 				user.setUserIdCard(decryptUserIdCard);
 			} catch (Exception e) {
 				throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证信息有误");
@@ -217,7 +231,7 @@ public class UserController {
 	public BaseResponse<User> getUserById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 		User user = userService.getById(id);
-		user.setUserIdCard(EncryptionUtil.decrypt(user.getUserIdCard()));
+		user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
 		ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
 		return ResultUtils.success(user);
 	}
@@ -256,7 +270,7 @@ public class UserController {
 		Page<User> userPage = userService.page(new Page<>(current, size),
 				userService.getQueryWrapper(userQueryRequest));
 		
-		userPage.getRecords().forEach(user -> user.setUserIdCard(EncryptionUtil.decrypt(user.getUserIdCard())));
+		userPage.getRecords().forEach(user -> user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard())));
 		return ResultUtils.success(userPage);
 	}
 	
@@ -308,5 +322,70 @@ public class UserController {
 		boolean result = userService.updateById(user);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
 		return ResultUtils.success(true);
+	}
+	
+	/**
+	 * 用户数据批量导入
+	 *
+	 * @param file 用户 Excel 文件
+	 * @return 导入结果
+	 */
+	@PostMapping("/import")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Map<String, Object>> importUserDataByExcel(@RequestParam("file") MultipartFile file) {
+		// 检查文件是否为空
+		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+		
+		// 获取文件名并检查是否为null
+		String filename = file.getOriginalFilename();
+		ThrowUtils.throwIf(filename == null, ErrorCode.PARAMS_ERROR, "文件名不能为空");
+		
+		// 检查文件格式是否为Excel格式
+		if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+			throw new RuntimeException("上传文件格式不正确");
+		}
+		
+		// 调用服务层处理用户导入
+		Map<String, Object> result = userService.importUsers(file);
+		return ResultUtils.success(result);
+	}
+	
+	/**
+	 * 用户数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void download(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<UserExcelVO> userExcelVOList = userService.list().stream().map(user -> {
+					UserExcelVO userExcelVO = new UserExcelVO();
+					BeanUtils.copyProperties(user, userExcelVO);
+					userExcelVO.setId(String.valueOf(user.getId()));
+					userExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+					userExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
+					userExcelVO.setUserRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(user.getUserRole())).getText());
+					userExcelVO.setCreateTime(ExcelUtils.dateToString(user.getCreateTime()));
+					userExcelVO.setUpdateTime(ExcelUtils.dateToString(user.getUpdateTime()));
+					return userExcelVO;
+				})
+				.collect(Collectors.toList());
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, "用户信息");
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), UserExcelVO.class)
+					.sheet("用户信息")
+					.doWrite(userExcelVOList);
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
 	}
 }

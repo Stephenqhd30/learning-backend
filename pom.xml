@@ -77,7 +77,13 @@
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
-            <version>3.1.1</version>
+            <version>3.1.5</version>
+        </dependency>
+        <!-- 文件读取依赖 -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
         </dependency>
         <!-- https://hutool.cn/docs/index.html#/-->
         <dependency>

@@ -1,7 +1,6 @@
 package com.kc.learning.model.vo;
 
 import com.kc.learning.model.entity.User;
-import com.kc.learning.utils.EncryptionUtil;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
