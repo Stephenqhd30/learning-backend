@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -332,7 +333,7 @@ public class UserController {
 	 */
 	@PostMapping("/import")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public BaseResponse<Map<String, Object>> importUserDataByExcel(@RequestParam("file") MultipartFile file) {
+	public BaseResponse<Map<String, Object>> importUserDataByExcel(@RequestPart("file") MultipartFile file) {
 		// 检查文件是否为空
 		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
 		
@@ -383,6 +384,7 @@ public class UserController {
 			EasyExcel.write(response.getOutputStream(), UserExcelVO.class)
 					.sheet("用户信息")
 					.doWrite(userExcelVOList);
+			log.info("文件导出成功");
 		} catch (Exception e) {
 			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
