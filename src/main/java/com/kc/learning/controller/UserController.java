@@ -362,7 +362,7 @@ public class UserController {
 	 */
 	@GetMapping("/download")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public void download(HttpServletResponse response) throws IOException {
+	public void downloadUser(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<UserExcelVO> userExcelVOList = userService.list().stream().map(user -> {
 					UserExcelVO userExcelVO = new UserExcelVO();

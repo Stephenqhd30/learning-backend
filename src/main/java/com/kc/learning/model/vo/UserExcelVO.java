@@ -16,7 +16,7 @@ public class UserExcelVO implements Serializable {
 	/**
 	 * id
 	 */
-	@ColumnWidth(25)
+	@ColumnWidth(30)
 	@ExcelProperty("id")
 	private String id;
 	
@@ -24,7 +24,7 @@ public class UserExcelVO implements Serializable {
 	/**
 	 * 身份证号
 	 */
-	@ColumnWidth(25)
+	@ColumnWidth(40)
 	@ExcelProperty("身份证号")
 	private String userIdCard;
 	

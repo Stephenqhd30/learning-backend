@@ -1,6 +1,5 @@
 package com.kc.learning.model.dto.excel;
 
-import com.kc.learning.model.entity.User;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,15 +7,16 @@ import lombok.NoArgsConstructor;
 /**
  * 错误记录
  * @author stephen qiu
+ * @param <T> 导入数据的类型
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ErrorRecord {
+public class ErrorRecord<T> {
 	/**
-	 * 导入的用户数据
+	 * 导入的数据
 	 */
-	private User user;
+	private T data;
 	
 	/**
 	 * 错误信息

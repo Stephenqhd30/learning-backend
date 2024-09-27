@@ -2,11 +2,16 @@ package com.kc.learning.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.date.DateUtil;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.exception.ExcelAnalysisException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kc.learning.aop.CertificateExcelListener;
+import com.kc.learning.aop.UserExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constant.CommonConstant;
+import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.CertificateMapper;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -25,9 +30,11 @@ import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -204,6 +211,36 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;
+	}
+	
+	/**
+	 * 导入证书
+	 * @param file file
+	 * @return Map<String, Object>
+	 */
+	@Override
+	public Map<String, Object> importCertificates(MultipartFile file, HttpServletRequest request) {
+		// 传递 userService 实例给 UserExcelListener
+		CertificateExcelListener listener = new CertificateExcelListener(this, userService, request);
+		try {
+			EasyExcel.read(file.getInputStream(), Certificate.class, listener).sheet().doRead();
+		} catch (IOException e) {
+			log.error("文件读取失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件读取失败");
+		} catch (ExcelAnalysisException e) {
+			log.error("Excel解析失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.OPERATION_ERROR, "Excel解析失败");
+		}
+		
+		// 返回处理结果，包括成功和异常的数据
+		Map<String, Object> result = new HashMap<>();
+		// 获取异常记录
+		result.put("errorRecords", listener.getErrorRecords());
+		
+		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
+		
+		return result;
+		
 	}
 	
 	

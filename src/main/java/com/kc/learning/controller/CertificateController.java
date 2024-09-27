@@ -1,5 +1,6 @@
 package com.kc.learning.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -17,21 +18,32 @@ import com.kc.learning.model.dto.certificate.CertificateUpdateRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
-import com.kc.learning.model.enums.ReviewStatusEnum;
+import com.kc.learning.model.enums.*;
+import com.kc.learning.model.vo.CertificateExcelVO;
 import com.kc.learning.model.vo.CertificateVO;
+import com.kc.learning.model.vo.UserExcelVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserService;
+import com.kc.learning.utils.EncryptionUtils;
+import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 证书接口
@@ -281,5 +293,78 @@ public class CertificateController {
 			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
 		}
 		return ResultUtils.success(true);
+	}
+	
+	
+	/**
+	 * 证书批量导入
+	 *
+	 * @param file 用户 Excel 文件
+	 * @return 导入结果
+	 */
+	@PostMapping("/import")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Map<String, Object>> importCertificateDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+		// 检查文件是否为空
+		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+		
+		// 获取文件名并检查是否为null
+		String filename = file.getOriginalFilename();
+		ThrowUtils.throwIf(filename == null, ErrorCode.PARAMS_ERROR, "文件名不能为空");
+		
+		// 检查文件格式是否为Excel格式
+		if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+			throw new RuntimeException("上传文件格式不正确");
+		}
+		
+		// 调用服务层处理用户导入
+		Map<String, Object> result = certificateService.importCertificates(file, request);
+		return ResultUtils.success(result);
+	}
+	
+	
+	/**
+	 * 证书数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadCertificate(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<CertificateExcelVO> certificateExcelVOList = certificateService.list().stream().map(certificate -> {
+					CertificateExcelVO certificateExcelVO = new CertificateExcelVO();
+					BeanUtils.copyProperties(certificate, certificateExcelVO);
+					certificateExcelVO.setId(String.valueOf(certificate.getId()));
+					certificateExcelVO.setCertificateType(Objects.requireNonNull(CertificateTypeEnum.getEnumByValue(certificate.getCertificateType())).getText());
+					certificateExcelVO.setCertificateSituation(Objects.requireNonNull(CertificateSituationEnum.getEnumByValue(certificate.getCertificateSituation())).getText());
+					certificateExcelVO.setReviewStatus(Objects.requireNonNull(ReviewStatusEnum.getEnumByValue(certificate.getReviewStatus())).getText());
+					certificateExcelVO.setReviewerId(String.valueOf(certificate.getReviewerId()));
+					certificateExcelVO.setReviewTime(ExcelUtils.dateToString(certificate.getReviewTime()));
+					certificateExcelVO.setGainUserId(String.valueOf(certificate.getGainUserId()));
+					certificateExcelVO.setUserId(String.valueOf(certificate.getUserId()));
+					certificateExcelVO.setCreateTime(ExcelUtils.dateToString(certificate.getCreateTime()));
+					certificateExcelVO.setUpdateTime(ExcelUtils.dateToString(certificate.getUpdateTime()));
+					
+					return certificateExcelVO;
+				})
+				.collect(Collectors.toList());
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, "证书信息");
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), CertificateExcelVO.class)
+					.sheet(" 证书信息")
+					.doWrite(certificateExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
 	}
 }

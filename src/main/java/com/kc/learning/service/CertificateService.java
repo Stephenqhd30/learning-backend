@@ -7,8 +7,10 @@ import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.vo.CertificateVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * 证书服务
@@ -51,4 +53,11 @@ public interface CertificateService extends IService<Certificate> {
 	 */
 	Page<CertificateVO> getCertificateVOPage(Page<Certificate> certificatePage, HttpServletRequest request);
 	
+	/**
+	 * 导入证书
+	 * @param file file
+	 * @param request request
+	 * @return @return {@link Map}<{@link String}, {@link Object}>
+	 */
+	Map<String, Object> importCertificates(MultipartFile file, HttpServletRequest request);
 }
