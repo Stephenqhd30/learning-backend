@@ -6,15 +6,14 @@ import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.constant.ExcelConstant;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.UserGenderEnum;
 import com.kc.learning.model.enums.UserRoleEnum;
-import com.kc.learning.model.vo.LoginUserVO;
-import com.kc.learning.model.vo.UserExcelVO;
-import com.kc.learning.model.vo.UserVO;
+import com.kc.learning.model.vo.*;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.EncryptionUtils;
 import com.kc.learning.utils.ExcelUtils;
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -377,13 +377,51 @@ public class UserController {
 				})
 				.collect(Collectors.toList());
 		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, "用户信息");
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_EXCEL);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), UserExcelVO.class)
-					.sheet("用户信息")
+					.sheet(ExcelConstant.USER_EXCEL)
 					.doWrite(userExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
+	
+	/**
+	 * 用户数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download/example")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadUserExample(HttpServletResponse response) throws IOException {
+		List<UserExcelExampleVO> userExcelExampleVOList = new ArrayList<>();
+		// 获取数据，根据自身业务修改
+		UserExcelExampleVO userExcelExampleVO = new UserExcelExampleVO();
+		userExcelExampleVO.setUserName("用户的姓名(必填)");
+		userExcelExampleVO.setUserIdCard("用户的身份证号(必填)");
+		userExcelExampleVO.setUserGender("用户的性别(0-男， 1-女)(必填)");
+		userExcelExampleVO.setUserProfile("用户的简介(可以为空)");
+		userExcelExampleVO.setUserEmail("用户的邮箱(可以为空)");
+		userExcelExampleVO.setUserPhone("用户的电话(必填)");
+		userExcelExampleVO.setUserNumber("用户的学号(必填)");
+		userExcelExampleVOList.add(userExcelExampleVO);
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_EXCEL_EXAMPLE);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), UserExcelExampleVO.class)
+					.sheet(ExcelConstant.USER_EXCEL_EXAMPLE)
+					.doWrite(userExcelExampleVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
 			log.error("导出失败:{}", e.getMessage());

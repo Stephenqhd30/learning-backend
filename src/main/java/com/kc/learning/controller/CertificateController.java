@@ -10,6 +10,7 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
+import com.kc.learning.constant.ExcelConstant;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.certificate.CertificateAddRequest;
@@ -19,6 +20,7 @@ import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.*;
+import com.kc.learning.model.vo.CertificateExcelExampleVO;
 import com.kc.learning.model.vo.CertificateExcelVO;
 import com.kc.learning.model.vo.CertificateVO;
 import com.kc.learning.model.vo.UserExcelVO;
@@ -39,10 +41,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -354,13 +353,51 @@ public class CertificateController {
 				})
 				.collect(Collectors.toList());
 		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, "证书信息");
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), CertificateExcelVO.class)
-					.sheet(" 证书信息")
+					.sheet(ExcelConstant.CERTIFICATE_EXCEL)
 					.doWrite(certificateExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
+	
+	/**
+	 * 证书数据下载示例数据
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download/example")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadCertificateExample(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<CertificateExcelExampleVO> certificateExcelExampleVOList = new ArrayList<>();
+		CertificateExcelExampleVO certificateExcelExampleVO = new CertificateExcelExampleVO();
+		certificateExcelExampleVO.setCertificateNumber("证书编号(必填)");
+		certificateExcelExampleVO.setCertificateName("证书名称(必填)");
+		certificateExcelExampleVO.setCertificateType("证书类型(0-干部培训,1-其他)(必填)");
+		certificateExcelExampleVO.setCertificateYear("证书获得年份(必填)");
+		certificateExcelExampleVO.setCertificateSituation("证书获得情况(0-有,1-没有)(必填)");
+		certificateExcelExampleVO.setGainUserId("获得证书的用户id(必填)");
+		certificateExcelExampleVO.setCertificateUrl("证书得下载地址(必填)");
+		certificateExcelExampleVOList.add(certificateExcelExampleVO);
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), CertificateExcelExampleVO.class)
+					.sheet(ExcelConstant.CERTIFICATE_EXCEL)
+					.doWrite(certificateExcelExampleVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
 			log.error("导出失败:{}", e.getMessage());

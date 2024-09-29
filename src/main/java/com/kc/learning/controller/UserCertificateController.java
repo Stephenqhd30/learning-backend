@@ -1,6 +1,7 @@
 package com.kc.learning.controller;
 
 import cn.hutool.core.collection.CollUtil;
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,9 +9,15 @@ import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.constant.ExcelConstant;
 import com.kc.learning.model.entity.Certificate;
+import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
+import com.kc.learning.model.vo.CertificateExcelVO;
+import com.kc.learning.model.vo.UserCertificateExcelVO;
 import com.kc.learning.service.CertificateService;
+import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
@@ -22,12 +29,16 @@ import com.kc.learning.model.vo.UserCertificateVO;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -160,5 +171,44 @@ public class UserCertificateController {
 	
 	// endregion
 	
+	/**
+	 * 用户证书数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadUserCertificate(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<UserCertificateExcelVO> userCertificateExcelVOList = userCertificateService.list().stream().map(userCertificate -> {
+					UserCertificateExcelVO userCertificateExcelVO = new UserCertificateExcelVO();
+					BeanUtils.copyProperties(userCertificate, userCertificateExcelVO);
+					userCertificateExcelVO.setId(String.valueOf(userCertificate.getId()));
+					userCertificateExcelVO.setUserId(String.valueOf(userCertificate.getUserId()));
+					userCertificateExcelVO.setCertificateId(String.valueOf(userCertificate.getCertificateId()));
+					userCertificateExcelVO.setCreateTime(ExcelUtils.dateToString(userCertificate.getCreateTime()));
+					userCertificateExcelVO.setUpdateTime(ExcelUtils.dateToString(userCertificate.getUpdateTime()));
+					
+					return userCertificateExcelVO;
+				})
+				.collect(Collectors.toList());
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_CERTIFICATE_EXCEL);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), UserCertificateExcelVO.class)
+					.sheet(ExcelConstant.USER_CERTIFICATE_EXCEL)
+					.doWrite(userCertificateExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
 	
 }
