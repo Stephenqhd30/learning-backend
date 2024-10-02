@@ -8,12 +8,7 @@ package com.kc.learning.constant;
 public interface CertificateConstant {
 	
 	/**
-	 * 证书抬头
+	 * 证书默认图片
 	 */
-	String CERTIFICATE_NAME = "HKC";
-	
-	/**
-	 * 当前年份
-	 */
-	String CERTIFICATE_YEAR = "2024";
+	String CERTIFICATE_URL = "https://butterfly-1318299170.cos.ap-shanghai.myqcloud.com/learning/certificate_url/defalut_certificate.jpg";
 }

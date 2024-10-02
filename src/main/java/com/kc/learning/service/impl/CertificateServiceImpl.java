@@ -17,6 +17,7 @@ import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
+import com.kc.learning.model.vo.CertificateForUserVO;
 import com.kc.learning.model.vo.CertificateVO;
 import com.kc.learning.model.vo.UserVO;
 import com.kc.learning.service.CertificateService;
@@ -204,6 +205,28 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			}
 			certificateVO.setUserVO(userService.getUserVO(user, request));
 		});
+		// endregion
+		certificateVOPage.setRecords(certificateVOList);
+		return certificateVOPage;
+	}
+	
+	/**
+	 * 分页获取给用户展示的证书视图
+	 *
+	 * @param certificatePage certificatePage
+	 * @param request         request
+	 * @return Page<CertificateVO>
+	 */
+	@Override
+	public Page<CertificateForUserVO> getCertificateForUserVOPage(Page<Certificate> certificatePage, HttpServletRequest request) {
+		List<Certificate> certificateList = certificatePage.getRecords();
+		Page<CertificateForUserVO> certificateVOPage = new Page<>(certificatePage.getCurrent(), certificatePage.getSize(), certificatePage.getTotal());
+		if (CollUtil.isEmpty(certificateList)) {
+			return certificateVOPage;
+		}
+		// 对象列表 => 封装对象列表
+		List<CertificateForUserVO> certificateVOList = certificateList.stream().map(CertificateForUserVO::objToVo).collect(Collectors.toList());
+		
 		// endregion
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;

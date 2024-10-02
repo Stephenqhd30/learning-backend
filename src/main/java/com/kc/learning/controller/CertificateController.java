@@ -10,6 +10,7 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
+import com.kc.learning.constant.CertificateConstant;
 import com.kc.learning.constant.ExcelConstant;
 import com.kc.learning.constant.UserConstant;
 import com.kc.learning.exception.BusinessException;
@@ -24,6 +25,7 @@ import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.CertificateExcelExampleVO;
 import com.kc.learning.model.vo.CertificateExcelVO;
+import com.kc.learning.model.vo.CertificateForUserVO;
 import com.kc.learning.model.vo.CertificateVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
@@ -212,6 +214,30 @@ public class CertificateController {
 		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
 	}
 	
+	
+	/**
+	 * 分页获取证书列表（封装类）
+	 *
+	 * @param certificateQueryRequest certificateQueryRequest
+	 * @param request                 request
+	 * @return BaseResponse<Page < CertificateVO>>
+	 */
+	@PostMapping("/list/page/vo/user")
+	public BaseResponse<Page<CertificateForUserVO>> listCertificateForUserVOByPage(@RequestBody CertificateQueryRequest certificateQueryRequest,
+	                                                                               HttpServletRequest request) {
+		long current = certificateQueryRequest.getCurrent();
+		long size = certificateQueryRequest.getPageSize();
+		// 补充查询条件，只查询审核通过的证书
+		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+		// 限制爬虫
+		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		// 获取封装类
+		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
+	}
+	
 	/**
 	 * 分页获取当前登录用户创建的证书列表
 	 *
@@ -236,6 +262,33 @@ public class CertificateController {
 				certificateService.getQueryWrapper(certificateQueryRequest));
 		// 获取封装类
 		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+	}
+	
+	/**
+	 * 分页获取当前登录用户创建的证书列表
+	 *
+	 * @param certificateQueryRequest certificateQueryRequest
+	 * @param request                 request
+	 * @return BaseResponse<Page < CertificateVO>>
+	 */
+	@PostMapping("/my/list/page/vo/user")
+	public BaseResponse<Page<CertificateForUserVO>> listMyCertificateForUserVOByPage(@RequestBody CertificateQueryRequest certificateQueryRequest,
+	                                                                                 HttpServletRequest request) {
+		ThrowUtils.throwIf(certificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
+		// 补充查询条件，只查询当前登录用户的数据
+		User loginUser = userService.getLoginUser(request);
+		certificateQueryRequest.setGainUserId(loginUser.getId());
+		// 补充查询条件，只查询审核通过的证书
+		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+		long current = certificateQueryRequest.getCurrent();
+		long size = certificateQueryRequest.getPageSize();
+		// 限制爬虫
+		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		// 获取封装类
+		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
 	}
 	
 	// endregion

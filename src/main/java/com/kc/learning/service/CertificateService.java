@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
+import com.kc.learning.model.vo.CertificateForUserVO;
 import com.kc.learning.model.vo.CertificateVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,14 +48,24 @@ public interface CertificateService extends IService<Certificate> {
 	 * 分页获取证书封装
 	 *
 	 * @param certificatePage certificatePage
-	 * @param request request
+	 * @param request         request
 	 * @return Page<CertificateVO>
 	 */
 	Page<CertificateVO> getCertificateVOPage(Page<Certificate> certificatePage, HttpServletRequest request);
 	
 	/**
+	 * 分页获取给用户展示的证书视图
+	 *
+	 * @param certificatePage certificatePage
+	 * @param request         request
+	 * @return Page<CertificateVO>
+	 */
+	Page<CertificateForUserVO> getCertificateForUserVOPage(Page<Certificate> certificatePage, HttpServletRequest request);
+	
+	/**
 	 * 导入证书
-	 * @param file file
+	 *
+	 * @param file    file
 	 * @param request request
 	 * @return @return {@link Map}<{@link String}, {@link Object}>
 	 */
