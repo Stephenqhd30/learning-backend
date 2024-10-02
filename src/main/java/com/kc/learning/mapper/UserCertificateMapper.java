@@ -1,7 +1,7 @@
 package com.kc.learning.mapper;
 
-import com.kc.learning.model.entity.UserCertificate;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.kc.learning.model.entity.UserCertificate;
 
 /**
 * @author stephen qiu

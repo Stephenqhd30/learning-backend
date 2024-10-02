@@ -28,4 +28,9 @@ public class ReviewRequest implements Serializable {
 	 * 审核信息
 	 */
 	private String reviewMessage;
+	
+	/**
+	 * id列表
+	 */
+	private String idList;
 }

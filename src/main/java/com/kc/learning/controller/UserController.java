@@ -13,7 +13,10 @@ import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.UserGenderEnum;
 import com.kc.learning.model.enums.UserRoleEnum;
-import com.kc.learning.model.vo.*;
+import com.kc.learning.model.vo.LoginUserVO;
+import com.kc.learning.model.vo.UserExcelExampleVO;
+import com.kc.learning.model.vo.UserExcelVO;
+import com.kc.learning.model.vo.UserVO;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.EncryptionUtils;
 import com.kc.learning.utils.ExcelUtils;
@@ -26,13 +29,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -200,9 +199,9 @@ public class UserController {
 		BeanUtils.copyProperties(userUpdateRequest, user);
 		// 数据校验
 		userService.validUser(user, false);
+		String userIdCard = userUpdateRequest.getUserIdCard();
 		// 对数据进行加密
-		if (userUpdateRequest.getUserIdCard() != null) {
-			String userIdCard = userUpdateRequest.getUserIdCard();
+		if (userIdCard != null) {
 			try {
 				String decryptUserIdCard = EncryptionUtils.decrypt(userIdCard);
 				user.setUserIdCard(decryptUserIdCard);
@@ -232,8 +231,8 @@ public class UserController {
 	public BaseResponse<User> getUserById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 		User user = userService.getById(id);
-		user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
 		ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR);
+		user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
 		return ResultUtils.success(user);
 	}
 	
@@ -271,7 +270,13 @@ public class UserController {
 		Page<User> userPage = userService.page(new Page<>(current, size),
 				userService.getQueryWrapper(userQueryRequest));
 		
-		userPage.getRecords().forEach(user -> user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard())));
+		try {
+			userPage.getRecords().forEach(user -> {
+				user.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+			});
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+		}
 		return ResultUtils.success(userPage);
 	}
 	

@@ -2,20 +2,19 @@ package com.kc.learning.utils;
 
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.symmetric.AES;
+import com.kc.learning.constant.SaltConstant;
 
 /**
  * @author stephen qiu
  */
 public class EncryptionUtils {
-	// 固定密钥或盐值，长度必须为 16, 24 或 32 字符
-	private static final String KEY = "1234567890abcdef";
 	
 	// AES 对象
-	private static final AES aes;
+	private static final AES AES;
 	
 	static {
 		// 直接使用字符串作为密钥
-		aes = SecureUtil.aes(KEY.getBytes());
+		AES = SecureUtil.aes(SaltConstant.USER_ID_CARD_KEY.getBytes());
 	}
 	
 	/**
@@ -25,7 +24,7 @@ public class EncryptionUtils {
 	 * @return 加密后的十六进制字符串
 	 */
 	public static String encrypt(String data) {
-		return aes.encryptHex(data);
+		return AES.encryptHex(data);
 	}
 	
 	/**
@@ -35,6 +34,6 @@ public class EncryptionUtils {
 	 * @return 解密后的原始数据
 	 */
 	public static String decrypt(String encryptedData) {
-		return aes.decryptStr(encryptedData);
+		return AES.decryptStr(encryptedData);
 	}
 }

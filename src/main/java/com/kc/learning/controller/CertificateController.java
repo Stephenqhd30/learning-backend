@@ -1,8 +1,8 @@
 package com.kc.learning.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
@@ -19,15 +19,15 @@ import com.kc.learning.model.dto.certificate.CertificateUpdateRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
-import com.kc.learning.model.enums.*;
+import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.CertificateTypeEnum;
+import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.CertificateExcelExampleVO;
 import com.kc.learning.model.vo.CertificateExcelVO;
 import com.kc.learning.model.vo.CertificateVO;
-import com.kc.learning.model.vo.UserExcelVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.EncryptionUtils;
 import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
@@ -203,9 +203,6 @@ public class CertificateController {
 	                                                                 HttpServletRequest request) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		if (certificateQueryRequest.getReviewStatus() == null) {
-			certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
-		}
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
@@ -290,6 +287,46 @@ public class CertificateController {
 			// 写入数据库
 			boolean save = userCertificateService.save(userCertificate);
 			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
+		}
+		return ResultUtils.success(true);
+	}
+	
+	
+	/**
+	 * 批量应用审核
+	 *
+	 * @param reviewRequest reviewRequest
+	 * @param request       request
+	 * @return BaseResponse<Boolean>
+	 */
+	@PostMapping("/review/batch")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@Transactional(rollbackFor = Exception.class)
+	public BaseResponse<Boolean> doCertificateReviewByBatch(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
+		// 取出来请求中需要的属性
+		String reviewMessage = reviewRequest.getReviewMessage();
+		Integer reviewStatus = reviewRequest.getReviewStatus();
+		String idList = reviewRequest.getIdList();
+		List<Long> list = JSONUtil.toList(idList, Long.class);
+		if (!list.isEmpty()) {
+			for (Long id : list) {
+				// 判断app是否存在
+				Certificate oldCertificate = certificateService.getById(id);
+				ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
+				// 判断是否已经审核
+				ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
+				Certificate app = new Certificate();
+				// 更新审核状态
+				User loginUser = userService.getLoginUser(request);
+				app.setId(id);
+				app.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+				app.setReviewMessage(reviewMessage);
+				app.setReviewerId(loginUser.getId());
+				app.setReviewTime(new Date());
+				boolean result = certificateService.updateById(app);
+				ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+			}
 		}
 		return ResultUtils.success(true);
 	}

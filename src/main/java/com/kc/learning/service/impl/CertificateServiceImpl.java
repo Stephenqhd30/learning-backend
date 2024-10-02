@@ -8,7 +8,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.CertificateExcelListener;
-import com.kc.learning.aop.UserExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constant.CommonConstant;
 import com.kc.learning.exception.BusinessException;
@@ -16,7 +15,6 @@ import com.kc.learning.mapper.CertificateMapper;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.vo.CertificateVO;
@@ -26,7 +24,6 @@ import com.kc.learning.service.UserService;
 import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.LocaleUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -208,13 +205,13 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			certificateVO.setUserVO(userService.getUserVO(user, request));
 		});
 		// endregion
-		
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;
 	}
 	
 	/**
 	 * 导入证书
+	 *
 	 * @param file file
 	 * @return Map<String, Object>
 	 */
