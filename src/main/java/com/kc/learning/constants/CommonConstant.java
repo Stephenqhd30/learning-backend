@@ -1,4 +1,4 @@
-package com.kc.learning.constant;
+package com.kc.learning.constants;
 
 /**
  * 通用常量

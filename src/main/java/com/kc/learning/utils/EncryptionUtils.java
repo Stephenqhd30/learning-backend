@@ -2,7 +2,7 @@ package com.kc.learning.utils;
 
 import cn.hutool.crypto.SecureUtil;
 import cn.hutool.crypto.symmetric.AES;
-import com.kc.learning.constant.SaltConstant;
+import com.kc.learning.constants.SaltConstant;
 
 /**
  * @author stephen qiu

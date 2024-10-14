@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.CertificateExcelListener;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constant.CommonConstant;
+import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.CertificateMapper;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;

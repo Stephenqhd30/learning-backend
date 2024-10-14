@@ -6,8 +6,8 @@ import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constant.ExcelConstant;
-import com.kc.learning.constant.UserConstant;
+import com.kc.learning.constants.ExcelConstant;
+import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
@@ -38,7 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.kc.learning.constant.UserConstant.USER_AVATAR;
+import static com.kc.learning.constants.UserConstant.USER_AVATAR;
 
 
 /**

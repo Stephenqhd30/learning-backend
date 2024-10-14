@@ -1,6 +1,6 @@
 package com.kc.learning.common;
 
-import com.kc.learning.constant.CommonConstant;
+import com.kc.learning.constants.CommonConstant;
 import lombok.Data;
 
 /**
