@@ -1,29 +1,42 @@
 package com.kc.learning.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.utils.ResultUtils;
+import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
-import com.kc.learning.utils.ThrowUtils;
 import com.kc.learning.model.dto.course.CourseAddRequest;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.dto.course.CourseUpdateRequest;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
-
+import com.kc.learning.model.vo.CertificateExcelExampleVO;
+import com.kc.learning.model.vo.CourseExcelExampleVO;
+import com.kc.learning.model.vo.CourseExcelVO;
 import com.kc.learning.model.vo.CourseVO;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserService;
+import com.kc.learning.utils.ExcelUtils;
+import com.kc.learning.utils.ResultUtils;
+import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 课程接口
@@ -190,7 +203,7 @@ public class CourseController {
 	}
 	
 	/**
-	 * 分页获取当前登录用户创建的课程列表
+	 * 分页获取当前登录课程创建的课程列表
 	 *
 	 * @param courseQueryRequest
 	 * @param request
@@ -201,7 +214,7 @@ public class CourseController {
 	public BaseResponse<Page<CourseVO>> listMyCourseVOByPage(@RequestBody CourseQueryRequest courseQueryRequest,
 	                                                         HttpServletRequest request) {
 		ThrowUtils.throwIf(courseQueryRequest == null, ErrorCode.PARAMS_ERROR);
-		// 补充查询条件，只查询当前登录用户的数据
+		// 补充查询条件，只查询当前登录课程的数据
 		User loginUser = userService.getLoginUser(request);
 		courseQueryRequest.setUserId(loginUser.getId());
 		long current = courseQueryRequest.getCurrent();
@@ -215,4 +228,104 @@ public class CourseController {
 		return ResultUtils.success(courseService.getCourseVOPage(coursePage, request));
 	}
 	// endregion
+	
+	/**
+	 * 课程批量导入
+	 *
+	 * @param file    课程 Excel 文件
+	 * @param request request
+	 * @return 导入结果
+	 */
+	@PostMapping("/import")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@Transactional(rollbackFor = Exception.class)
+	public BaseResponse<Map<String, Object>> importCourseDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+		// 检查文件是否为空
+		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+		
+		// 获取文件名并检查是否为null
+		String filename = file.getOriginalFilename();
+		ThrowUtils.throwIf(filename == null, ErrorCode.PARAMS_ERROR, "文件名不能为空");
+		
+		// 检查文件格式是否为Excel格式
+		if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+			throw new RuntimeException("上传文件格式不正确");
+		}
+		
+		// 调用服务层处理课程导入
+		Map<String, Object> result = courseService.importCourse(file, request);
+		return ResultUtils.success(result);
+	}
+	
+	/**
+	 * 课程数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadCourse(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<CourseExcelVO> courseExcelVOList = courseService.list().stream().map(user -> {
+					CourseExcelVO userExcelVO = new CourseExcelVO();
+					BeanUtils.copyProperties(user, userExcelVO);
+					userExcelVO.setId(String.valueOf(user.getId()));
+					userExcelVO.setUserId(String.valueOf(user.getUserId()));
+					userExcelVO.setCreateTime(ExcelUtils.dateToString(user.getCreateTime()));
+					userExcelVO.setUpdateTime(ExcelUtils.dateToString(user.getUpdateTime()));
+					return userExcelVO;
+				})
+				.collect(Collectors.toList());
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.COURSE_EXCEL);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), CourseExcelVO.class)
+					.sheet(ExcelConstant.COURSE_EXCEL)
+					.doWrite(courseExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
+	
+	
+	/**
+	 * 课程数据下载示例数据
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download/example")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadCourseExample(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<CourseExcelExampleVO> courseExcelExampleVOList = new ArrayList<>();
+		CourseExcelExampleVO courseExcelExampleVO = new CourseExcelExampleVO();
+		courseExcelExampleVO.setCourseNumber("课程号(必填)");
+		courseExcelExampleVO.setCourseName("课程名称(必填)");
+		courseExcelExampleVOList.add(courseExcelExampleVO);
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), CourseExcelExampleVO.class)
+					.sheet(ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE)
+					.doWrite(courseExcelExampleVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
 }

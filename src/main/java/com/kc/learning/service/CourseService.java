@@ -6,8 +6,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.vo.CourseVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * 课程服务
@@ -49,4 +51,11 @@ public interface CourseService extends IService<Course> {
      * @return
      */
     Page<CourseVO> getCourseVOPage(Page<Course> coursePage, HttpServletRequest request);
+    
+    /**
+     * 导入课程信息
+     * @param file file
+     * @return {@link Map}<{@link String}, {@link Object}> }
+     */
+    Map<String, Object> importCourse(MultipartFile file, HttpServletRequest request);
 }

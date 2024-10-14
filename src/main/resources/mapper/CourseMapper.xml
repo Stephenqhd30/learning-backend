@@ -11,11 +11,11 @@
             <result property="userId" column="userId" jdbcType="BIGINT"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-            <result property="idDelete" column="idDelete" jdbcType="TINYINT"/>
+            <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,courseNumber,courseName,userId,
-        createTime,updateTime,idDelete
+        createTime,updateTime,isDelete
     </sql>
 </mapper>

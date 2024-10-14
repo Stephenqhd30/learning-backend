@@ -36,4 +36,9 @@ public interface ExcelConstant {
 	 * 用户证书信息
 	 */
 	String USER_CERTIFICATE_EXCEL = "用户证书信息";
+	
+	/**
+	 * 课程信息
+	 */
+	String COURSE_EXCEL = "课程信息";
 }

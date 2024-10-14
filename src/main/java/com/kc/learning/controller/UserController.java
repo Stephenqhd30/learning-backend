@@ -25,6 +25,7 @@ import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -337,6 +338,7 @@ public class UserController {
 	 * @return 导入结果
 	 */
 	@PostMapping("/import")
+	@Transactional(rollbackFor = Exception.class)
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public BaseResponse<Map<String, Object>> importUserDataByExcel(@RequestPart("file") MultipartFile file) {
 		// 检查文件是否为空

@@ -391,6 +391,7 @@ public class CertificateController {
 	 * @return 导入结果
 	 */
 	@PostMapping("/import")
+	@Transactional(rollbackFor = Exception.class)
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public BaseResponse<Map<String, Object>> importCertificateDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
 		// 检查文件是否为空
@@ -480,12 +481,12 @@ public class CertificateController {
 		certificateExcelExampleVO.setCertificateUrl("证书得下载地址(必填)");
 		certificateExcelExampleVOList.add(certificateExcelExampleVO);
 		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL);
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), CertificateExcelExampleVO.class)
-					.sheet(ExcelConstant.CERTIFICATE_EXCEL)
+					.sheet(ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE)
 					.doWrite(certificateExcelExampleVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
