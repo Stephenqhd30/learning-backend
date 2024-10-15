@@ -63,3 +63,18 @@ create table user_certificate
     isDelete        tinyint  default 0                 not null comment '是否删除(0-正常,1-删除)'
 )
     comment '用户证书表';
+
+create table course
+(
+    id           bigint auto_increment comment 'id'
+        primary key,
+    courseNumber int                                not null comment '课程号',
+    courseName   varchar(256)                       not null comment '课程名称',
+    userId       bigint                             not null comment '创建用户id',
+    createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete     tinyint  default 0                 not null comment '是否删除(0-未删除，1-删除)',
+    constraint course_number
+        unique (courseNumber)
+)
+    comment '课程表';
