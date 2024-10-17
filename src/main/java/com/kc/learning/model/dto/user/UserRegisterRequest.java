@@ -28,4 +28,9 @@ public class UserRegisterRequest implements Serializable {
 	 * 再次输入身份证号
 	 */
 	private String userCheckIdCard;
+	
+	/**
+	 * 学号
+	 */
+	private String userNumber;
 }

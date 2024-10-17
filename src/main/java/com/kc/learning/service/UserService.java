@@ -33,9 +33,10 @@ public interface UserService extends IService<User> {
 	 * @param userName      用户账户
 	 * @param userIdCard    身份证号
 	 * @param checkPassword 校验密码
+	 * @param userNumber    学号
 	 * @return 新用户 id
 	 */
-	long userRegister(String userName, String userIdCard, String checkPassword) throws Exception;
+	long userRegister(String userName, String userIdCard, String checkPassword, String userNumber) throws Exception;
 	
 	/**
 	 * 用户登录

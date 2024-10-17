@@ -71,10 +71,11 @@ public class UserController {
 		String userName = userRegisterRequest.getUserName();
 		String userIdCard = userRegisterRequest.getUserIdCard();
 		String userCheckIdCard = userRegisterRequest.getUserCheckIdCard();
-		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard)) {
-			return null;
+		String userNumber = userRegisterRequest.getUserNumber();
+		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard, userNumber)) {
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
 		}
-		long result = userService.userRegister(userName, userIdCard, userCheckIdCard);
+		long result = userService.userRegister(userName, userIdCard, userCheckIdCard, userNumber);
 		return ResultUtils.success(result);
 	}
 	

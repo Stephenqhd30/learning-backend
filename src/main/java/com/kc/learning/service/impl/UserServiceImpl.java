@@ -97,10 +97,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		}
 	}
 	
+	/**
+	 * 用户注册
+	 *
+	 * @param userName        用户账户
+	 * @param userIdCard      身份证号
+	 * @param userCheckIdCard 校验密码
+	 * @return long
+	 */
 	@Override
-	public long userRegister(String userName, String userIdCard, String userCheckIdCard) {
+	public long userRegister(String userName, String userIdCard, String userCheckIdCard, String userNumber) {
 		// 1. 校验
-		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard)) {
+		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard, userNumber)) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
 		}
 		ThrowUtils.throwIf(!RegexUtils.checkIdCard(userIdCard), ErrorCode.PARAMS_ERROR, "身份证号输入有误");
@@ -128,6 +136,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 			User user = new User();
 			user.setUserName(userName);
 			user.setUserIdCard(encryptIdCard);
+			user.setUserNumber(userNumber);
 			// 3. 给用户分配一个默认的头像
 			user.setUserAvatar(UserConstant.USER_AVATAR);
 			boolean saveResult = this.save(user);

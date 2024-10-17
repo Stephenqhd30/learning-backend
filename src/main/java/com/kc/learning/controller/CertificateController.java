@@ -368,16 +368,32 @@ public class CertificateController {
 				ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
 				// 判断是否已经审核
 				ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
-				Certificate app = new Certificate();
 				// 更新审核状态
 				User loginUser = userService.getLoginUser(request);
-				app.setId(id);
-				app.setReviewStatus(ReviewStatusEnum.PASS.getValue());
-				app.setReviewMessage(reviewMessage);
-				app.setReviewerId(loginUser.getId());
-				app.setReviewTime(new Date());
-				boolean result = certificateService.updateById(app);
+				Certificate certificate = new Certificate();
+				certificate.setId(id);
+				certificate.setReviewStatus(reviewStatus);
+				certificate.setReviewMessage(reviewMessage);
+				certificate.setReviewerId(loginUser.getId());
+				certificate.setReviewTime(new Date());
+				boolean result = certificateService.updateById(certificate);
 				ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+				// 如果审核通过，则关联用户证书关系
+				if (ReviewStatusEnum.PASS.getValue().equals(reviewStatus)) {
+					// 获取更新完之后的信息
+					Certificate newCertificate = certificateService.getById(id);
+					// 如果审核通过，则关联用户证书关系
+					UserCertificate userCertificate = new UserCertificate();
+					userCertificate.setUserId(newCertificate.getGainUserId());
+					userCertificate.setCertificateId(newCertificate.getId());
+					userCertificate.setGainTime(newCertificate.getCertificateYear());
+					userCertificate.setCertificateNumber(newCertificate.getCertificateNumber());
+					userCertificate.setCertificateName(newCertificate.getCertificateName());
+					userCertificate.setGainUserName(userService.getById(newCertificate.getGainUserId()).getUserName());
+					// 写入数据库
+					boolean save = userCertificateService.save(userCertificate);
+					ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
+				}
 			}
 		}
 		return ResultUtils.success(true);
