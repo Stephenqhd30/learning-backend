@@ -205,7 +205,7 @@ public class UserController {
 		// 对数据进行加密
 		if (userIdCard != null) {
 			try {
-				String decryptUserIdCard = EncryptionUtils.decrypt(userIdCard);
+				String decryptUserIdCard = EncryptionUtils.encrypt(userIdCard);
 				user.setUserIdCard(decryptUserIdCard);
 			} catch (Exception e) {
 				throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证信息有误");
