@@ -53,7 +53,7 @@ public class UserCertificateController {
 	// region 增删改查
 	
 	/**
-	 * 删除用户证书
+	 * 删除用户证书(硬删除)
 	 *
 	 * @param deleteRequest deleteRequest
 	 * @param request       request
@@ -81,8 +81,8 @@ public class UserCertificateController {
 	/**
 	 * 根据 id 获取用户证书（封装类）
 	 *
-	 * @param id
-	 * @return
+	 * @param id id
+	 * @return {@link BaseResponse<UserCertificateVO>}
 	 */
 	@GetMapping("/get/vo")
 	public BaseResponse<UserCertificateVO> getUserCertificateVOById(long id, HttpServletRequest request) {
@@ -136,9 +136,9 @@ public class UserCertificateController {
 	/**
 	 * 分页获取当前登录用户创建的用户证书列表
 	 *
-	 * @param userCertificateQueryRequest
-	 * @param request
-	 * @return
+	 * @param userCertificateQueryRequest userCertificateQueryRequest
+	 * @param request                     request
+	 * @return {@link BaseResponse <{@link Page <{@link UserCertificateVO}>}>}
 	 */
 	@PostMapping("/my/list/page/vo")
 	public BaseResponse<Page<UserCertificateVO>> listMyUserCertificateVOByPage(@RequestBody UserCertificateQueryRequest userCertificateQueryRequest,

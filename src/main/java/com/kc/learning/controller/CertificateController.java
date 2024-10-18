@@ -112,7 +112,7 @@ public class CertificateController {
 		Certificate oldCertificate = certificateService.getById(id);
 		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
 		// 仅本人或管理员可删除
-		if (!oldCertificate.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
+		if (!oldCertificate.getUserId().equals(user.getId()) || !userService.isAdmin(request)) {
 			throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
 		}
 		LambdaQueryWrapper<UserCertificate> queryWrapper = Wrappers.lambdaQuery(UserCertificate.class)
@@ -167,10 +167,10 @@ public class CertificateController {
 	 */
 	@GetMapping("/get/vo")
 	public BaseResponse<CertificateVO> getCertificateVOById(long id, HttpServletRequest request) {
-		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR, "id有误");
 		// 查询数据库
 		Certificate certificate = certificateService.getById(id);
-		ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR);
+		ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
 		// 获取封装类
 		return ResultUtils.success(certificateService.getCertificateVO(certificate, request));
 	}
@@ -277,8 +277,9 @@ public class CertificateController {
 		// 补充查询条件，只查询当前登录用户的数据
 		User loginUser = userService.getLoginUser(request);
 		certificateQueryRequest.setGainUserId(loginUser.getId());
-		// 补充查询条件，只查询审核通过的证书
-		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+		// 补充查询条件，如果未传入审核状态默认查询已经过审的证书信息
+		certificateQueryRequest.setReviewStatus(Optional.ofNullable(certificateQueryRequest.getReviewStatus())
+				.orElse(ReviewStatusEnum.PASS.getValue()));
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
