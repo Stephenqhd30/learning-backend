@@ -1,4 +1,4 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.user;
 
 import com.kc.learning.model.entity.User;
 import lombok.Data;

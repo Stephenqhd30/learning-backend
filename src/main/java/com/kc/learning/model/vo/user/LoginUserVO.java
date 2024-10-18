@@ -1,4 +1,4 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.user;
 
 import lombok.Data;
 

@@ -6,7 +6,7 @@ spring:
   # 默认 dev 环境
   config:
     activate:
-      on-profile: dev
+      on-profile: default
   # 支持 swagger3
   mvc:
     pathmatch:

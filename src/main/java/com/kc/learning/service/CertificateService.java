@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
-import com.kc.learning.model.vo.CertificateForUserVO;
-import com.kc.learning.model.vo.CertificateVO;
+import com.kc.learning.model.vo.certificate.CertificateForUserVO;
+import com.kc.learning.model.vo.certificate.CertificateVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;

@@ -1,13 +1,12 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.course;
 
-import cn.hutool.json.JSONUtil;
 import com.kc.learning.model.entity.Course;
+import com.kc.learning.model.vo.user.UserVO;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * 课程视图

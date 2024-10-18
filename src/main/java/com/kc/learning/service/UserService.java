@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.user.UserQueryRequest;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.vo.LoginUserVO;
-import com.kc.learning.model.vo.UserVO;
+import com.kc.learning.model.vo.user.LoginUserVO;
+import com.kc.learning.model.vo.user.UserVO;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;

@@ -1,6 +1,8 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.userCertificate;
 
 import com.kc.learning.model.entity.UserCertificate;
+import com.kc.learning.model.vo.certificate.CertificateVO;
+import com.kc.learning.model.vo.user.UserVO;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 

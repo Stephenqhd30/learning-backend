@@ -1,4 +1,4 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.userCertificate;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;

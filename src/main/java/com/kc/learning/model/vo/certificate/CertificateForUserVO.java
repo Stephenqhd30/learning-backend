@@ -1,4 +1,4 @@
-package com.kc.learning.model.vo;
+package com.kc.learning.model.vo.certificate;
 
 import com.kc.learning.model.entity.Certificate;
 import lombok.Data;
