@@ -13,13 +13,12 @@
 		<result property="certificateName" column="certificateName" jdbcType="VARCHAR"/>
 		<result property="gainUserName" column="gainUserName" jdbcType="VARCHAR"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-		<result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
 		id
 		,certificateName,gainUserName
 		,userId,certificateId,certificateNumber,
-        gainTime,createTime,updateTime
+        gainTime,createTime
 	</sql>
 </mapper>

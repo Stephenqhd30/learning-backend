@@ -39,11 +39,6 @@ public class UserCourseVO implements Serializable {
 	private Date createTime;
 	
 	/**
-	 * 更新时间
-	 */
-	private Date updateTime;
-	
-	/**
 	 * 用户信息
 	 */
 	private UserVO userVO;
