@@ -58,11 +58,6 @@ public class UserCertificateVO implements Serializable {
 	private Date createTime;
 	
 	/**
-	 * 更新时间
-	 */
-	private Date updateTime;
-	
-	/**
 	 * 创建用户信息
 	 */
 	private UserVO userVO;

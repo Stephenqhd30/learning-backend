@@ -3,6 +3,7 @@ package com.kc.learning.controller;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.ObjectUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
@@ -20,13 +21,16 @@ import com.kc.learning.model.dto.certificate.CertificateUpdateRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
+import com.kc.learning.model.entity.UserCourse;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.certificate.*;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
+import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
+import com.kc.learning.utils.EncryptionUtils;
 import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
@@ -42,6 +46,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.bouncycastle.asn1.isismtt.ocsp.RequestedCertificate.certificate;
 
 /**
  * 证书接口
@@ -61,6 +67,9 @@ public class CertificateController {
 	
 	@Resource
 	private UserService userService;
+	
+	@Resource
+	private UserCourseService userCourseService;
 	
 	// region 增删改查
 	
@@ -173,6 +182,34 @@ public class CertificateController {
 		return ResultUtils.success(certificateService.getCertificateVO(certificate, request));
 	}
 	
+	
+	/**
+	 * 获取打印证书（封装类）
+	 *
+	 * @param certificatePrintRequest certificatePrintRequest
+	 * @param request                 request
+	 * @return BaseResponse<CertificateVO>
+	 */
+	@PostMapping("/get/print/vo")
+	public BaseResponse<CertificatePrintVO> getCertificatePrintVO(@RequestBody CertificatePrintRequest certificatePrintRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(certificatePrintRequest == null, ErrorCode.PARAMS_ERROR, "请求信息不能为空");
+		// 校验信息是否存在
+		Long userCourseId = certificatePrintRequest.getUserCourseId();
+		Long certificateId = certificatePrintRequest.getCertificateId();
+		UserCourse userCourse = userCourseService.getById(userCourseId);
+		ThrowUtils.throwIf(userCourse == null, ErrorCode.NOT_FOUND_ERROR, "用户课程信息为空");
+		Certificate certificate = certificateService.getById(certificateId);
+		ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
+		// 查询数据库
+		CertificatePrintVO certificatePrintVO = certificateService.getCertificatePrintVO(certificatePrintRequest);
+		ThrowUtils.throwIf(certificatePrintVO == null, ErrorCode.NOT_FOUND_ERROR, "打印证书信息为空");
+		// 解密身份证号
+		certificatePrintVO.setUserIdCard(EncryptionUtils.decrypt(certificatePrintVO.getUserIdCard()));
+		// 获取封装类
+		return ResultUtils.success(certificatePrintVO);
+	}
+	
+	
 	/**
 	 * 分页获取证书列表（仅管理员可用）
 	 *
@@ -211,29 +248,6 @@ public class CertificateController {
 		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
 	}
 	
-	/**
-	 * 分页获取打印证书列表（封装类）
-	 *
-	 * @param certificatePrintRequest certificatePrintRequest
-	 * @param request                 request
-	 * @return BaseResponse<Page < CertificatePrintVO>>
-	 */
-	@PostMapping("/list/page/print/vo")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public BaseResponse<Page<CertificatePrintVO>> listPrintCertificateVOByPage(@RequestBody CertificatePrintRequest certificatePrintRequest,
-	                                                                           HttpServletRequest request) {
-		int current = certificatePrintRequest.getCurrent();
-		long size = certificatePrintRequest.getPageSize();
-		Long userCourseId = certificatePrintRequest.getUserCourseId();
-		Long certificateId = certificatePrintRequest.getCertificateId();
-		Date acquisitionDate = certificatePrintRequest.getAcquisitionTime();
-		Date finishDate = certificatePrintRequest.getFinishTime();
-		// 查询数据库
-		
-		// 获取封装类
-		return null;
-	}
-	
 	
 	/**
 	 * 分页获取证书列表（封装类）
@@ -257,7 +271,6 @@ public class CertificateController {
 		// 获取封装类
 		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
 	}
-	
 	
 	
 	/**
@@ -528,6 +541,49 @@ public class CertificateController {
 			EasyExcel.write(response.getOutputStream(), CertificateExcelExampleVO.class)
 					.sheet(ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE)
 					.doWrite(certificateExcelExampleVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
+	
+	/**
+	 * 打印证书数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@PostMapping("/download/print/vo")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadCertificatePrintVO(@RequestBody CertificatePrintRequest certificatePrintRequest, HttpServletResponse response) throws IOException {
+		ThrowUtils.throwIf(certificatePrintRequest == null, ErrorCode.PARAMS_ERROR, "请求信息不能为空");
+		// 校验信息是否存在
+		Long userCourseId = certificatePrintRequest.getUserCourseId();
+		Long certificateId = certificatePrintRequest.getCertificateId();
+		UserCourse userCourse = userCourseService.getById(userCourseId);
+		ThrowUtils.throwIf(userCourse == null, ErrorCode.NOT_FOUND_ERROR, "用户课程信息为空");
+		Certificate certificate = certificateService.getById(certificateId);
+		ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
+		// 查询数据库
+		CertificatePrintVO certificatePrintVO = certificateService.getCertificatePrintVO(certificatePrintRequest);
+		ThrowUtils.throwIf(certificatePrintVO == null, ErrorCode.NOT_FOUND_ERROR, "打印证书信息为空");
+		// 解密身份证号
+		certificatePrintVO.setUserIdCard(EncryptionUtils.decrypt(certificatePrintVO.getUserIdCard()));
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE__PRINT_EXCEL);
+		
+		// 将单个对象转为集合
+		List<CertificatePrintVO> certificatePrintVOList = Collections.singletonList(certificatePrintVO);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), CertificatePrintVO.class)
+					.sheet(ExcelConstant.CERTIFICATE__PRINT_EXCEL)
+					.doWrite(certificatePrintVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
 			log.error("导出失败:{}", e.getMessage());

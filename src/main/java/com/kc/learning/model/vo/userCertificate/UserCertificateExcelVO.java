@@ -71,11 +71,4 @@ public class UserCertificateExcelVO implements Serializable {
 	@ExcelProperty(value = "创建时间")
 	@ColumnWidth(20)
 	private String createTime;
-	
-	/**
-	 * 更新时间
-	 */
-	@ExcelProperty(value = "更新时间")
-	@ColumnWidth(20)
-	private String updateTime;
 }

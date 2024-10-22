@@ -28,6 +28,11 @@ public interface ExcelConstant {
 	String CERTIFICATE_EXCEL = "证书信息";
 	
 	/**
+	 * 打印证书信息
+	 */
+	String CERTIFICATE__PRINT_EXCEL = "打印证书信息";
+	
+	/**
 	 * 证书信息
 	 */
 	String CERTIFICATE_EXCEL_EXAMPLE = "导入证书信息示例数据";

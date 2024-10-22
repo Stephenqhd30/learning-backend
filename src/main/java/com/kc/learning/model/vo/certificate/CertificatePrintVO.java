@@ -31,11 +31,11 @@ public class CertificatePrintVO implements Serializable {
 	private String userIdCard;
 	
 	/**
-	 * 性别
+	 * 性别(0-男, 1-女)
 	 */
 	@ExcelProperty("性别")
 	@ColumnWidth(20)
-	private String userGender;
+	private Integer userGender;
 	
 	/**
 	 * 证书编号
@@ -52,9 +52,9 @@ public class CertificatePrintVO implements Serializable {
 	private String courseName;
 	
 	/**
-	 * 证书获得时间
+	 * 开课时间
 	 */
-	@ExcelProperty("证书获得时间")
+	@ExcelProperty("开课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
 	@ColumnWidth(30)
 	private Date acquisitionTime;
@@ -65,5 +65,5 @@ public class CertificatePrintVO implements Serializable {
 	@ExcelProperty("结课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
 	@ColumnWidth(30)
-	private String finishTime;
+	private Date finishTime;
 }

@@ -180,7 +180,6 @@ public class UserCertificateController {
 					userCertificateExcelVO.setUserId(String.valueOf(userCertificate.getUserId()));
 					userCertificateExcelVO.setCertificateId(String.valueOf(userCertificate.getCertificateId()));
 					userCertificateExcelVO.setCreateTime(ExcelUtils.dateToString(userCertificate.getCreateTime()));
-					userCertificateExcelVO.setUpdateTime(ExcelUtils.dateToString(userCertificate.getUpdateTime()));
 					
 					return userCertificateExcelVO;
 				})

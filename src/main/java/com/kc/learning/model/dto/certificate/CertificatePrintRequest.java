@@ -25,15 +25,5 @@ public class CertificatePrintRequest extends PageRequest implements Serializable
 	 */
 	private Long certificateId;
 	
-	/**
-	 * 证书获得时间
-	 */
-	private Date acquisitionTime;
-	
-	/**
-	 * 结课时间
-	 */
-	private Date finishTime;
-	
 	private static final long serialVersionUID = 1L;
 }

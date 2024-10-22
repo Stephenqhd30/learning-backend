@@ -3,9 +3,11 @@ package com.kc.learning.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.kc.learning.model.dto.certificate.CertificatePrintRequest;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
+import com.kc.learning.model.vo.certificate.CertificatePrintVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,6 +47,14 @@ public interface CertificateService extends IService<Certificate> {
 	CertificateVO getCertificateVO(Certificate certificate, HttpServletRequest request);
 	
 	/**
+	 * 获取打印证书封装
+	 *
+	 * @param certificatePrintRequest certificatePrintRequest
+	 * @return {@link CertificatePrintVO}
+	 */
+	CertificatePrintVO getCertificatePrintVO(CertificatePrintRequest certificatePrintRequest);
+	
+	/**
 	 * 分页获取证书封装
 	 *
 	 * @param certificatePage certificatePage
@@ -52,6 +62,14 @@ public interface CertificateService extends IService<Certificate> {
 	 * @return Page<CertificateVO>
 	 */
 	Page<CertificateVO> getCertificateVOPage(Page<Certificate> certificatePage, HttpServletRequest request);
+	
+	/**
+	 * 分页获取给用户展示的证书视图
+	 *
+	 * @param certificatePrintRequest certificatePrintRequest
+	 * @return {@link  Page<CertificatePrintVO>}
+	 */
+	Page<CertificatePrintVO> getCertificatePrintVOByPage(CertificatePrintRequest certificatePrintRequest);
 	
 	/**
 	 * 分页获取给用户展示的证书视图
