@@ -5,7 +5,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Date;
 
 /**
  * 查询课程请求
@@ -30,6 +30,16 @@ public class CourseQueryRequest extends PageRequest implements Serializable {
      * 课程号
      */
     private Integer courseNumber;
+    
+    /**
+     * 开课时间
+     */
+    private Date acquisitionTime;
+    
+    /**
+     * 结课时间
+     */
+    private Date finishTime;
     
     /**
      * 课程名称

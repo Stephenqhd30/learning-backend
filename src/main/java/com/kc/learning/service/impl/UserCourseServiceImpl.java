@@ -6,26 +6,28 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
-import com.kc.learning.model.entity.Course;
-import com.kc.learning.model.vo.course.CourseVO;
-import com.kc.learning.service.CourseService;
-import com.kc.learning.utils.ThrowUtils;
 import com.kc.learning.mapper.UserCourseMapper;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
-import com.kc.learning.model.entity.UserCourse;
+import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.vo.userCourse.UserCourseVO;
+import com.kc.learning.model.entity.UserCourse;
+import com.kc.learning.model.vo.course.CourseVO;
 import com.kc.learning.model.vo.user.UserVO;
+import com.kc.learning.model.vo.userCourse.UserCourseVO;
+import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.SqlUtils;
+import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**

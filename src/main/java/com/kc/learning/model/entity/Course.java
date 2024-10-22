@@ -2,12 +2,12 @@ package com.kc.learning.model.entity;
 
 import com.alibaba.excel.annotation.ExcelIgnore;
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.format.DateTimeFormat;
 import com.baomidou.mybatisplus.annotation.*;
+import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
-
-import lombok.Data;
 
 /**
  * 课程表
@@ -42,6 +42,20 @@ public class Course implements Serializable {
 	 */
 	@ExcelIgnore
 	private Long userId;
+	
+	/**
+	 * 开课时间
+	 */
+	@ExcelProperty(value = "开课时间")
+	@DateTimeFormat("yyyy年MM月dd日")
+	private Date acquisitionTime;
+	
+	/**
+	 * 结课时间
+	 */
+	@ExcelProperty(value = "结课时间")
+	@DateTimeFormat("yyyy年MM月dd日")
+	private Date finishTime;
 	
 	/**
 	 * 创建时间

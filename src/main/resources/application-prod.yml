@@ -14,18 +14,18 @@ spring:
   # 数据库配置
   # todo 需替换配置
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://1.13.163.104:3306/learning
-    username: learning
-    password: Popcornqhd30.
+    driver-class-name: ${prod.learning.mysql.datasource.class}
+    url: ${prod.learning.mysql.datasource.url}
+    username: ${prod.learning.mysql.datasource.username}
+    password: ${prod.learning.mysql.datasource.password}
   # Redis 配置
   # todo 需替换配置
   redis:
-    database: 0
-    host: 1.13.163.104
-    port: 6379
-    timeout: 5000
-    password: Popcornqhd30.
+    database: ${prod.learning.redis.database}
+    host: ${prod.learning.redis.host}
+    port: ${prod.learning.redis.port}
+    timeout: ${prod.learning.redis.timeout}
+    password: ${prod.learning.redis.password}
   # 文件上传
   servlet:
     multipart:
@@ -56,7 +56,7 @@ mybatis-plus:
 # 对象存储
 cos:
   client:
-    accessKey: ${learning.cos.client.accessKey}
-    secretKey: ${learning.cos.client.secretKey}
-    region: ${learning.cos.client.region}
-    bucket: ${learning.cos.client.bucket}
+    accessKey: ${prod.learning.cos.client.accessKey}
+    secretKey: ${prod.learning.cos.client.secretKey}
+    region: ${prod.learning.cos.client.region}
+    bucket: ${prod.learning.cos.client.bucket}

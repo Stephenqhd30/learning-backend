@@ -19,6 +19,7 @@ import java.util.List;
 
 /**
  * 导入用户 excel文件监听器
+ *
  * @author: stephen qiu
  * @create: 2024-09-26 10:36
  **/
@@ -79,7 +80,7 @@ public class CourseExcelListener extends AnalysisEventListener<Course> {
 	 * 当读取到一行数据时，会调用这个方法，并将读取到的数据以及上下文信息作为参数传入
 	 * 可以在这个方法中对读取到的数据进行处理和操作，处理数据时要注意异常错误，保证读取数据的稳定性
 	 *
-	 * @param course    course
+	 * @param course  course
 	 * @param context context
 	 */
 	@Override
@@ -92,6 +93,8 @@ public class CourseExcelListener extends AnalysisEventListener<Course> {
 			newCourse.setCourseNumber(course.getCourseNumber());
 			newCourse.setCourseName(course.getCourseName());
 			newCourse.setUserId(userService.getLoginUser(request).getId());
+			newCourse.setAcquisitionTime(course.getAcquisitionTime());
+			newCourse.setFinishTime(course.getFinishTime());
 			newCourse.setCreateTime(new Date());
 			newCourse.setUpdateTime(new Date());
 			newCourse.setIsDelete(0);

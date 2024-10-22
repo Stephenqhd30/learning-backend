@@ -14,6 +14,7 @@ import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.certificate.CertificateAddRequest;
+import com.kc.learning.model.dto.certificate.CertificatePrintRequest;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.dto.certificate.CertificateUpdateRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -22,10 +23,7 @@ import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
-import com.kc.learning.model.vo.certificate.CertificateExcelExampleVO;
-import com.kc.learning.model.vo.certificate.CertificateExcelVO;
-import com.kc.learning.model.vo.certificate.CertificateForUserVO;
-import com.kc.learning.model.vo.certificate.CertificateVO;
+import com.kc.learning.model.vo.certificate.*;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserService;
@@ -213,6 +211,29 @@ public class CertificateController {
 		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
 	}
 	
+	/**
+	 * 分页获取打印证书列表（封装类）
+	 *
+	 * @param certificatePrintRequest certificatePrintRequest
+	 * @param request                 request
+	 * @return BaseResponse<Page < CertificatePrintVO>>
+	 */
+	@PostMapping("/list/page/print/vo")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Page<CertificatePrintVO>> listPrintCertificateVOByPage(@RequestBody CertificatePrintRequest certificatePrintRequest,
+	                                                                           HttpServletRequest request) {
+		int current = certificatePrintRequest.getCurrent();
+		long size = certificatePrintRequest.getPageSize();
+		Long userCourseId = certificatePrintRequest.getUserCourseId();
+		Long certificateId = certificatePrintRequest.getCertificateId();
+		Date acquisitionDate = certificatePrintRequest.getAcquisitionTime();
+		Date finishDate = certificatePrintRequest.getFinishTime();
+		// 查询数据库
+		
+		// 获取封装类
+		return null;
+	}
+	
 	
 	/**
 	 * 分页获取证书列表（封装类）
@@ -236,6 +257,8 @@ public class CertificateController {
 		// 获取封装类
 		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
 	}
+	
+	
 	
 	/**
 	 * 分页获取当前登录用户创建的证书列表

@@ -89,9 +89,9 @@ public class CourseController {
 	/**
 	 * 删除课程
 	 *
-	 * @param deleteRequest
-	 * @param request
-	 * @return
+	 * @param deleteRequest deleteRequest
+	 * @param request       request
+	 * @return {@link BaseResponse<Boolean>}
 	 */
 	@PostMapping("/delete")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -117,8 +117,8 @@ public class CourseController {
 	/**
 	 * 更新课程（仅管理员可用）
 	 *
-	 * @param courseUpdateRequest
-	 * @return
+	 * @param courseUpdateRequest courseUpdateRequest
+	 * @return {@link BaseResponse<Boolean>}
 	 */
 	@PostMapping("/update")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -148,8 +148,8 @@ public class CourseController {
 	/**
 	 * 根据 id 获取课程（封装类）
 	 *
-	 * @param id
-	 * @return
+	 * @param id id
+	 * @return {@link BaseResponse<CourseVO>}
 	 */
 	@GetMapping("/get/vo")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -165,8 +165,8 @@ public class CourseController {
 	/**
 	 * 分页获取课程列表（仅管理员可用）
 	 *
-	 * @param courseQueryRequest
-	 * @return
+	 * @param courseQueryRequest courseQueryRequest
+	 * @return {@link BaseResponse<Page<Course>>}
 	 */
 	@PostMapping("/list/page")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -182,9 +182,9 @@ public class CourseController {
 	/**
 	 * 分页获取课程列表（封装类）
 	 *
-	 * @param courseQueryRequest
-	 * @param request
-	 * @return
+	 * @param courseQueryRequest courseQueryRequest
+	 * @param request            request
+	 * @return {@link BaseResponse {@link Page} {@link CourseVO }}
 	 */
 	@PostMapping("/list/page/vo")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -204,9 +204,9 @@ public class CourseController {
 	/**
 	 * 分页获取当前登录课程创建的课程列表
 	 *
-	 * @param courseQueryRequest
-	 * @param request
-	 * @return
+	 * @param courseQueryRequest courseQueryRequest
+	 * @param request            request
+	 * @return {@link BaseResponse {@link Page} {@link CourseVO }}
 	 */
 	@PostMapping("/my/list/page/vo")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -269,13 +269,15 @@ public class CourseController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadCourse(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<CourseExcelVO> courseExcelVOList = courseService.list().stream().map(user -> {
+		List<CourseExcelVO> courseExcelVOList = courseService.list().stream().map(course -> {
 					CourseExcelVO userExcelVO = new CourseExcelVO();
-					BeanUtils.copyProperties(user, userExcelVO);
-					userExcelVO.setId(String.valueOf(user.getId()));
-					userExcelVO.setUserId(String.valueOf(user.getUserId()));
-					userExcelVO.setCreateTime(ExcelUtils.dateToString(user.getCreateTime()));
-					userExcelVO.setUpdateTime(ExcelUtils.dateToString(user.getUpdateTime()));
+					BeanUtils.copyProperties(course, userExcelVO);
+					userExcelVO.setId(String.valueOf(course.getId()));
+					userExcelVO.setUserId(String.valueOf(course.getUserId()));
+					userExcelVO.setAcquisitionTime(ExcelUtils.dateToString(course.getAcquisitionTime()));
+					userExcelVO.setFinishTime(ExcelUtils.dateToString(course.getFinishTime()));
+					userExcelVO.setCreateTime(ExcelUtils.dateToString(course.getCreateTime()));
+					userExcelVO.setUpdateTime(ExcelUtils.dateToString(course.getUpdateTime()));
 					return userExcelVO;
 				})
 				.collect(Collectors.toList());
@@ -312,6 +314,8 @@ public class CourseController {
 		CourseExcelExampleVO courseExcelExampleVO = new CourseExcelExampleVO();
 		courseExcelExampleVO.setCourseNumber("课程号(必填)");
 		courseExcelExampleVO.setCourseName("课程名称(必填)");
+		courseExcelExampleVO.setAcquisitionTime("开课时间(必填)");
+		courseExcelExampleVO.setFinishTime("开课时间(结课时间)");
 		courseExcelExampleVOList.add(courseExcelExampleVO);
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE);

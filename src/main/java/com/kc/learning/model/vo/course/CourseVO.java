@@ -38,6 +38,16 @@ public class CourseVO implements Serializable {
 	private Long userId;
 	
 	/**
+	 * 开课时间
+	 */
+	private Date acquisitionTime;
+	
+	/**
+	 * 结课时间
+	 */
+	private Date finishTime;
+	
+	/**
 	 * 创建时间
 	 */
 	private Date createTime;

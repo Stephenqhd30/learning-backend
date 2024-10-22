@@ -9,13 +9,17 @@
             <result property="courseNumber" column="courseNumber" jdbcType="INTEGER"/>
             <result property="courseName" column="courseName" jdbcType="VARCHAR"/>
             <result property="userId" column="userId" jdbcType="BIGINT"/>
+            <result property="acquisitionTime" column="acquisitionTime" jdbcType="TIMESTAMP"/>
+            <result property="finishTime" column="finishTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,courseNumber,courseName,userId,
+	    id
+	    ,courseNumber,courseName,userId,
+        acquisitionTime,finishTime,
         createTime,updateTime,isDelete
     </sql>
 </mapper>

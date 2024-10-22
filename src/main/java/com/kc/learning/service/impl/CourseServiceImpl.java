@@ -10,7 +10,6 @@ import com.kc.learning.aop.CourseExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.exception.BusinessException;
-import com.kc.learning.utils.ThrowUtils;
 import com.kc.learning.mapper.CourseMapper;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.entity.Course;
@@ -20,6 +19,7 @@ import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.SqlUtils;
+import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,17 +56,29 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		// todo 从对象中取值
 		Integer courseNumber = course.getCourseNumber();
 		String courseName = course.getCourseName();
+		Date acquisitionTime = course.getAcquisitionTime();
+		Date finishTime = course.getFinishTime();
+		
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(courseNumber), ErrorCode.PARAMS_ERROR, "课程号不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(courseName), ErrorCode.PARAMS_ERROR, "课程名不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(acquisitionTime), ErrorCode.PARAMS_ERROR, "开课时间不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(finishTime), ErrorCode.PARAMS_ERROR, "结课时间不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
+		if (ObjectUtils.isNotEmpty(courseNumber)) {
+			ThrowUtils.throwIf(courseNumber <= 0, ErrorCode.PARAMS_ERROR, "课程号必须为正整数");
+		}
 		if (StringUtils.isNotBlank(courseName)) {
 			ThrowUtils.throwIf(courseName.length() > 256, ErrorCode.PARAMS_ERROR, "课程名称过长");
 		}
+		if (ObjectUtils.isNotEmpty(acquisitionTime) && ObjectUtils.isNotEmpty(finishTime)) {
+			ThrowUtils.throwIf(finishTime.before(acquisitionTime), ErrorCode.PARAMS_ERROR, "完成时间必须晚于获取时间");
+		}
+		
 	}
 	
 	/**
@@ -86,12 +98,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		Long notId = courseQueryRequest.getNotId();
 		Integer courseNumber = courseQueryRequest.getCourseNumber();
 		String courseName = courseQueryRequest.getCourseName();
+		Date acquisitionTime = courseQueryRequest.getAcquisitionTime();
+		Date finishTime = courseQueryRequest.getFinishTime();
 		Long userId = courseQueryRequest.getUserId();
 		String sortField = courseQueryRequest.getSortField();
 		String sortOrder = courseQueryRequest.getSortOrder();
 		// todo 补充需要的查询条件
 		// 模糊查询
 		queryWrapper.like(StringUtils.isNotBlank(courseName), "courseName", courseName);
+		queryWrapper.ne(ObjectUtils.isNotEmpty(acquisitionTime), "acquisitionTime", acquisitionTime);
+		queryWrapper.ne(ObjectUtils.isNotEmpty(finishTime), "finishTime", finishTime);
 		// 精确查询
 		queryWrapper.ne(ObjectUtils.isNotEmpty(notId), "id", notId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
@@ -115,7 +131,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 	public CourseVO getCourseVO(Course course, HttpServletRequest request) {
 		// 对象转封装类
 		CourseVO courseVO = CourseVO.objToVo(course);
-		
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
 		// region 可选
 		// 1. 关联查询用户信息
@@ -146,10 +161,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 			return courseVOPage;
 		}
 		// 对象列表 => 封装对象列表
-		List<CourseVO> courseVOList = courseList.stream().map(course -> {
-			return CourseVO.objToVo(course);
-		}).collect(Collectors.toList());
-		
+		List<CourseVO> courseVOList = courseList.stream().map(CourseVO::objToVo).collect(Collectors.toList());
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
 		// region 可选
 		// 1. 关联查询用户信息

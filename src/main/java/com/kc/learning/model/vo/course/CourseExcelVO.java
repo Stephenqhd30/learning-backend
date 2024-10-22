@@ -1,6 +1,7 @@
 package com.kc.learning.model.vo.course;
 
 import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.format.DateTimeFormat;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.Data;
 
@@ -19,7 +20,7 @@ public class CourseExcelVO implements Serializable {
 	 * id
 	 */
 	@ExcelProperty(value = "id")
-	@ColumnWidth(30)
+	@ColumnWidth(40)
 	private String id;
 	
 	/**
@@ -33,27 +34,45 @@ public class CourseExcelVO implements Serializable {
 	 * 课程名称
 	 */
 	@ExcelProperty(value = "课程名称")
-	@ColumnWidth(30)
+	@ColumnWidth(40)
 	private String courseName;
 	
 	/**
 	 * 创建用户id
 	 */
 	@ExcelProperty(value = "创建用户id")
-	@ColumnWidth(30)
+	@ColumnWidth(40)
 	private String userId;
+	
+	/**
+	 * 开课时间
+	 */
+	@ExcelProperty(value = "开课时间")
+	@ColumnWidth(40)
+	@DateTimeFormat("yyyy年MM月dd日")
+	private String acquisitionTime;
+	
+	/**
+	 * 结课时间
+	 */
+	@ExcelProperty(value = "结课时间")
+	@ColumnWidth(40)
+	@DateTimeFormat("yyyy年MM月dd日")
+	private String finishTime;
 	
 	/**
 	 * 创建时间
 	 */
 	@ExcelProperty(value = "创建时间")
-	@ColumnWidth(20)
+	@ColumnWidth(40)
+	@DateTimeFormat("yyyy年MM月dd日")
 	private String createTime;
 	
 	/**
 	 * 更新时间
 	 */
 	@ExcelProperty(value = "更新时间")
-	@ColumnWidth(30)
+	@ColumnWidth(40)
+	@DateTimeFormat("yyyy年MM月dd日")
 	private String updateTime;
 }

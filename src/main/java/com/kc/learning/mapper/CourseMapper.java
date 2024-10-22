@@ -1,7 +1,7 @@
 package com.kc.learning.mapper;
 
-import com.kc.learning.model.entity.Course;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.kc.learning.model.entity.Course;
 
 /**
 * @author stephen qiu
