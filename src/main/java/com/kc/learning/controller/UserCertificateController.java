@@ -47,9 +47,6 @@ public class UserCertificateController {
 	@Resource
 	private UserService userService;
 	
-	@Resource
-	private CertificateService certificateService;
-	
 	// region 增删改查
 	
 	/**

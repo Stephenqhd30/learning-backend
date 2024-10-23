@@ -1,6 +1,8 @@
 package com.kc.learning.controller;
 
 import com.alibaba.excel.EasyExcel;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
@@ -68,9 +70,12 @@ public class UserCourseController {
 		} catch (Exception e) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, e.getMessage());
 		}
-		// todo 填充默认值
-		User loginUser = userService.getLoginUser(request);
-		userCourse.setUserId(loginUser.getId());
+		// 避免重复添加信息
+		LambdaQueryWrapper<UserCourse> userCourseLambdaQueryWrapper = Wrappers.lambdaQuery(UserCourse.class)
+				.eq(UserCourse::getUserId, userCourseAddRequest.getUserId())
+				.eq(UserCourse::getCourseId, userCourseAddRequest.getCourseId());
+		UserCourse oldUserCourse = userCourseService.getOne(userCourseLambdaQueryWrapper);
+		ThrowUtils.throwIf(oldUserCourse != null, ErrorCode.PARAMS_ERROR, "用户已经加入课程");
 		// 写入数据库
 		boolean result = userCourseService.save(userCourse);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
