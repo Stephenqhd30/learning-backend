@@ -187,7 +187,7 @@ public class LogPrintCertificateController {
 	// endregion
 	
 	/**
-	 * 证书数据导出
+	 * 打印证书数据导出
 	 * 文件下载（失败了会返回一个有部分数据的Excel）
 	 * 1. 创建excel对应的实体对象
 	 * 2. 设置返回的 参数
@@ -197,7 +197,7 @@ public class LogPrintCertificateController {
 	 */
 	@GetMapping("/download")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public void downloadCertificate(HttpServletResponse response) throws IOException {
+	public void downloadLogPrintCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<LogPrintCertificateExcelVO> logPrintCertificateExcelVOList = logPrintCertificateService.list().stream().map(logPrintCertificate -> {
 					LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
