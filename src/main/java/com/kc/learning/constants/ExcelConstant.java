@@ -46,4 +46,9 @@ public interface ExcelConstant {
 	 * 课程信息
 	 */
 	String COURSE_EXCEL = "课程信息";
+	
+	/**
+	 * 课程信息
+	 */
+	String USER_COURSE_EXCEL = "用户课程信息";
 }

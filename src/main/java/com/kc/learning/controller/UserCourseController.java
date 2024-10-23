@@ -1,19 +1,23 @@
 package com.kc.learning.controller;
 
+import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCourse;
+import com.kc.learning.model.vo.userCourse.UserCourseExcelVO;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;
 import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
+import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +26,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户课程接口
@@ -46,7 +54,7 @@ public class UserCourseController {
 	 *
 	 * @param userCourseAddRequest userCourseAddRequest
 	 * @param request              request
-	 * @return {@link BaseResponse<Long>}
+	 * @return {@link BaseResponse <{@link Long}>}
 	 */
 	@PostMapping("/add")
 	public BaseResponse<Long> addUserCourse(@RequestBody UserCourseAddRequest userCourseAddRequest, HttpServletRequest request) {
@@ -74,9 +82,9 @@ public class UserCourseController {
 	/**
 	 * 删除用户课程
 	 *
-	 * @param deleteRequest
-	 * @param request
-	 * @return
+	 * @param deleteRequest deleteRequest
+	 * @param request       request
+	 * @return {@link BaseResponse <{@link Boolean}>}
 	 */
 	@PostMapping("/delete")
 	public BaseResponse<Boolean> deleteUserCourse(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
@@ -102,8 +110,8 @@ public class UserCourseController {
 	/**
 	 * 根据 id 获取用户课程（封装类）
 	 *
-	 * @param id
-	 * @return
+	 * @param id id
+	 * @return {@link BaseResponse <{@link UserCourseVO}>}
 	 */
 	@GetMapping("/get/vo")
 	public BaseResponse<UserCourseVO> getUserCourseVOById(long id, HttpServletRequest request) {
@@ -118,8 +126,8 @@ public class UserCourseController {
 	/**
 	 * 分页获取用户课程列表（仅管理员可用）
 	 *
-	 * @param userCourseQueryRequest
-	 * @return
+	 * @param userCourseQueryRequest userCourseQueryRequest
+	 * @return {@link BaseResponse <{@link Page <{@link UserCourse}>}>}
 	 */
 	@PostMapping("/list/page")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -135,9 +143,9 @@ public class UserCourseController {
 	/**
 	 * 分页获取用户课程列表（封装类）
 	 *
-	 * @param userCourseQueryRequest
-	 * @param request
-	 * @return
+	 * @param userCourseQueryRequest userCourseQueryRequest
+	 * @param request                request
+	 * @return {@link BaseResponse <{@link Page <{@link UserCourseVO}>}>}
 	 */
 	@PostMapping("/list/page/vo")
 	public BaseResponse<Page<UserCourseVO>> listUserCourseVOByPage(@RequestBody UserCourseQueryRequest userCourseQueryRequest,
@@ -156,9 +164,9 @@ public class UserCourseController {
 	/**
 	 * 分页获取当前登录用户创建的用户课程列表
 	 *
-	 * @param userCourseQueryRequest
-	 * @param request
-	 * @return
+	 * @param userCourseQueryRequest userCourseQueryRequest
+	 * @param request                request
+	 * @return {@link BaseResponse <{@link Page <{@link UserCourseVO}>}>}
 	 */
 	@PostMapping("/my/list/page/vo")
 	public BaseResponse<Page<UserCourseVO>> listMyUserCourseVOByPage(@RequestBody UserCourseQueryRequest userCourseQueryRequest,
@@ -179,4 +187,43 @@ public class UserCourseController {
 	}
 	
 	// endregion
+	
+	/**
+	 * 用户证书数据导出
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/download")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadUserCourse(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<UserCourseExcelVO> userCourseExcelVOList = userCourseService.list().stream().map(userCourse -> {
+					UserCourseExcelVO userCourseExcelVO = new UserCourseExcelVO();
+					BeanUtils.copyProperties(userCourse, userCourseExcelVO);
+					userCourseExcelVO.setId(String.valueOf(userCourse.getId()));
+					userCourseExcelVO.setCourseId(String.valueOf(userCourse.getCourseId()));
+					userCourseExcelVO.setUserId(String.valueOf(userCourse.getUserId()));
+					userCourseExcelVO.setCreateTime(ExcelUtils.dateToExcelString(userCourse.getCreateTime()));
+					
+					return userCourseExcelVO;
+				})
+				.collect(Collectors.toList());
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_COURSE_EXCEL);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), UserCourseExcelVO.class)
+					.sheet(ExcelConstant.USER_COURSE_EXCEL)
+					.doWrite(userCourseExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
 }
