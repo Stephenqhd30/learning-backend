@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kc.learning.mapper.LogPrintCertificateMapper">
+
+	<resultMap id="BaseResultMap" type="com.kc.learning.model.entity.LogPrintCertificate">
+		<id property="id" column="id" jdbcType="BIGINT"/>
+		<result property="userId" column="userId" jdbcType="BIGINT"/>
+		<result property="certificateId" column="certificateId" jdbcType="BIGINT"/>
+		<result property="courseId" column="courseId" jdbcType="BIGINT"/>
+		<result property="userName" column="userName" jdbcType="INTEGER"/>
+		<result property="userGender" column="userGender" jdbcType="TINYINT"/>
+		<result property="userIdCard" column="userIdCard" jdbcType="VARCHAR"/>
+		<result property="certificateNumber" column="certificateNumber" jdbcType="VARCHAR"/>
+		<result property="courseName" column="courseName" jdbcType="BIGINT"/>
+		<result property="acquisitionTime" column="acquisitionTime" jdbcType="TIMESTAMP"/>
+		<result property="finishTime" column="finishTime" jdbcType="TIMESTAMP"/>
+		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		id
+		,userId,certificateId,
+        courseId,userName,userGender,
+        userIdCard,certificateNumber,courseName,
+        acquisitionTime,finishTime,createTime
+	</sql>
+
+	<!-- 获取打印证书信息 -->
+	<select id="getLogPrintCertificateVO"
+	        resultType="com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO">
+		SELECT us.userName         AS userName,
+		       us.userIdCard       AS userIdCard,
+		       us.userGender       AS userGender,
+		       c.certificateNumber AS certificateNumber,
+		       co.courseName       AS courseName,
+		       co.acquisitionTime  AS acquisitionTime,
+		       co.finishTime       AS finishTime
+		FROM user_course uc
+			     JOIN
+		     user us ON uc.userId = us.id
+			     JOIN
+		     course co ON uc.courseId = co.id
+			     JOIN
+		     certificate c ON c.gainUserId = us.id
+		WHERE uc.id = #{userCourseId}
+		  AND c.id = #{certificateId}
+		  AND uc.userId = c.gainUserId
+		  AND co.userId = uc.userId;
+	</select>
+
+	<!-- 分页获取打印证书信息 -->
+	<select id="getLogPrintCertificateVOByPage"
+	        resultType="com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO">
+		SELECT us.userName         AS userName,
+		       us.userIdCard       AS userIdCard,
+		       us.userGender       AS userGender,
+		       c.certificateNumber AS certificateNumber,
+		       co.courseName       AS courseName,
+		       co.acquisitionTime  AS acquisitionTime,
+		       co.finishTime       AS finishTime
+		FROM user_course uc
+			     JOIN
+		     user us ON uc.userId = us.id
+			     JOIN
+		     course co ON uc.courseId = co.id
+			     JOIN
+		     certificate c ON c.gainUserId = us.id
+		WHERE uc.id = #{query.userCourseId}
+		  AND c.id = #{query.certificateId}
+		  AND uc.userId = c.gainUserId
+		  AND co.userId = uc.userId;
+	</select>
+</mapper>

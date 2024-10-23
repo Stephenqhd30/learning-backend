@@ -1,4 +1,4 @@
-package com.kc.learning.model.vo.certificate;
+package com.kc.learning.model.vo.logPrintCertificate;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.format.DateTimeFormat;
@@ -6,15 +6,16 @@ import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
- * @author: stephen qiu
- * @create: 2024-10-18 23:54
- **/
+ * 打印证书日志视图
+ *
+ * @author stephen
+ */
 @Data
-public class CertificatePrintVO implements Serializable {
-	private static final long serialVersionUID = 3494789515343796912L;
+public class LogPrintCertificateExcelVO implements Serializable {
+	
+	private static final long serialVersionUID = 8635682960358749816L;
 	
 	/**
 	 * 姓名
@@ -35,7 +36,7 @@ public class CertificatePrintVO implements Serializable {
 	 */
 	@ExcelProperty("性别")
 	@ColumnWidth(20)
-	private Integer userGender;
+	private String userGender;
 	
 	/**
 	 * 证书编号
@@ -57,7 +58,7 @@ public class CertificatePrintVO implements Serializable {
 	@ExcelProperty("开课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
 	@ColumnWidth(30)
-	private Date acquisitionTime;
+	private String acquisitionTime;
 	
 	/**
 	 * 结课时间
@@ -65,5 +66,6 @@ public class CertificatePrintVO implements Serializable {
 	@ExcelProperty("结课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
 	@ColumnWidth(30)
-	private Date finishTime;
+	private String finishTime;
+	
 }

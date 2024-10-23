@@ -1,11 +1,10 @@
-package com.kc.learning.model.dto.certificate;
+package com.kc.learning.model.dto.logPrintCertificate;
 
 import com.kc.learning.common.PageRequest;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 打印证书请求
@@ -14,7 +13,7 @@ import java.util.Date;
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-public class CertificatePrintRequest extends PageRequest implements Serializable {
+public class LogPrintCertificatePrintRequest extends PageRequest implements Serializable {
 	/**
 	 * 用户课程id
 	 */

@@ -12,14 +12,12 @@ import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.CertificateMapper;
-import com.kc.learning.model.dto.certificate.CertificatePrintRequest;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
-import com.kc.learning.model.vo.certificate.CertificatePrintVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.CertificateService;
@@ -178,18 +176,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		return certificateVO;
 	}
 	
-	
-	/**
-	 * 获取打印证书封装
-	 *
-	 * @param certificatePrintRequest certificatePrintRequest
-	 * @return {@link CertificatePrintVO}
-	 */
-	@Override
-	public CertificatePrintVO getCertificatePrintVO(CertificatePrintRequest certificatePrintRequest) {
-		return certificateMapper.getCertificatePrintData(certificatePrintRequest);
-	}
-	
 	/**
 	 * 分页获取证书封装
 	 *
@@ -225,20 +211,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// endregion
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;
-	}
-	
-	/**
-	 * 分页获取给用户展示的证书视图
-	 *
-	 * @param certificatePrintRequest certificatePrintRequest
-	 * @return {@link  Page<CertificatePrintVO>}
-	 */
-	@Override
-	public Page<CertificatePrintVO> getCertificatePrintVOByPage(CertificatePrintRequest certificatePrintRequest) {
-		int current = certificatePrintRequest.getCurrent();
-		int pageSize = certificatePrintRequest.getPageSize();
-		Page<CertificatePrintVO> page = new Page<>(current, pageSize);
-		return certificateMapper.getCertificatePrintDataByPage(certificatePrintRequest, page);
 	}
 	
 	/**

@@ -76,4 +76,19 @@ public class ExcelUtils {
 		return sdf.format(date);
 	}
 	
+	/**
+	 * Date转 yyyy年MM月dd日
+	 *
+	 * @param date 日期
+	 * @return 字符串
+	 */
+	public static String dateToExcelString(Date date) {
+		if (date == null) {
+			throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+		}
+		// Date转换为String
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy年MM月dd日");
+		return sdf.format(date);
+	}
+	
 }

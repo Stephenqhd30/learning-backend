@@ -30,49 +30,4 @@
         createTime,updateTime,isDelete
 	</sql>
 
-	<!-- 获取打印证书信息 -->
-	<select id="getCertificatePrintData" resultType="com.kc.learning.model.vo.certificate.CertificatePrintVO">
-		SELECT us.userName         AS userName,
-		       us.userIdCard       AS userIdCard,
-		       us.userGender       AS userGender,
-		       c.certificateNumber AS certificateNumber,
-		       co.courseName       AS courseName,
-		       co.acquisitionTime  AS acquisitionTime,
-		       co.finishTime       AS finishTime
-		FROM user_course uc
-			     JOIN
-		     user us ON uc.userId = us.id
-			     JOIN
-		     course co ON uc.courseId = co.id
-			     JOIN
-		     certificate c ON c.gainUserId = us.id
-		WHERE uc.id = #{query.userCourseId}
-		  AND c.id = #{query.certificateId}
-		  AND uc.userId = c.gainUserId
-		  AND co.userId = uc.userId;
-	</select>
-
-	<!-- 分页获取打印证书信息 -->
-	<select id="getCertificatePrintDataByPage"
-	        resultType="com.kc.learning.model.vo.certificate.CertificatePrintVO">
-		SELECT us.userName         AS userName,
-		       us.userIdCard       AS userIdCard,
-		       us.userGender       AS userGender,
-		       c.certificateNumber AS certificateNumber,
-		       co.courseName       AS courseName,
-		       co.acquisitionTime  AS acquisitionTime,
-		       co.finishTime       AS finishTime
-		FROM user_course uc
-			     JOIN
-		     user us ON uc.userId = us.id
-			     JOIN
-		     course co ON uc.courseId = co.id
-			     JOIN
-		     certificate c ON c.gainUserId = us.id
-		WHERE uc.id = #{query.userCourseId}
-		  AND c.id = #{query.certificateId}
-		  AND uc.userId = c.gainUserId
-		  AND co.userId = uc.userId;
-
-	</select>
 </mapper>

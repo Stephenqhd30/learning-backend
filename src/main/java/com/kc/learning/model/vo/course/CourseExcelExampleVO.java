@@ -6,7 +6,6 @@ import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 课程视图

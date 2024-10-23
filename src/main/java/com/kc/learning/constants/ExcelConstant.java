@@ -30,7 +30,7 @@ public interface ExcelConstant {
 	/**
 	 * 打印证书信息
 	 */
-	String CERTIFICATE__PRINT_EXCEL = "打印证书信息";
+	String LOG_PRINT_CERTIFICATE_EXCEL = "打印证书信息";
 	
 	/**
 	 * 证书信息
