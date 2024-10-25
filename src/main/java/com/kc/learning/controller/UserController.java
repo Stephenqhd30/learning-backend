@@ -57,28 +57,6 @@ public class UserController {
 	
 	
 	// region 登录相关
-	
-	/**
-	 * 用户注册
-	 *
-	 * @param userRegisterRequest 用户注册请求
-	 * @return BaseResponse<Long> 注册是否成功
-	 */
-	@PostMapping("/register")
-	public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) throws Exception {
-		ThrowUtils.throwIf(userRegisterRequest == null, ErrorCode.PARAMS_ERROR);
-		// 获取请求参数
-		String userName = userRegisterRequest.getUserName();
-		String userIdCard = userRegisterRequest.getUserIdCard();
-		String userCheckIdCard = userRegisterRequest.getUserCheckIdCard();
-		String userNumber = userRegisterRequest.getUserNumber();
-		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard, userNumber)) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数不能为空");
-		}
-		long result = userService.userRegister(userName, userIdCard, userCheckIdCard, userNumber);
-		return ResultUtils.success(result);
-	}
-	
 	/**
 	 * 用户登录
 	 *

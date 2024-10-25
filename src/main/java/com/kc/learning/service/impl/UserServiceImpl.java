@@ -98,55 +98,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	}
 	
 	/**
-	 * 用户注册
+	 * 用户登录
 	 *
-	 * @param userName        用户账户
-	 * @param userIdCard      身份证号
-	 * @param userCheckIdCard 校验密码
-	 * @return long
+	 * @param userName   用户账户
+	 * @param userIdCard 身份证号
+	 * @param request    request
+	 * @return {@link LoginUserVO}
 	 */
-	@Override
-	public long userRegister(String userName, String userIdCard, String userCheckIdCard, String userNumber) {
-		// 1. 校验
-		if (StringUtils.isAnyBlank(userName, userIdCard, userCheckIdCard, userNumber)) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
-		}
-		ThrowUtils.throwIf(!RegexUtils.checkIdCard(userIdCard), ErrorCode.PARAMS_ERROR, "身份证号输入有误");
-		ThrowUtils.throwIf(!RegexUtils.checkUserName(userName), ErrorCode.PARAMS_ERROR, "姓名输入有误");
-		// 身份证号和校验身份证号相同
-		if (!userIdCard.equals(userCheckIdCard)) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的身份证号不一致");
-		}
-		synchronized (userIdCard.intern()) {
-			// 身份证号不能重复
-			QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-			queryWrapper.eq("userIdCard", userIdCard);
-			long count = this.baseMapper.selectCount(queryWrapper);
-			if (count > 0) {
-				throw new BusinessException(ErrorCode.PARAMS_ERROR, "身份证号重复");
-			}
-			// 2. 加密
-			String encryptIdCard = null;
-			try {
-				encryptIdCard = EncryptionUtils.encrypt(userIdCard);
-			} catch (Exception e) {
-				throw new BusinessException(ErrorCode.SYSTEM_ERROR);
-			}
-			// 3. 插入数据
-			User user = new User();
-			user.setUserName(userName);
-			user.setUserIdCard(encryptIdCard);
-			user.setUserNumber(userNumber);
-			// 3. 给用户分配一个默认的头像
-			user.setUserAvatar(UserConstant.USER_AVATAR);
-			boolean saveResult = this.save(user);
-			if (!saveResult) {
-				throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
-			}
-			return user.getId();
-		}
-	}
-	
 	@Override
 	public LoginUserVO userLogin(String userName, String userIdCard, HttpServletRequest request) {
 		// 1. 校验
