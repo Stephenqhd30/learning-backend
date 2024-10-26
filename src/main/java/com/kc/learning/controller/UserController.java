@@ -353,12 +353,9 @@ public class UserController {
 		List<UserExcelVO> userExcelVOList = userService.list().stream().map(user -> {
 					UserExcelVO userExcelVO = new UserExcelVO();
 					BeanUtils.copyProperties(user, userExcelVO);
-					userExcelVO.setId(String.valueOf(user.getId()));
 					userExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
 					userExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
 					userExcelVO.setUserRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(user.getUserRole())).getText());
-					userExcelVO.setCreateTime(ExcelUtils.dateToString(user.getCreateTime()));
-					userExcelVO.setUpdateTime(ExcelUtils.dateToString(user.getUpdateTime()));
 					return userExcelVO;
 				})
 				.collect(Collectors.toList());

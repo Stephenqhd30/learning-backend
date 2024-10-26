@@ -16,12 +16,11 @@ import java.io.Serializable;
 public class UserExcelVO implements Serializable {
 	private static final long serialVersionUID = -4002634298767485839L;
 	/**
-	 * id
+	 * 姓名
 	 */
-	@ColumnWidth(30)
-	@ExcelProperty("id")
-	private String id;
-	
+	@ColumnWidth(20)
+	@ExcelProperty("姓名")
+	private String userName;
 	
 	/**
 	 * 身份证号
@@ -29,13 +28,6 @@ public class UserExcelVO implements Serializable {
 	@ColumnWidth(40)
 	@ExcelProperty("身份证号")
 	private String userIdCard;
-	
-	/**
-	 * 姓名
-	 */
-	@ColumnWidth(20)
-	@ExcelProperty("姓名")
-	private String userName;
 	
 	/**
 	 * 性别（0-男，1-女，2-保密）
@@ -55,14 +47,14 @@ public class UserExcelVO implements Serializable {
 	 * 用户角色：user/admin/ban
 	 */
 	@ExcelProperty("用户角色：user/admin/ban")
-	@ColumnWidth(30)
+	@ColumnWidth(20)
 	private String userRole;
 	
 	/**
 	 * 用户邮箱
 	 */
 	@ExcelProperty("用户邮箱")
-	@ColumnWidth(20)
+	@ColumnWidth(30)
 	private String userEmail;
 	
 	/**
@@ -76,20 +68,6 @@ public class UserExcelVO implements Serializable {
 	 * 学号
 	 */
 	@ExcelProperty("学号")
-	@ColumnWidth(20)
+	@ColumnWidth(30)
 	private String userNumber;
-	
-	/**
-	 * 创建时间
-	 */
-	@ExcelProperty("创建时间")
-	@ColumnWidth(20)
-	private String createTime;
-	
-	/**
-	 * 更新时间
-	 */
-	@ExcelProperty("更新时间")
-	@ColumnWidth(20)
-	private String updateTime;
 }

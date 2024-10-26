@@ -18,9 +18,11 @@ import org.springframework.beans.BeanUtils;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 导入用户 excel文件监听器
+ *
  * @author: stephen qiu
  * @create: 2024-09-26 10:36
  **/
@@ -40,34 +42,31 @@ public class UserExcelListener extends AnalysisEventListener<User> {
 	}
 	
 	/**
-	 * 缓存的数据
+	 * 缓存的证书数据列表，每批次达到BATCH_COUNT后批量插入数据库
 	 */
 	private final List<User> cachedDataList = ListUtils.newArrayListWithExpectedSize(ExcelConstant.BATCH_COUNT);
 	
 	/**
-	 * 用于记录异常信息
-	 * -- GETTER --
-	 * 返回异常信息给外部调用者
+	 * 记录异常信息的列表，用于收集处理错误的数据
 	 */
 	@Getter
 	private final List<ErrorRecord<User>> errorRecords = ListUtils.newArrayList();
 	
 	/**
-	 * 用于记录正常导入信息
-	 * -- GETTER --
-	 * 返回异常信息给外部调用者
+	 * 记录成功导入的信息，用于收集处理成功的数据
 	 */
 	@Getter
 	private final List<SuccessRecord<User>> successRecords = ListUtils.newArrayList();
 	
-	
 	/**
-	 * @param exception exception
-	 * @param context   context
+	 * 当解析出现异常时调用
+	 *
+	 * @param exception 异常对象
+	 * @param context   上下文信息
 	 */
 	@Override
 	public void onException(Exception exception, AnalysisContext context) throws Exception {
-		log.error("解析异常: {}", exception.getMessage());
+		log.error("解析过程中出现异常：行号={}, 异常信息={}", context.readRowHolder().getRowIndex(), exception.getMessage());
 		throw exception;
 	}
 	
@@ -106,32 +105,40 @@ public class UserExcelListener extends AnalysisEventListener<User> {
 			errorRecords.add(new ErrorRecord<>(newUser, e.getMessage()));
 		}
 		if (cachedDataList.size() >= ExcelConstant.BATCH_COUNT) {
-			saveData();
+			saveDataAsync();
 			cachedDataList.clear();
 		}
 	}
 	
 	/**
-	 * 当每个sheet所有数据读取完毕后，会调用这个方法，可以在这个方法中进行一些收尾工作，如资源释放、数据汇总等。
+	 * 数据解析完成后执行的收尾操作
 	 *
-	 * @param context context
+	 * @param context 上下文信息
 	 */
 	@Override
 	public void doAfterAllAnalysed(AnalysisContext context) {
-		// 收尾工作，处理剩下的缓存数据。。。
+		// 处理剩余未保存的数据
 		if (!cachedDataList.isEmpty()) {
-			saveData();
+			saveDataAsync();
+			cachedDataList.clear();
 		}
-		log.info("sheet={} 所有数据解析完成！", context.readSheetHolder().getSheetName());
+		log.info("所有数据解析完成，sheet名称={}！", context.readSheetHolder().getSheetName());
 	}
 	
 	/**
-	 * 处理数据，如插入数据库
+	 * 执行批量保存数据操作
 	 */
-	private void saveData() {
-		log.info("{} 条数据，开始存储数据库！", cachedDataList.size());
-		// 批量插入数据库的逻辑 例如通过服务保存
-		userService.saveBatch(cachedDataList);
-		log.info("存储数据库成功！");
+	private void saveDataAsync() {
+		List<User> dataToSave = List.copyOf(cachedDataList);
+		CompletableFuture.runAsync(() -> {
+			log.info("开始批量保存{}条证书数据到数据库...", dataToSave.size());
+			try {
+				userService.saveBatch(dataToSave);
+				log.info("批量保存数据库成功！");
+			} catch (Exception e) {
+				log.error("批量保存数据库失败：{}", e.getMessage());
+				errorRecords.add(new ErrorRecord<>(null, "批量保存失败：" + e.getMessage()));
+			}
+		});
 	}
 }

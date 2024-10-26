@@ -312,6 +312,8 @@ public class CertificateController {
 		// 补充查询条件，如果未传入审核状态默认查询已经过审的证书信息
 		certificateQueryRequest.setReviewStatus(Optional.ofNullable(certificateQueryRequest.getReviewStatus())
 				.orElse(ReviewStatusEnum.PASS.getValue()));
+		certificateQueryRequest.setCertificateSituation(Optional.ofNullable(certificateQueryRequest.getCertificateSituation())
+				.orElse(CertificateSituationEnum.HAVA.getValue()));
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
