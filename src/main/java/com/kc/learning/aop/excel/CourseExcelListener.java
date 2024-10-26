@@ -1,4 +1,4 @@
-package com.kc.learning.aop;
+package com.kc.learning.aop.excel;
 
 import com.alibaba.excel.context.AnalysisContext;
 import com.alibaba.excel.event.AnalysisEventListener;
@@ -6,7 +6,9 @@ import com.alibaba.excel.util.ListUtils;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.model.dto.excel.ErrorRecord;
 import com.kc.learning.model.dto.excel.SuccessRecord;
+import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.Course;
+import com.kc.learning.model.entity.User;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserService;
 import lombok.Getter;
@@ -16,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 导入用户 excel文件监听器
@@ -107,32 +110,40 @@ public class CourseExcelListener extends AnalysisEventListener<Course> {
 			errorRecords.add(new ErrorRecord<>(newCourse, e.getMessage()));
 		}
 		if (cachedDataList.size() >= ExcelConstant.BATCH_COUNT) {
-			saveData();
+			saveDataAsync();
 			cachedDataList.clear();
 		}
 	}
 	
 	/**
-	 * 当每个sheet所有数据读取完毕后，会调用这个方法，可以在这个方法中进行一些收尾工作，如资源释放、数据汇总等。
+	 * 数据解析完成后执行的收尾操作
 	 *
-	 * @param context context
+	 * @param context 上下文信息
 	 */
 	@Override
 	public void doAfterAllAnalysed(AnalysisContext context) {
-		// 收尾工作，处理剩下的缓存数据。。。
+		// 处理剩余未保存的数据
 		if (!cachedDataList.isEmpty()) {
-			saveData();
+			saveDataAsync();
+			cachedDataList.clear();
 		}
-		log.info("sheet={} 所有数据解析完成！", context.readSheetHolder().getSheetName());
+		log.info("所有数据解析完成，sheet名称={}！", context.readSheetHolder().getSheetName());
 	}
 	
 	/**
-	 * 处理数据，如插入数据库
+	 * 执行批量保存数据操作
 	 */
-	private void saveData() {
-		log.info("{} 条数据，开始存储数据库！", cachedDataList.size());
-		// 批量插入数据库的逻辑 例如通过服务保存
-		courseService.saveBatch(cachedDataList);
-		log.info("存储数据库成功！");
+	private void saveDataAsync() {
+		List<Course> dataToSave = List.copyOf(cachedDataList);
+		CompletableFuture.runAsync(() -> {
+			log.info("开始批量保存{}条证书数据到数据库...", dataToSave.size());
+			try {
+				courseService.saveBatch(dataToSave);
+				log.info("批量保存数据库成功！");
+			} catch (Exception e) {
+				log.error("批量保存数据库失败：{}", e.getMessage());
+				errorRecords.add(new ErrorRecord<>(null, "批量保存失败：" + e.getMessage()));
+			}
+		});
 	}
 }

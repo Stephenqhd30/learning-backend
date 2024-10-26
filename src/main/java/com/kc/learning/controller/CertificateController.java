@@ -22,9 +22,9 @@ import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
-import com.kc.learning.model.vo.certificate.CertificateExcelExampleVO;
 import com.kc.learning.model.vo.certificate.CertificateExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
+import com.kc.learning.model.vo.certificate.CertificateImportExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
@@ -43,6 +43,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -269,6 +270,32 @@ public class CertificateController {
 	}
 	
 	/**
+	 * 分页获取待打印证书信息
+	 *
+	 * @param certificateQueryRequest certificateQueryRequest
+	 * @param request                 request
+	 * @return BaseResponse<Page < CertificateVO>>
+	 */
+	@PostMapping("/wait/print/list/page/vo")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Page<CertificateVO>> listWaitPrintCertificateVOByPage(@RequestBody CertificateQueryRequest certificateQueryRequest,
+	                                                                          HttpServletRequest request) {
+		ThrowUtils.throwIf(certificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
+		// 补充查询条件，只查询当前登录用户的数据
+		certificateQueryRequest.setCertificateSituation(CertificateSituationEnum.NONE.getValue());
+		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
+		long current = certificateQueryRequest.getCurrent();
+		long size = certificateQueryRequest.getPageSize();
+		// 限制爬虫
+		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		// 获取封装类
+		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+	}
+	
+	/**
 	 * 分页获取当前登录用户创建的证书列表
 	 *
 	 * @param certificateQueryRequest certificateQueryRequest
@@ -435,47 +462,54 @@ public class CertificateController {
 	
 	
 	/**
-	 * 证书数据导出
-	 * 文件下载（失败了会返回一个有部分数据的Excel）
-	 * 1. 创建excel对应的实体对象
-	 * 2. 设置返回的 参数
-	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 * 导出证书数据为Excel文件
+	 * <p>
+	 * 1. 查询证书数据并转换为Excel导出所需格式。
+	 * 2. 设置下载的响应参数。
+	 * 3. 将数据写入Excel并导出，若出现异常将返回部分数据。
 	 *
-	 * @param response response
+	 * @param response HttpServletResponse对象，用于文件下载
+	 * @throws IOException 当输出流发生异常时抛出
 	 */
 	@GetMapping("/download")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadCertificate(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
+		// 查询证书数据并转换为CertificateExcelVO对象列表
 		List<CertificateExcelVO> certificateExcelVOList = certificateService.list().stream().map(certificate -> {
-					CertificateExcelVO certificateExcelVO = new CertificateExcelVO();
-					BeanUtils.copyProperties(certificate, certificateExcelVO);
-					certificateExcelVO.setId(String.valueOf(certificate.getId()));
-					certificateExcelVO.setCertificateType(Objects.requireNonNull(CertificateTypeEnum.getEnumByValue(certificate.getCertificateType())).getText());
-					certificateExcelVO.setCertificateSituation(Objects.requireNonNull(CertificateSituationEnum.getEnumByValue(certificate.getCertificateSituation())).getText());
-					certificateExcelVO.setReviewStatus(Objects.requireNonNull(ReviewStatusEnum.getEnumByValue(certificate.getReviewStatus())).getText());
-					certificateExcelVO.setReviewerId(String.valueOf(certificate.getReviewerId()));
-					certificateExcelVO.setReviewTime(ExcelUtils.dateToString(certificate.getReviewTime()));
-					certificateExcelVO.setGainUserId(String.valueOf(certificate.getGainUserId()));
-					certificateExcelVO.setUserId(String.valueOf(certificate.getUserId()));
-					certificateExcelVO.setCreateTime(ExcelUtils.dateToString(certificate.getCreateTime()));
-					certificateExcelVO.setUpdateTime(ExcelUtils.dateToString(certificate.getUpdateTime()));
-					
-					return certificateExcelVO;
-				})
-				.collect(Collectors.toList());
-		// 设置导出名称
+			CertificateExcelVO certificateExcelVO = new CertificateExcelVO();
+			BeanUtils.copyProperties(certificate, certificateExcelVO);
+			
+			// 转换证书及相关字段信息
+			certificateExcelVO.setId(String.valueOf(certificate.getId()));
+			certificateExcelVO.setCertificateType(
+					Objects.requireNonNull(CertificateTypeEnum.getEnumByValue(certificate.getCertificateType())).getText());
+			certificateExcelVO.setCertificateSituation(
+					Objects.requireNonNull(CertificateSituationEnum.getEnumByValue(certificate.getCertificateSituation())).getText());
+			certificateExcelVO.setReviewStatus(
+					Objects.requireNonNull(ReviewStatusEnum.getEnumByValue(certificate.getReviewStatus())).getText());
+			certificateExcelVO.setReviewerId(String.valueOf(certificate.getReviewerId()));
+			certificateExcelVO.setReviewTime(ExcelUtils.dateToString(certificate.getReviewTime()));
+			certificateExcelVO.setCertificateUrl(Optional.ofNullable(certificate.getCertificateUrl()).orElse("证书尚未生成"));
+			
+			// 获取证书获得人信息并设置
+			User user = userService.getById(certificate.getGainUserId());
+			certificateExcelVO.setGainUserName(user.getUserName());
+			certificateExcelVO.setGainUserNumber(user.getUserNumber());
+			return certificateExcelVO;
+		}).collect(Collectors.toList());
+		
+		// 设置Excel文件下载的响应属性
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-		// 写入 Excel 文件
-		try {
-			EasyExcel.write(response.getOutputStream(), CertificateExcelVO.class)
+		
+		// 写入 Excel 文件并下载
+		try (OutputStream outputStream = response.getOutputStream()) {
+			EasyExcel.write(outputStream, CertificateExcelVO.class)
 					.sheet(ExcelConstant.CERTIFICATE_EXCEL)
 					.doWrite(certificateExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("文件导出失败: {}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "文件导出失败");
 		}
 	}
 	
@@ -492,28 +526,21 @@ public class CertificateController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadCertificateExample(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<CertificateExcelExampleVO> certificateExcelExampleVOList = new ArrayList<>();
-		CertificateExcelExampleVO certificateExcelExampleVO = new CertificateExcelExampleVO();
-		certificateExcelExampleVO.setCertificateNumber("证书编号(必填)");
-		certificateExcelExampleVO.setCertificateName("证书名称(必填)");
-		certificateExcelExampleVO.setCertificateType("证书类型(0-干部培训,1-其他)(必填)");
-		certificateExcelExampleVO.setCertificateYear("证书获得年份(必填)");
-		certificateExcelExampleVO.setCertificateSituation("证书获得情况(0-有,1-没有)(必填)");
-		certificateExcelExampleVO.setGainUserId("获得证书的用户id(必填)");
-		certificateExcelExampleVO.setCertificateUrl("证书得下载地址(必填)");
-		certificateExcelExampleVOList.add(certificateExcelExampleVO);
+		List<CertificateImportExcelVO> certificateImportExcelVOList = new ArrayList<>();
+		CertificateImportExcelVO certificateImportExcelVO = new CertificateImportExcelVO();
+		certificateImportExcelVOList.add(certificateImportExcelVO);
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
 		// 写入 Excel 文件
 		try {
-			EasyExcel.write(response.getOutputStream(), CertificateExcelExampleVO.class)
+			EasyExcel.write(response.getOutputStream(), CertificateImportExcelVO.class)
 					.sheet(ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE)
-					.doWrite(certificateExcelExampleVOList);
+					.doWrite(certificateImportExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 }

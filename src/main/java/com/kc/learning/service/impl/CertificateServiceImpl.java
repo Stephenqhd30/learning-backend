@@ -7,7 +7,7 @@ import com.alibaba.excel.exception.ExcelAnalysisException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.kc.learning.aop.CertificateExcelListener;
+import com.kc.learning.aop.excel.CertificateExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.exception.BusinessException;
@@ -17,7 +17,9 @@ import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
+import com.kc.learning.model.vo.certificate.CertificateExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
+import com.kc.learning.model.vo.certificate.CertificateImportExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.CertificateService;
@@ -66,13 +68,11 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		String certificateYear = certificate.getCertificateYear();
 		Integer certificateSituation = certificate.getCertificateSituation();
 		Long gainUserId = certificate.getGainUserId();
-		String certificateUrl = certificate.getCertificateUrl();
 		String certificateNumber = certificate.getCertificateNumber();
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateName), ErrorCode.PARAMS_ERROR, "证书名称不能为空");
-			ThrowUtils.throwIf(StringUtils.isBlank(certificateUrl), ErrorCode.PARAMS_ERROR, "证书存放地址不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateYear), ErrorCode.PARAMS_ERROR, "获得证书年份不能为空");
 			ThrowUtils.throwIf(Integer.parseInt(certificateYear) > DateUtil.year(DateUtil.date()), ErrorCode.PARAMS_ERROR, "获得证书年份不能超过当前年份");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateType), ErrorCode.PARAMS_ERROR, "证书类型不能为空");
@@ -246,7 +246,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// 传递 userService 实例给 UserExcelListener
 		CertificateExcelListener listener = new CertificateExcelListener(this, userService, request);
 		try {
-			EasyExcel.read(file.getInputStream(), Certificate.class, listener).sheet().doRead();
+			EasyExcel.read(file.getInputStream(), CertificateImportExcelVO.class, listener).sheet().doRead();
 		} catch (IOException e) {
 			log.error("文件读取失败: {}", e.getMessage());
 			throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件读取失败");

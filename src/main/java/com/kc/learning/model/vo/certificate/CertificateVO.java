@@ -16,6 +16,7 @@ import java.util.Date;
 @Data
 public class CertificateVO implements Serializable {
 	
+	private static final long serialVersionUID = -6568475531229072695L;
 	/**
 	 * id
 	 */

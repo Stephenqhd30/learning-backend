@@ -86,38 +86,23 @@ public class CertificateExcelVO implements Serializable {
 	private String reviewTime;
 	
 	/**
-	 * 获得人id
+	 * 获得人姓名
 	 */
-	@ExcelProperty(value = "获得人id")
+	@ExcelProperty(value = "获得人姓名")
 	@ColumnWidth(30)
-	private String gainUserId;
+	private String gainUserName;
+	
+	/**
+	 * 获得人学号
+	 */
+	@ExcelProperty(value = "获得人学号")
+	@ColumnWidth(30)
+	private String gainUserNumber;
 	
 	/**
 	 * 证书地址下载地址
 	 */
 	@ExcelProperty(value = "证书地址下载地址")
-	@ColumnWidth(30)
+	@ColumnWidth(60)
 	private String certificateUrl;
-	
-	/**
-	 * 创建用户id
-	 */
-	@ExcelProperty(value = "创建用户id")
-	@ColumnWidth(30)
-	private String userId;
-	
-	
-	/**
-	 * 创建时间
-	 */
-	@ExcelProperty(value = "创建时间")
-	@ColumnWidth(20)
-	private String createTime;
-	
-	/**
-	 * 更新时间
-	 */
-	@ExcelProperty(value = "更新时间")
-	@ColumnWidth(20)
-	private String updateTime;
 }
