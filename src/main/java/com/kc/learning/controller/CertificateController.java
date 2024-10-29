@@ -1,7 +1,6 @@
 package com.kc.learning.controller;
 
 import cn.hutool.json.JSONUtil;
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -10,7 +9,6 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.certificate.CertificateAddRequest;
@@ -20,32 +18,25 @@ import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.enums.CertificateSituationEnum;
-import com.kc.learning.model.enums.CertificateTypeEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
-import com.kc.learning.model.vo.certificate.CertificateExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
-import com.kc.learning.model.vo.certificate.CertificateImportExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * 证书接口
@@ -82,20 +73,31 @@ public class CertificateController {
 	@Transactional(rollbackFor = Exception.class)
 	public BaseResponse<Long> addCertificate(@RequestBody CertificateAddRequest certificateAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(certificateAddRequest == null, ErrorCode.PARAMS_ERROR);
+		// 构建查询条件
+		LambdaQueryWrapper<User> eq = Wrappers.lambdaQuery(User.class)
+				.eq(User::getUserName, certificateAddRequest.getUserName())
+				.eq(User::getUserNumber, certificateAddRequest.getUserNumber());
+		User user = userService.getOne(eq);
+		ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
 		// todo 在此处将实体类和 DTO 进行转换
 		Certificate certificate = new Certificate();
 		BeanUtils.copyProperties(certificateAddRequest, certificate);
+		certificate.setGainUserId(user.getId());
 		// 数据校验
 		certificateService.validCertificate(certificate, true);
 		// todo 填充默认值
 		User loginUser = userService.getLoginUser(request);
 		certificate.setUserId(loginUser.getId());
-		// 写入数据库
-		boolean result = certificateService.save(certificate);
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		// 返回新写入的数据 id
-		long newCertificateId = certificate.getId();
-		return ResultUtils.success(newCertificateId);
+		try {
+			// 写入数据库
+			boolean result = certificateService.save(certificate);
+			ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+			// 返回新写入的数据 id
+			long newCertificateId = certificate.getId();
+			return ResultUtils.success(newCertificateId);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "添加证书失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -118,18 +120,25 @@ public class CertificateController {
 		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
 		// 仅本人或管理员可删除
 		if (!oldCertificate.getUserId().equals(user.getId()) || !userService.isAdmin(request)) {
-			throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+			throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权限删除");
 		}
-		LambdaQueryWrapper<UserCertificate> queryWrapper = Wrappers.lambdaQuery(UserCertificate.class)
-				.eq(UserCertificate::getCertificateId, id)
-				.eq(UserCertificate::getUserId, oldCertificate.getGainUserId());
-		UserCertificate userCertificate = userCertificateService.getOne(queryWrapper);
-		// 操作数据库
-		boolean result = certificateService.removeById(id);
-		boolean save = userCertificateService.removeById(userCertificate.getId());
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-		return ResultUtils.success(true);
+		
+		try {
+			// 操作数据库
+			boolean result = certificateService.removeById(id);
+			LambdaQueryWrapper<UserCertificate> queryWrapper = Wrappers.lambdaQuery(UserCertificate.class)
+					.eq(UserCertificate::getCertificateId, id)
+					.eq(UserCertificate::getUserId, oldCertificate.getGainUserId());
+			UserCertificate userCertificate = userCertificateService.getOne(queryWrapper);
+			if (userCertificate != null) {
+				boolean save = userCertificateService.removeById(userCertificate.getId());
+				ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR, "删除用户证书失败");
+			}
+			ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "删除证书失败");
+			return ResultUtils.success(true);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "删除证书失败" + e.getMessage());
+		}
 	}
 	
 	/**

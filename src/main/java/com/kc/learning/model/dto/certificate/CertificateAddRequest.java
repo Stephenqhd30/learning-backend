@@ -40,7 +40,12 @@ public class CertificateAddRequest implements Serializable {
 	/**
 	 * 获得人姓名
 	 */
-	private Long gainUserId;
+	private String userName;
+	
+	/**
+	 * 获得人学号
+	 */
+	private String userNumber;
 	
 	/**
 	 * 证书地址

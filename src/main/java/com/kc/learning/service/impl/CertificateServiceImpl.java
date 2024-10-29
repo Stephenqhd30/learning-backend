@@ -17,7 +17,6 @@ import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.CertificateSituationEnum;
 import com.kc.learning.model.enums.CertificateTypeEnum;
-import com.kc.learning.model.vo.certificate.CertificateExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateForUserVO;
 import com.kc.learning.model.vo.certificate.CertificateImportExcelVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
@@ -29,7 +28,6 @@ import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -50,8 +48,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 	
 	@Resource
 	private UserService userService;
-	@Autowired
-	private CertificateMapper certificateMapper;
 	
 	/**
 	 * 校验数据
@@ -259,12 +255,8 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Map<String, Object> result = new HashMap<>();
 		// 获取异常记录
 		result.put("errorRecords", listener.getErrorRecords());
-		
 		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
-		
 		return result;
-		
 	}
-	
 	
 }
