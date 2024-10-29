@@ -183,7 +183,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 	}
 	
 	/**
-	 * 导入用户数据
+	 * 导入课程数据
 	 *
 	 * @param file    上传的 Excel 文件
 	 * @param request request
@@ -198,10 +198,10 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 			EasyExcel.read(file.getInputStream(), Course.class, listener).sheet().doRead();
 		} catch (IOException e) {
 			log.error("文件读取失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件读取失败");
+			throw new BusinessException(ErrorCode.EXCEL_ERROR, "文件读取失败");
 		} catch (ExcelAnalysisException e) {
 			log.error("Excel解析失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "Excel解析失败");
+			throw new BusinessException(ErrorCode.EXCEL_ERROR, "Excel解析失败");
 		}
 		
 		// 返回处理结果，包括成功和异常的数据

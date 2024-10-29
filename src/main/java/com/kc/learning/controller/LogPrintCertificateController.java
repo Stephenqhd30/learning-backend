@@ -185,43 +185,4 @@ public class LogPrintCertificateController {
 	}
 	
 	// endregion
-	
-	/**
-	 * 打印证书数据导出
-	 * 文件下载（失败了会返回一个有部分数据的Excel）
-	 * 1. 创建excel对应的实体对象
-	 * 2. 设置返回的 参数
-	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
-	 *
-	 * @param response response
-	 */
-	@GetMapping("/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public void downloadLogPrintCertificate(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
-		List<LogPrintCertificateExcelVO> logPrintCertificateExcelVOList = logPrintCertificateService.list().stream().map(logPrintCertificate -> {
-					LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
-					BeanUtils.copyProperties(logPrintCertificate, logPrintCertificateExcelVO);
-					logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(logPrintCertificate.getUserIdCard()));
-					logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(logPrintCertificate.getUserGender())).getText());
-					logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
-					logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
-					
-					return logPrintCertificateExcelVO;
-				})
-				.collect(Collectors.toList());
-		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, ExcelConstant.LOG_PRINT_CERTIFICATE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-		// 写入 Excel 文件
-		try {
-			EasyExcel.write(response.getOutputStream(), LogPrintCertificateExcelVO.class)
-					.sheet(ExcelConstant.LOG_PRINT_CERTIFICATE_EXCEL)
-					.doWrite(logPrintCertificateExcelVOList);
-			log.info("文件导出成功");
-		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
-		}
-	}
 }

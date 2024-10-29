@@ -157,43 +157,4 @@ public class UserCertificateController {
 	
 	// endregion
 	
-	/**
-	 * 用户证书数据导出
-	 * 文件下载（失败了会返回一个有部分数据的Excel）
-	 * 1. 创建excel对应的实体对象
-	 * 2. 设置返回的 参数
-	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
-	 *
-	 * @param response response
-	 */
-	@GetMapping("/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public void downloadUserCertificate(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
-		List<UserCertificateExcelVO> userCertificateExcelVOList = userCertificateService.list().stream().map(userCertificate -> {
-					UserCertificateExcelVO userCertificateExcelVO = new UserCertificateExcelVO();
-					BeanUtils.copyProperties(userCertificate, userCertificateExcelVO);
-					userCertificateExcelVO.setId(String.valueOf(userCertificate.getId()));
-					userCertificateExcelVO.setUserId(String.valueOf(userCertificate.getUserId()));
-					userCertificateExcelVO.setCertificateId(String.valueOf(userCertificate.getCertificateId()));
-					userCertificateExcelVO.setCreateTime(ExcelUtils.dateToString(userCertificate.getCreateTime()));
-					
-					return userCertificateExcelVO;
-				})
-				.collect(Collectors.toList());
-		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_CERTIFICATE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-		// 写入 Excel 文件
-		try {
-			EasyExcel.write(response.getOutputStream(), UserCertificateExcelVO.class)
-					.sheet(ExcelConstant.USER_CERTIFICATE_EXCEL)
-					.doWrite(userCertificateExcelVOList);
-			log.info("文件导出成功");
-		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
-		}
-	}
-	
 }

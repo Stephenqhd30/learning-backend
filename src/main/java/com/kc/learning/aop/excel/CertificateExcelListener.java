@@ -95,7 +95,7 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 		User loginUser = userService.getLoginUser(request);
 		
 		try {
-		
+			
 			// 获取当前导入数据的用户
 			LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery(User.class)
 					.eq(User::getUserName, certificateImportExcelVO.getUserName())
@@ -115,7 +115,6 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 			newCertificate.setReviewMessage("管理员导入，请检查审核信息是否正确");
 			newCertificate.setUserId(loginUser.getId());
 			
-	
 			
 			// 将成功记录缓存到列表
 			cachedDataList.add(newCertificate);

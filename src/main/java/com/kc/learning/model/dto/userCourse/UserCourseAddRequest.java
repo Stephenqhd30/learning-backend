@@ -13,9 +13,14 @@ import java.io.Serializable;
 public class UserCourseAddRequest implements Serializable {
     
     /**
-     * 用户id
+     * 姓名
      */
-    private Long userId;
+    private String userName;
+    
+    /**
+     * 学号
+     */
+    private String userNumber;
     
     /**
      * 课程id

@@ -61,9 +61,18 @@ public class UserCourseController {
 	@PostMapping("/add")
 	public BaseResponse<Long> addUserCourse(@RequestBody UserCourseAddRequest userCourseAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(userCourseAddRequest == null, ErrorCode.PARAMS_ERROR);
+		// 拼接用户信息
+		String userName = userCourseAddRequest.getUserName();
+		String userNumber = userCourseAddRequest.getUserNumber();
+		LambdaQueryWrapper<User> eq = Wrappers.lambdaQuery(User.class)
+				.eq(User::getUserName, userName)
+				.eq(User::getUserNumber, userNumber);
+		User user = userService.getOne(eq);
+		ThrowUtils.throwIf(user == null, ErrorCode.PARAMS_ERROR, "添加的用户不存在");
 		// todo 在此处将实体类和 DTO 进行转换
 		UserCourse userCourse = new UserCourse();
 		BeanUtils.copyProperties(userCourseAddRequest, userCourse);
+		userCourse.setUserId(user.getId());
 		// 数据校验
 		try {
 			userCourseService.validUserCourse(userCourse, true);
@@ -72,8 +81,8 @@ public class UserCourseController {
 		}
 		// 避免重复添加信息
 		LambdaQueryWrapper<UserCourse> userCourseLambdaQueryWrapper = Wrappers.lambdaQuery(UserCourse.class)
-				.eq(UserCourse::getUserId, userCourseAddRequest.getUserId())
-				.eq(UserCourse::getCourseId, userCourseAddRequest.getCourseId());
+				.eq(UserCourse::getUserId, userCourse.getUserId())
+				.eq(UserCourse::getCourseId, userCourse.getCourseId());
 		UserCourse oldUserCourse = userCourseService.getOne(userCourseLambdaQueryWrapper);
 		ThrowUtils.throwIf(oldUserCourse != null, ErrorCode.PARAMS_ERROR, "用户已经加入课程");
 		// 写入数据库
@@ -192,43 +201,4 @@ public class UserCourseController {
 	}
 	
 	// endregion
-	
-	/**
-	 * 用户证书数据导出
-	 * 文件下载（失败了会返回一个有部分数据的Excel）
-	 * 1. 创建excel对应的实体对象
-	 * 2. 设置返回的 参数
-	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
-	 *
-	 * @param response response
-	 */
-	@GetMapping("/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public void downloadUserCourse(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
-		List<UserCourseExcelVO> userCourseExcelVOList = userCourseService.list().stream().map(userCourse -> {
-					UserCourseExcelVO userCourseExcelVO = new UserCourseExcelVO();
-					BeanUtils.copyProperties(userCourse, userCourseExcelVO);
-					userCourseExcelVO.setId(String.valueOf(userCourse.getId()));
-					userCourseExcelVO.setCourseId(String.valueOf(userCourse.getCourseId()));
-					userCourseExcelVO.setUserId(String.valueOf(userCourse.getUserId()));
-					userCourseExcelVO.setCreateTime(ExcelUtils.dateToExcelString(userCourse.getCreateTime()));
-					
-					return userCourseExcelVO;
-				})
-				.collect(Collectors.toList());
-		// 设置导出名称
-		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_COURSE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
-		// 写入 Excel 文件
-		try {
-			EasyExcel.write(response.getOutputStream(), UserCourseExcelVO.class)
-					.sheet(ExcelConstant.USER_COURSE_EXCEL)
-					.doWrite(userCourseExcelVOList);
-			log.info("文件导出成功");
-		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
-		}
-	}
 }
