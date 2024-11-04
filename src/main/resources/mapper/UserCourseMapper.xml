@@ -8,11 +8,13 @@
 		<id property="id" column="id" jdbcType="BIGINT"/>
 		<result property="userId" column="userId" jdbcType="BIGINT"/>
 		<result property="courseId" column="courseId" jdbcType="BIGINT"/>
+		<result property="createUserId" column="createUserId" jdbcType="BIGINT"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
 		id
+		, createUserId
 		,userId,courseId,createTime
 	</sql>
 </mapper>

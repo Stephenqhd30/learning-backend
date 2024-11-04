@@ -1,21 +1,23 @@
 package com.kc.learning.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.exception.ExcelAnalysisException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.kc.learning.aop.excel.UserCourseExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
+import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.UserCourseMapper;
-import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCourse;
 import com.kc.learning.model.vo.course.CourseVO;
 import com.kc.learning.model.vo.user.UserVO;
+import com.kc.learning.model.vo.userCourse.UserCourseExcelVO;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserCourseService;
@@ -25,9 +27,12 @@ import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +96,7 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		Long notId = userCourseQueryRequest.getNotId();
 		Long userId = userCourseQueryRequest.getUserId();
 		Long courseId = userCourseQueryRequest.getCourseId();
+		Long createUserId = userCourseQueryRequest.getCreateUserId();
 		String sortField = userCourseQueryRequest.getSortField();
 		String sortOrder = userCourseQueryRequest.getSortOrder();
 		// todo 补充需要的查询条件
@@ -99,6 +105,7 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(courseId), "userId", userId);
+		queryWrapper.eq(ObjectUtils.isNotEmpty(createUserId), "createUserId", createUserId);
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
 				sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
@@ -186,6 +193,36 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		// endregion
 		userCourseVOPage.setRecords(userCourseVOList);
 		return userCourseVOPage;
+	}
+	
+	/**
+	 * 导入课程数据
+	 *
+	 * @param file    上传的 Excel 文件
+	 * @param request request
+	 * @return 返回成功和错误信息
+	 */
+	@Override
+	public Map<String, Object> importUserCourse(MultipartFile file, HttpServletRequest request) {
+		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.OPERATION_ERROR, "上传的文件为空");
+		UserCourseExcelListener listener = new UserCourseExcelListener(this, userService, courseService, request);
+		
+		try {
+			EasyExcel.read(file.getInputStream(), UserCourseExcelVO.class, listener).sheet().doRead();
+		} catch (IOException e) {
+			log.error("文件读取失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.EXCEL_ERROR, "文件读取失败");
+		} catch (ExcelAnalysisException e) {
+			log.error("Excel解析失败: {}", e.getMessage());
+			throw new BusinessException(ErrorCode.EXCEL_ERROR, "Excel解析失败");
+		}
+		
+		// 返回处理结果，包括成功和异常的数据
+		Map<String, Object> result = new HashMap<>();
+		// 获取异常记录
+		result.put("errorRecords", listener.getErrorRecords());
+		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
+		return result;
 	}
 	
 }

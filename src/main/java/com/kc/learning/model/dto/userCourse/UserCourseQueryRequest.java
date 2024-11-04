@@ -31,6 +31,11 @@ public class UserCourseQueryRequest extends PageRequest implements Serializable 
     private Long userId;
     
     /**
+     * 创建人id
+     */
+    private Long createUserId;
+    
+    /**
      * 课程id
      */
     private Long courseId;

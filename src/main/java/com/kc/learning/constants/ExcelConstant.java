@@ -20,7 +20,7 @@ public interface ExcelConstant {
 	/**
 	 * 用户信息
 	 */
-	String USER_EXCEL_EXAMPLE = "导入用户信息示例数据";
+	String USER_EXCEL_EXAMPLE = "导入用户信息示例";
 	
 	/**
 	 * 证书信息
@@ -35,7 +35,7 @@ public interface ExcelConstant {
 	/**
 	 * 证书信息
 	 */
-	String CERTIFICATE_EXCEL_EXAMPLE = "导入证书信息示例数据";
+	String CERTIFICATE_EXCEL_EXAMPLE = "导入证书信息示例";
 	
 	/**
 	 * 用户证书信息
@@ -51,4 +51,9 @@ public interface ExcelConstant {
 	 * 课程信息
 	 */
 	String USER_COURSE_EXCEL = "用户课程信息";
+	
+	/**
+	 * 课程信息
+	 */
+	String USER_COURSE_EXCEL_EXAMPLE = "导入用户课程信息示例";
 }

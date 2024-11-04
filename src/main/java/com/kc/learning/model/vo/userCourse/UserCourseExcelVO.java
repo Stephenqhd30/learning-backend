@@ -1,7 +1,6 @@
 package com.kc.learning.model.vo.userCourse;
 
 import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.excel.annotation.format.DateTimeFormat;
 import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.Data;
 
@@ -16,32 +15,32 @@ import java.io.Serializable;
 public class UserCourseExcelVO implements Serializable {
 	
 	private static final long serialVersionUID = -382141467091694865L;
-	/**
-	 * id
-	 */
-	@ExcelProperty("id")
-	@ColumnWidth(30)
-	private String id;
 	
 	/**
-	 * 用户id
+	 * 姓名
 	 */
-	@ExcelProperty("用户id")
+	@ExcelProperty("姓名")
 	@ColumnWidth(30)
-	private String userId;
+	private String userName;
 	
 	/**
-	 * 课程id
+	 * 学号
 	 */
-	@ExcelProperty("课程id")
+	@ExcelProperty("学号")
 	@ColumnWidth(30)
-	private String courseId;
+	private String userNumber;
 	
 	/**
-	 * 创建时间
+	 * 课程名
 	 */
-	@ExcelProperty("创建时间")
-	@DateTimeFormat("yyyy年MM月dd日")
+	@ExcelProperty("课程名")
 	@ColumnWidth(30)
-	private String createTime;
+	private String courseName;
+	
+	/**
+	 * 课程号
+	 */
+	@ExcelProperty("课程号")
+	@ColumnWidth(30)
+	private String courseNumber;
 }

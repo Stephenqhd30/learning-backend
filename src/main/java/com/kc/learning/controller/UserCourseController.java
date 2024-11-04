@@ -1,6 +1,5 @@
 package com.kc.learning.controller;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,18 +7,15 @@ import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCourse;
-import com.kc.learning.model.vo.userCourse.UserCourseExcelVO;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;
 import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -28,10 +24,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 用户课程接口
@@ -85,6 +77,9 @@ public class UserCourseController {
 				.eq(UserCourse::getCourseId, userCourse.getCourseId());
 		UserCourse oldUserCourse = userCourseService.getOne(userCourseLambdaQueryWrapper);
 		ThrowUtils.throwIf(oldUserCourse != null, ErrorCode.PARAMS_ERROR, "用户已经加入课程");
+		// todo 补充默认信息
+		User loginUser = userService.getLoginUser(request);
+		userCourse.setCreateUserId(loginUser.getId());
 		// 写入数据库
 		boolean result = userCourseService.save(userCourse);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

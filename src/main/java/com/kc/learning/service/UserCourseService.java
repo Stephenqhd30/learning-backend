@@ -7,8 +7,10 @@ import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.UserCourse;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * 用户课程服务
@@ -50,4 +52,13 @@ public interface UserCourseService extends IService<UserCourse> {
 	 * @return {@link Page<UserCourseVO>}
 	 */
 	Page<UserCourseVO> getUserCourseVOPage(Page<UserCourse> userCoursePage, HttpServletRequest request);
+	
+	/**
+	 * 导入用户课程数据
+	 *
+	 * @param file    file
+	 * @param request request
+	 * @return {@link Map<String, Object>}
+	 */
+	Map<String, Object> importUserCourse(MultipartFile file, HttpServletRequest request);
 }

@@ -6,6 +6,7 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
+import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.*;
 import com.kc.learning.model.vo.certificate.CertificateExcelVO;
@@ -363,10 +364,6 @@ public class ExcelController {
 		// 获取数据，根据自身业务修改
 		List<CourseExcelExampleVO> courseExcelExampleVOList = new ArrayList<>();
 		CourseExcelExampleVO courseExcelExampleVO = new CourseExcelExampleVO();
-		courseExcelExampleVO.setCourseNumber("课程号(必填)");
-		courseExcelExampleVO.setCourseName("课程名称(必填)");
-		courseExcelExampleVO.setAcquisitionTime("开课时间(必填)");
-		courseExcelExampleVO.setFinishTime("开课时间(结课时间)");
 		courseExcelExampleVOList.add(courseExcelExampleVO);
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL_EXAMPLE);
@@ -403,7 +400,6 @@ public class ExcelController {
 					userCertificateExcelVO.setUserId(String.valueOf(userCertificate.getUserId()));
 					userCertificateExcelVO.setCertificateId(String.valueOf(userCertificate.getCertificateId()));
 					userCertificateExcelVO.setCreateTime(ExcelUtils.dateToString(userCertificate.getCreateTime()));
-					
 					return userCertificateExcelVO;
 				})
 				.collect(Collectors.toList());
@@ -462,6 +458,34 @@ public class ExcelController {
 	}
 	
 	/**
+	 * 用户课程批量导入
+	 *
+	 * @param file    课程 Excel 文件
+	 * @param request request
+	 * @return 导入结果
+	 */
+	@PostMapping("/user/course/import")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@Transactional(rollbackFor = Exception.class)
+	public BaseResponse<Map<String, Object>> importUserCourseDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
+		// 检查文件是否为空
+		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
+		
+		// 获取文件名并检查是否为null
+		String filename = file.getOriginalFilename();
+		ThrowUtils.throwIf(filename == null, ErrorCode.PARAMS_ERROR, "文件名不能为空");
+		
+		// 检查文件格式是否为Excel格式
+		if (!filename.endsWith(".xlsx") && !filename.endsWith(".xls")) {
+			throw new RuntimeException("上传文件格式不正确");
+		}
+		
+		// 调用服务层处理课程导入
+		Map<String, Object> result = userCourseService.importUserCourse(file, request);
+		return ResultUtils.success(result);
+	}
+	
+	/**
 	 * 用户课程数据导出
 	 * 文件下载（失败了会返回一个有部分数据的Excel）
 	 * 1. 创建excel对应的实体对象
@@ -477,11 +501,12 @@ public class ExcelController {
 		List<UserCourseExcelVO> userCourseExcelVOList = userCourseService.list().stream().map(userCourse -> {
 					UserCourseExcelVO userCourseExcelVO = new UserCourseExcelVO();
 					BeanUtils.copyProperties(userCourse, userCourseExcelVO);
-					userCourseExcelVO.setId(String.valueOf(userCourse.getId()));
-					userCourseExcelVO.setCourseId(String.valueOf(userCourse.getCourseId()));
-					userCourseExcelVO.setUserId(String.valueOf(userCourse.getUserId()));
-					userCourseExcelVO.setCreateTime(ExcelUtils.dateToExcelString(userCourse.getCreateTime()));
-					
+					User user = userService.getById(userCourse.getUserId());
+					Course course = courseService.getById(userCourse.getCourseId());
+					userCourseExcelVO.setUserName(user.getUserName());
+					userCourseExcelVO.setUserNumber(user.getUserNumber());
+					userCourseExcelVO.setCourseName(course.getCourseName());
+					userCourseExcelVO.setCourseNumber(String.valueOf(course.getCourseNumber()));
 					return userCourseExcelVO;
 				})
 				.collect(Collectors.toList());
@@ -492,6 +517,37 @@ public class ExcelController {
 		try {
 			EasyExcel.write(response.getOutputStream(), UserCourseExcelVO.class)
 					.sheet(ExcelConstant.USER_COURSE_EXCEL)
+					.doWrite(userCourseExcelVOList);
+			log.info("文件导出成功");
+		} catch (Exception e) {
+			log.error("导出失败:{}", e.getMessage());
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+		}
+	}
+	
+	/**
+	 * 用户课程数据下载示例数据
+	 * 文件下载（失败了会返回一个有部分数据的Excel）
+	 * 1. 创建excel对应的实体对象
+	 * 2. 设置返回的 参数
+	 * 3. 直接写，这里注意，finish的时候会自动关闭OutputStream,当然你外面再关闭流问题不大
+	 *
+	 * @param response response
+	 */
+	@GetMapping("/uer/course/download/example")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public void downloadUserCourseExample(HttpServletResponse response) throws IOException {
+		// 获取数据，根据自身业务修改
+		List<UserCourseExcelVO> userCourseExcelVOList = new ArrayList<>();
+		UserCourseExcelVO userCourseExcelExampleVO = new UserCourseExcelVO();
+		userCourseExcelVOList.add(userCourseExcelExampleVO);
+		// 设置导出名称
+		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_COURSE_EXCEL_EXAMPLE);
+		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		// 写入 Excel 文件
+		try {
+			EasyExcel.write(response.getOutputStream(), UserCourseExcelVO.class)
+					.sheet(ExcelConstant.USER_COURSE_EXCEL_EXAMPLE)
 					.doWrite(userCourseExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
