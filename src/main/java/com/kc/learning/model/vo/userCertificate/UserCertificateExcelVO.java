@@ -15,28 +15,6 @@ import java.io.Serializable;
 @Data
 public class UserCertificateExcelVO implements Serializable {
 	private static final long serialVersionUID = -5741413222214936521L;
-	
-	/**
-	 * id
-	 */
-	@ExcelProperty(value = "id")
-	@ColumnWidth(30)
-	private String id;
-	
-	/**
-	 * 用户id
-	 */
-	@ExcelProperty(value = "用户id")
-	@ColumnWidth(30)
-	private String userId;
-	
-	/**
-	 * 用户id
-	 */
-	@ExcelProperty(value = "证书id")
-	@ColumnWidth(30)
-	private String certificateId;
-	
 	/**
 	 * 证书编号
 	 */
@@ -62,13 +40,13 @@ public class UserCertificateExcelVO implements Serializable {
 	 * 获得人名称
 	 */
 	@ExcelProperty(value = "获得人名称")
-	@ColumnWidth(20)
-	private String gainUserName;
+	@ColumnWidth(30)
+	private String userName;
 	
 	/**
-	 * 创建时间
+	 * 获得人学号
 	 */
-	@ExcelProperty(value = "创建时间")
-	@ColumnWidth(20)
-	private String createTime;
+	@ExcelProperty(value = "获得人学号")
+	@ColumnWidth(30)
+	private String userNumber;
 }

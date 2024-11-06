@@ -24,7 +24,6 @@ spring:
     username: ${learning.datasource.username}
     password: ${learning.datasource.password}
   # Redis 配置
-  # todo 需替换配置，然后取消注释
   redis:
     database: 10
     host: localhost
@@ -35,6 +34,9 @@ spring:
         max-active: 8
         max-idle: 8
         min-idle: 0
+  # Elasticsearch 配置
+  elasticsearch:
+    uris: ${learning.elasticsearch.uris}
   # 文件上传
   servlet:
     multipart:

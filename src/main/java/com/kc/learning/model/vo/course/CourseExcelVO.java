@@ -17,13 +17,6 @@ public class CourseExcelVO implements Serializable {
 	
 	private static final long serialVersionUID = 1106240053422155491L;
 	/**
-	 * id
-	 */
-	@ExcelProperty(value = "id")
-	@ColumnWidth(40)
-	private String id;
-	
-	/**
 	 * 课程号
 	 */
 	@ExcelProperty(value = "课程号")
@@ -38,11 +31,11 @@ public class CourseExcelVO implements Serializable {
 	private String courseName;
 	
 	/**
-	 * 创建用户id
+	 * 创建用户
 	 */
-	@ExcelProperty(value = "创建用户id")
+	@ExcelProperty(value = "创建用户")
 	@ColumnWidth(40)
-	private String userId;
+	private String userName;
 	
 	/**
 	 * 开课时间
@@ -59,20 +52,4 @@ public class CourseExcelVO implements Serializable {
 	@ColumnWidth(40)
 	@DateTimeFormat("yyyy年MM月dd日")
 	private String finishTime;
-	
-	/**
-	 * 创建时间
-	 */
-	@ExcelProperty(value = "创建时间")
-	@ColumnWidth(40)
-	@DateTimeFormat("yyyy年MM月dd日")
-	private String createTime;
-	
-	/**
-	 * 更新时间
-	 */
-	@ExcelProperty(value = "更新时间")
-	@ColumnWidth(40)
-	@DateTimeFormat("yyyy年MM月dd日")
-	private String updateTime;
 }

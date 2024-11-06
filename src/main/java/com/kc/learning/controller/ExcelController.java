@@ -35,6 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -104,19 +106,20 @@ public class ExcelController {
 	@GetMapping("/user/download")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadUser(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
-		List<UserExcelVO> userExcelVOList = userService.list().stream().map(user -> {
-					UserExcelVO userExcelVO = new UserExcelVO();
-					BeanUtils.copyProperties(user, userExcelVO);
-					userExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
-					userExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
-					userExcelVO.setUserRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(user.getUserRole())).getText());
-					return userExcelVO;
-				})
-				.collect(Collectors.toList());
+		List<CompletableFuture<UserExcelVO>> futures = userService.list().stream().map(user -> CompletableFuture.supplyAsync(() -> {
+			UserExcelVO userExcelVO = new UserExcelVO();
+			BeanUtils.copyProperties(user, userExcelVO);
+			userExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+			userExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
+			userExcelVO.setUserRole(Objects.requireNonNull(UserRoleEnum.getEnumByValue(user.getUserRole())).getText());
+			return userExcelVO;
+		})).collect(Collectors.toList());
+		// 等待所有 CompletableFuture 执行完毕，并收集结果
+		List<UserExcelVO> userExcelVOList = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+		
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), UserExcelVO.class)
@@ -168,7 +171,6 @@ public class ExcelController {
 	}
 	
 	
-	
 	/**
 	 * 证书批量导入
 	 *
@@ -211,7 +213,7 @@ public class ExcelController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadCertificate(HttpServletResponse response) throws IOException {
 		// 查询证书数据并转换为CertificateExcelVO对象列表
-		List<CertificateExcelVO> certificateExcelVOList = certificateService.list().stream().map(certificate -> {
+		List<CompletableFuture<CertificateExcelVO>> futures = certificateService.list().stream().map(certificate -> CompletableFuture.supplyAsync(() -> {
 			CertificateExcelVO certificateExcelVO = new CertificateExcelVO();
 			BeanUtils.copyProperties(certificate, certificateExcelVO);
 			
@@ -232,11 +234,11 @@ public class ExcelController {
 			certificateExcelVO.setGainUserName(user.getUserName());
 			certificateExcelVO.setGainUserNumber(user.getUserNumber());
 			return certificateExcelVO;
-		}).collect(Collectors.toList());
-		
+		})).collect(Collectors.toList());
+		// 等待并发项目异步执行完成
+		List<CertificateExcelVO> certificateExcelVOList = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
 		// 设置Excel文件下载的响应属性
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.CERTIFICATE_EXCEL);
-		
 		// 写入 Excel 文件并下载
 		try (OutputStream outputStream = response.getOutputStream()) {
 			EasyExcel.write(outputStream, CertificateExcelVO.class)
@@ -321,21 +323,28 @@ public class ExcelController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadCourse(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<CourseExcelVO> courseExcelVOList = courseService.list().stream().map(course -> {
-					CourseExcelVO userExcelVO = new CourseExcelVO();
-					BeanUtils.copyProperties(course, userExcelVO);
-					userExcelVO.setId(String.valueOf(course.getId()));
-					userExcelVO.setUserId(String.valueOf(course.getUserId()));
-					userExcelVO.setAcquisitionTime(ExcelUtils.dateToString(course.getAcquisitionTime()));
-					userExcelVO.setFinishTime(ExcelUtils.dateToString(course.getFinishTime()));
-					userExcelVO.setCreateTime(ExcelUtils.dateToString(course.getCreateTime()));
-					userExcelVO.setUpdateTime(ExcelUtils.dateToString(course.getUpdateTime()));
-					return userExcelVO;
-				})
-				.collect(Collectors.toList());
+		List<CompletableFuture<CourseExcelVO>> futures = courseService.list().stream().map(course -> CompletableFuture.supplyAsync(() -> {
+			CourseExcelVO userExcelVO = new CourseExcelVO();
+			BeanUtils.copyProperties(course, userExcelVO);
+			// 异步获取用户信息
+			CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(() -> userService.getById(course.getUserId()));
+			// 等待所有异步任务完成并设置相关信息
+			try {
+				User user = userFuture.get();
+				userExcelVO.setUserName(user.getUserName());
+				userExcelVO.setAcquisitionTime(ExcelUtils.dateToString(course.getAcquisitionTime()));
+				userExcelVO.setFinishTime(ExcelUtils.dateToString(course.getFinishTime()));
+			} catch (InterruptedException | ExecutionException e) {
+				log.error("数据获取失败: {}", e.getMessage());
+				Thread.currentThread().interrupt();
+			}
+			
+			return userExcelVO;
+		})).collect(Collectors.toList());
+		// 等待所有 CompletableFuture 执行完毕
+		List<CourseExcelVO> courseExcelVOList = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.COURSE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), CourseExcelVO.class)
@@ -393,16 +402,27 @@ public class ExcelController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadUserCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<UserCertificateExcelVO> userCertificateExcelVOList = userCertificateService.list().stream().map(userCertificate -> {
+		List<CompletableFuture<UserCertificateExcelVO>> futures = userCertificateService.list().stream().map(userCertificate -> CompletableFuture.supplyAsync(() -> {
 					UserCertificateExcelVO userCertificateExcelVO = new UserCertificateExcelVO();
 					BeanUtils.copyProperties(userCertificate, userCertificateExcelVO);
-					userCertificateExcelVO.setId(String.valueOf(userCertificate.getId()));
-					userCertificateExcelVO.setUserId(String.valueOf(userCertificate.getUserId()));
-					userCertificateExcelVO.setCertificateId(String.valueOf(userCertificate.getCertificateId()));
-					userCertificateExcelVO.setCreateTime(ExcelUtils.dateToString(userCertificate.getCreateTime()));
+					
+					// 异步获取用户信息
+					CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(() -> userService.getById(userCertificate.getUserId()));
+					// 等待所有异步任务完成并设置相关信息
+					try {
+						User user = userFuture.get();
+						userCertificateExcelVO.setUserName(user.getUserName());
+						userCertificateExcelVO.setUserNumber(user.getUserNumber());
+					} catch (InterruptedException | ExecutionException e) {
+						log.error("数据获取失败: {}", e.getMessage());
+						Thread.currentThread().interrupt();
+					}
 					return userCertificateExcelVO;
-				})
+					
+				}))
 				.collect(Collectors.toList());
+		List<UserCertificateExcelVO> userCertificateExcelVOList = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+		
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_CERTIFICATE_EXCEL);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
@@ -431,17 +451,15 @@ public class ExcelController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadLogPrintCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<LogPrintCertificateExcelVO> logPrintCertificateExcelVOList = logPrintCertificateService.list().stream().map(logPrintCertificate -> {
-					LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
-					BeanUtils.copyProperties(logPrintCertificate, logPrintCertificateExcelVO);
-					logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(logPrintCertificate.getUserIdCard()));
-					logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(logPrintCertificate.getUserGender())).getText());
-					logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
-					logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
-					
-					return logPrintCertificateExcelVO;
-				})
-				.collect(Collectors.toList());
+		List<CompletableFuture<LogPrintCertificateExcelVO>> logPrintCertificateExcelVOList = logPrintCertificateService.list().stream().map(logPrintCertificate -> CompletableFuture.supplyAsync(() -> {
+			LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
+			BeanUtils.copyProperties(logPrintCertificate, logPrintCertificateExcelVO);
+			logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(logPrintCertificate.getUserIdCard()));
+			logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(logPrintCertificate.getUserGender())).getText());
+			logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
+			logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+			return logPrintCertificateExcelVO;
+		})).collect(Collectors.toList());
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.LOG_PRINT_CERTIFICATE_EXCEL);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
@@ -497,22 +515,43 @@ public class ExcelController {
 	@GetMapping("/user/course/download")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadUserCourse(HttpServletResponse response) throws IOException {
-		// 获取数据，根据自身业务修改
-		List<UserCourseExcelVO> userCourseExcelVOList = userCourseService.list().stream().map(userCourse -> {
+		// 获取数据，并发处理 userService 和 courseService 的查询操作
+		List<CompletableFuture<UserCourseExcelVO>> futures = userCourseService.list().stream().map(userCourse ->
+				CompletableFuture.supplyAsync(() -> {
 					UserCourseExcelVO userCourseExcelVO = new UserCourseExcelVO();
 					BeanUtils.copyProperties(userCourse, userCourseExcelVO);
-					User user = userService.getById(userCourse.getUserId());
-					Course course = courseService.getById(userCourse.getCourseId());
-					userCourseExcelVO.setUserName(user.getUserName());
-					userCourseExcelVO.setUserNumber(user.getUserNumber());
-					userCourseExcelVO.setCourseName(course.getCourseName());
-					userCourseExcelVO.setCourseNumber(String.valueOf(course.getCourseNumber()));
+					
+					// 异步获取用户信息
+					CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(() -> userService.getById(userCourse.getUserId()));
+					// 异步获取课程信息
+					CompletableFuture<Course> courseFuture = CompletableFuture.supplyAsync(() -> courseService.getById(userCourse.getCourseId()));
+					
+					// 等待所有异步任务完成并设置相关信息
+					try {
+						User user = userFuture.get();
+						Course course = courseFuture.get();
+						
+						userCourseExcelVO.setUserName(user.getUserName());
+						userCourseExcelVO.setUserNumber(user.getUserNumber());
+						userCourseExcelVO.setCourseName(course.getCourseName());
+						userCourseExcelVO.setCourseNumber(String.valueOf(course.getCourseNumber()));
+					} catch (InterruptedException | ExecutionException e) {
+						log.error("数据获取失败: {}", e.getMessage());
+						Thread.currentThread().interrupt();
+					}
+					
 					return userCourseExcelVO;
 				})
+		).collect(Collectors.toList());
+		
+		// 等待所有 CompletableFuture 执行完毕
+		List<UserCourseExcelVO> userCourseExcelVOList = futures.stream()
+				.map(CompletableFuture::join)
 				.collect(Collectors.toList());
+		
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_COURSE_EXCEL);
-		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭
+		
 		// 写入 Excel 文件
 		try {
 			EasyExcel.write(response.getOutputStream(), UserCourseExcelVO.class)
