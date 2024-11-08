@@ -1,26 +1,20 @@
 package com.kc.learning.controller;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.LogPrintCertificate;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.enums.UserGenderEnum;
-import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
 import com.kc.learning.service.LogPrintCertificateService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.EncryptionUtils;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -29,11 +23,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 打印证书日志接口
@@ -73,7 +62,8 @@ public class LogPrintCertificateController {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, e.getMessage());
 		}
 		// todo 填充默认值
-		logPrintCertificate.setUserIdCard(EncryptionUtils.encrypt(logPrintCertificate.getUserIdCard()));
+		User loginUser = userService.getLoginUser(request);
+		logPrintCertificate.setCreateUserId(loginUser.getId());
 		// 写入数据库
 		boolean result = logPrintCertificateService.save(logPrintCertificate);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
@@ -172,7 +162,7 @@ public class LogPrintCertificateController {
 		ThrowUtils.throwIf(logPrintCertificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
 		// 补充查询条件，只查询当前登录用户的数据
 		User loginUser = userService.getLoginUser(request);
-		logPrintCertificateQueryRequest.setUserId(loginUser.getId());
+		logPrintCertificateQueryRequest.setCreateUserId(loginUser.getId());
 		long current = logPrintCertificateQueryRequest.getCurrent();
 		long size = logPrintCertificateQueryRequest.getPageSize();
 		// 限制爬虫

@@ -3,7 +3,6 @@ package com.kc.learning.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.UserCourse;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;

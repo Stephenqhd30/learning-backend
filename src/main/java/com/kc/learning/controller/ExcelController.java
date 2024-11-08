@@ -6,6 +6,8 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
+import com.kc.learning.exception.BusinessException;
+import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.*;
@@ -451,15 +453,35 @@ public class ExcelController {
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
 	public void downloadLogPrintCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
-		List<CompletableFuture<LogPrintCertificateExcelVO>> logPrintCertificateExcelVOList = logPrintCertificateService.list().stream().map(logPrintCertificate -> CompletableFuture.supplyAsync(() -> {
+		List<CompletableFuture<LogPrintCertificateExcelVO>> futures = logPrintCertificateService.list().stream().map(logPrintCertificate -> CompletableFuture.supplyAsync(() -> {
 			LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
 			BeanUtils.copyProperties(logPrintCertificate, logPrintCertificateExcelVO);
-			logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(logPrintCertificate.getUserIdCard()));
-			logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(logPrintCertificate.getUserGender())).getText());
-			logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
-			logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+			// 异步获取用户、课程、证书信息
+			CompletableFuture<User> userCompletableFuture = CompletableFuture.supplyAsync(() -> userService.getById(logPrintCertificate.getUserId()));
+			CompletableFuture<Course> courseCompletableFuture = CompletableFuture.supplyAsync(() -> courseService.getById(logPrintCertificate.getCourseId()));
+			CompletableFuture<Certificate> certificateCompletableFuture = CompletableFuture.supplyAsync(() -> certificateService.getById(logPrintCertificate.getCertificateId()));
+			
+			// 等待所有异步任务完成并设置相关信息
+			try {
+				User user = userCompletableFuture.get();
+				Course course = courseCompletableFuture.get();
+				Certificate certificate = certificateCompletableFuture.get();
+				logPrintCertificateExcelVO.setUserName(user.getUserName());
+				logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+				logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
+				logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
+				logPrintCertificateExcelVO.setCourseName(course.getCourseName());
+				logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
+				logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+				
+				logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(logPrintCertificate.getAcquisitionTime()));
+				logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+			} catch (InterruptedException | ExecutionException e) {
+				throw new BusinessException(ErrorCode.EXCEL_ERROR, "信息导出失败" + e.getMessage());
+			}
 			return logPrintCertificateExcelVO;
 		})).collect(Collectors.toList());
+		List<LogPrintCertificateExcelVO> logPrintCertificateExcelVOList = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.LOG_PRINT_CERTIFICATE_EXCEL);
 		// 这里 需要指定写用哪个class去写，然后写到第一个sheet，名字为模板 然后文件流会自动关闭

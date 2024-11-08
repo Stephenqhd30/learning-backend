@@ -1,12 +1,10 @@
 package com.kc.learning.controller;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.course.CourseAddRequest;
@@ -14,28 +12,17 @@ import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.dto.course.CourseUpdateRequest;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.vo.course.CourseExcelExampleVO;
-import com.kc.learning.model.vo.course.CourseExcelVO;
 import com.kc.learning.model.vo.course.CourseVO;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 课程接口

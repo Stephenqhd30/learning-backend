@@ -1,43 +1,28 @@
 package com.kc.learning.controller;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
-import com.kc.learning.model.enums.UserGenderEnum;
-import com.kc.learning.model.enums.UserRoleEnum;
 import com.kc.learning.model.vo.user.LoginUserVO;
-import com.kc.learning.model.vo.user.UserExcelExampleVO;
-import com.kc.learning.model.vo.user.UserExcelVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.EncryptionUtils;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static com.kc.learning.constants.UserConstant.USER_AVATAR;
 

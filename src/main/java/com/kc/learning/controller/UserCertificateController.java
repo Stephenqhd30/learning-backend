@@ -1,35 +1,25 @@
 package com.kc.learning.controller;
 
-import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
-import com.kc.learning.model.vo.userCertificate.UserCertificateExcelVO;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
-import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
 import com.kc.learning.service.UserService;
-import com.kc.learning.utils.ExcelUtils;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 用户证书接口

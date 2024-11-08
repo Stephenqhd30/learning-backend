@@ -14,10 +14,11 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class LogPrintCertificatePrintRequest extends PageRequest implements Serializable {
+	
 	/**
-	 * 用户课程id
+	 * 课程id
 	 */
-	private Long userCourseId;
+	private Long courseId;
 	
 	/**
 	 * 证书id

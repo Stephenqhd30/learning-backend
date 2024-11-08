@@ -61,9 +61,9 @@ public class LogPrintCertificateExcelVO implements Serializable {
 	private String acquisitionTime;
 	
 	/**
-	 * 结课时间
+	 * 证书获得时间
 	 */
-	@ExcelProperty("结课时间")
+	@ExcelProperty("证书获得时间")
 	@DateTimeFormat("yyyy年MM月dd日")
 	@ColumnWidth(30)
 	private String finishTime;
