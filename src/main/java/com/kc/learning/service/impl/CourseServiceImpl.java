@@ -30,6 +30,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -132,7 +134,7 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		// 对象转封装类
 		CourseVO courseVO = CourseVO.objToVo(course);
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
+		
 		// 1. 关联查询用户信息
 		Long userId = course.getUserId();
 		User user = null;
@@ -141,7 +143,6 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		}
 		UserVO userVO = userService.getUserVO(user, request);
 		courseVO.setUserVO(userVO);
-		// endregion
 		
 		return courseVO;
 	}
@@ -160,24 +161,36 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		if (CollUtil.isEmpty(courseList)) {
 			return courseVOPage;
 		}
-		// 对象列表 => 封装对象列表
-		List<CourseVO> courseVOList = courseList.stream().map(CourseVO::objToVo).collect(Collectors.toList());
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
-		// 1. 关联查询用户信息
-		Set<Long> userIdSet = courseList.stream().map(Course::getUserId).collect(Collectors.toSet());
-		Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-				.collect(Collectors.groupingBy(User::getId));
-		// 填充信息
-		courseVOList.forEach(courseVO -> {
-			Long userId = courseVO.getUserId();
-			User user = null;
-			if (userIdUserListMap.containsKey(userId)) {
-				user = userIdUserListMap.get(userId).get(0);
+		// 异步转换 Course -> CourseVO 列表
+		List<CourseVO> courseVOList = courseList.stream()
+				.map(CourseVO::objToVo)
+				.collect(Collectors.toList());
+		
+		// 提取用户 ID 并发查询
+		Set<Long> userIdSet = courseList.stream()
+				.map(Course::getUserId)
+				.collect(Collectors.toSet());
+		if (CollUtil.isNotEmpty(userIdSet)) {
+			CompletableFuture<Map<Long, List<User>>> mapCompletableFuture = CompletableFuture.supplyAsync(() -> userService.listByIds(userIdSet).stream()
+					.collect(Collectors.groupingBy(User::getId)));
+			try {
+				Map<Long, List<User>> userIdUserListMap = mapCompletableFuture.get();
+				// 填充信息
+				courseVOList.forEach(courseVO -> {
+					Long userId = courseVO.getUserId();
+					User user = null;
+					if (userIdUserListMap.containsKey(userId)) {
+						user = userIdUserListMap.get(userId).get(0);
+					}
+					courseVO.setUserVO(userService.getUserVO(user, request));
+				});
+			} catch (InterruptedException | ExecutionException e) {
+				Thread.currentThread().interrupt();
+				throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取证书信息失败" + e.getMessage());
 			}
-			courseVO.setUserVO(userService.getUserVO(user, request));
-		});
-		// endregion
+		}
+		
 		courseVOPage.setRecords(courseVOList);
 		return courseVOPage;
 	}
@@ -196,21 +209,16 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		
 		try {
 			EasyExcel.read(file.getInputStream(), Course.class, listener).sheet().doRead();
-		} catch (IOException e) {
+		} catch (IOException | ExcelAnalysisException e) {
 			log.error("文件读取失败: {}", e.getMessage());
 			throw new BusinessException(ErrorCode.EXCEL_ERROR, "文件读取失败");
-		} catch (ExcelAnalysisException e) {
-			log.error("Excel解析失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.EXCEL_ERROR, "Excel解析失败");
 		}
 		
 		// 返回处理结果，包括成功和异常的数据
 		Map<String, Object> result = new HashMap<>();
 		// 获取异常记录
 		result.put("errorRecords", listener.getErrorRecords());
-		
 		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
-		
 		return result;
 	}
 	

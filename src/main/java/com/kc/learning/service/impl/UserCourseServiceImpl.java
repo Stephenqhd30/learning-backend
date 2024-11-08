@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -124,27 +126,34 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 	public UserCourseVO getUserCourseVO(UserCourse userCourse, HttpServletRequest request) {
 		// 对象转封装类
 		UserCourseVO userCourseVO = UserCourseVO.objToVo(userCourse);
-		
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
 		// 1. 关联查询用户信息
-		Long userId = userCourse.getUserId();
-		User user = null;
-		if (userId != null && userId > 0) {
-			user = userService.getById(userId);
-		}
-		UserVO userVO = userService.getUserVO(user, request);
-		Long courseId = userCourse.getCourseId();
-		Course course = null;
-		if (courseId != null && courseId > 0) {
-			course = courseService.getById(courseId);
-		}
-		CourseVO courseVO = courseService.getCourseVO(course, request);
-		// 2. 关联课程信息
-		userCourseVO.setUserVO(userVO);
-		userCourseVO.setCourseVO(courseVO);
-		// endregion
+		CompletableFuture<UserVO> userFuture = CompletableFuture.supplyAsync(() -> {
+			Long userId = userCourse.getUserId();
+			
+			if (userId != null && userId > 0) {
+				User user = userService.getById(userId);
+				return userService.getUserVO(user, request);
+			}
+			return null;
+		});
+		// 2. 关联查询课程信息
+		CompletableFuture<CourseVO> courseFuture = CompletableFuture.supplyAsync(() -> {
+			Long courseId = userCourse.getCourseId();
+			if (courseId != null && courseId > 0) {
+				Course course = courseService.getById(courseId);
+				return courseService.getCourseVO(course, request);
+			}
+			return null;
+		});
 		
+		try {
+			userCourseVO.setUserVO(userFuture.get());
+			userCourseVO.setCourseVO(courseFuture.get());
+		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取用户课程封装失败");
+		}
 		return userCourseVO;
 	}
 	
@@ -162,35 +171,49 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		if (CollUtil.isEmpty(userCourseList)) {
 			return userCourseVOPage;
 		}
-		// 对象列表 => 封装对象列表
-		List<UserCourseVO> userCourseVOList = userCourseList.stream().map(UserCourseVO::objToVo).collect(Collectors.toList());
+		// 转换为 UserCourseVO 列表
+		List<UserCourseVO> userCourseVOList = userCourseList.stream()
+				.map(UserCourseVO::objToVo)
+				.collect(Collectors.toList());
 		
-		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
-		// 1. 关联查询用户信息
-		// 2. 关联查询课程信息
+		// 提取用户和课程的 ID 集合
 		Set<Long> userIdSet = userCourseList.stream().map(UserCourse::getUserId).collect(Collectors.toSet());
 		Set<Long> courseIdSet = userCourseList.stream().map(UserCourse::getCourseId).collect(Collectors.toSet());
-		Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-				.collect(Collectors.groupingBy(User::getId));
-		Map<Long, List<Course>> courseIdCourseListMap = courseService.listByIds(courseIdSet).stream()
-				.collect(Collectors.groupingBy(Course::getId));
-		// 填充信息
-		userCourseVOList.forEach(userCourseVO -> {
-			Long userId = userCourseVO.getUserId();
-			Long courseId = userCourseVO.getCourseId();
-			User user = null;
-			Course course = null;
-			if (userIdUserListMap.containsKey(userId)) {
-				user = userIdUserListMap.get(userId).get(0);
-			}
-			if (courseIdCourseListMap.containsKey(courseId)) {
-				course = courseIdCourseListMap.get(courseId).get(0);
-			}
-			userCourseVO.setUserVO(userService.getUserVO(user, request));
-			userCourseVO.setCourseVO(courseService.getCourseVO(course, request));
-		});
-		// endregion
+		
+		// 并发查询用户和课程信息
+		CompletableFuture<Map<Long, User>> userFuture = CompletableFuture.supplyAsync(() ->
+				userService.listByIds(userIdSet).stream().collect(Collectors.toMap(User::getId, user -> user))
+		);
+		CompletableFuture<Map<Long, Course>> courseFuture = CompletableFuture.supplyAsync(() ->
+				courseService.listByIds(courseIdSet).stream().collect(Collectors.toMap(Course::getId, course -> course))
+		);
+		
+		try {
+			// 获取查询结果
+			Map<Long, User> userMap = userFuture.get();
+			Map<Long, Course> courseMap = courseFuture.get();
+			
+			// 填充 UserCourseVO 的用户和课程信息
+			userCourseVOList.forEach(userCourseVO -> {
+				Long userId = userCourseVO.getUserId();
+				Long courseId = userCourseVO.getCourseId();
+				
+				User user = userMap.get(userId);
+				Course course = courseMap.get(courseId);
+				
+				if (user != null) {
+					userCourseVO.setUserVO(userService.getUserVO(user, request));
+				}
+				if (course != null) {
+					userCourseVO.setCourseVO(courseService.getCourseVO(course, request));
+				}
+			});
+		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取用户课程封装失败");
+		}
+		
+		// 设置分页结果
 		userCourseVOPage.setRecords(userCourseVOList);
 		return userCourseVOPage;
 	}
@@ -209,14 +232,10 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		
 		try {
 			EasyExcel.read(file.getInputStream(), UserCourseExcelVO.class, listener).sheet().doRead();
-		} catch (IOException e) {
+		} catch (IOException | ExcelAnalysisException e) {
 			log.error("文件读取失败: {}", e.getMessage());
 			throw new BusinessException(ErrorCode.EXCEL_ERROR, "文件读取失败");
-		} catch (ExcelAnalysisException e) {
-			log.error("Excel解析失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.EXCEL_ERROR, "Excel解析失败");
 		}
-		
 		// 返回处理结果，包括成功和异常的数据
 		Map<String, Object> result = new HashMap<>();
 		// 获取异常记录

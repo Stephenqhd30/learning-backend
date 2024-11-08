@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
+import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.UserCertificateMapper;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -30,6 +31,8 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -140,26 +143,33 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 	public UserCertificateVO getUserCertificateVO(UserCertificate userCertificate, HttpServletRequest request) {
 		// 对象转封装类
 		UserCertificateVO userCertificateVO = UserCertificateVO.objToVo(userCertificate);
-		
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
 		// 1. 关联查询用户信息
-		Long userId = userCertificate.getUserId();
-		Long certificateId = userCertificate.getCertificateId();
-		User user = null;
-		if (userId != null && userId > 0) {
-			user = userService.getById(userId);
-		}
-		Certificate certificate = null;
-		if (certificateId != null && certificateId > 0) {
-			certificate = certificateService.getById(certificateId);
-		}
-		UserVO userVO = userService.getUserVO(user, request);
-		CertificateVO certificateVO = certificateService.getCertificateVO(certificate, request);
-		userCertificateVO.setUserVO(userVO);
-		userCertificateVO.setCertificateVO(certificateVO);
-		// endregion
+		CompletableFuture<UserVO> userFutrue = CompletableFuture.supplyAsync(() -> {
+			Long userId = userCertificate.getUserId();
+			if (userId != null && userId > 0) {
+				User user = userService.getById(userId);
+				return userService.getUserVO(user, request);
+			}
+			return null;
+		});
+		CompletableFuture<CertificateVO> certificateFuture = CompletableFuture.supplyAsync(() -> {
+			Long certificateId = userCertificate.getCertificateId();
+			if (certificateId != null && certificateId > 0) {
+				Certificate certificate = certificateService.getById(certificateId);
+				return certificateService.getCertificateVO(certificate, request);
+			}
+			return null;
+		});
 		
+		// 等待所有异步任务完成，并获取结果
+		try {
+			userCertificateVO.setUserVO(userFutrue.get());
+			userCertificateVO.setCertificateVO(certificateFuture.get());
+		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取打印证书日志封装失败");
+		}
 		return userCertificateVO;
 	}
 	
@@ -178,45 +188,56 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		if (CollUtil.isEmpty(userCertificateList)) {
 			return userCertificateVOPage;
 		}
-		// 对象列表 => 封装对象列表
-		List<UserCertificateVO> userCertificateVOList = userCertificateList.stream().map(UserCertificateVO::objToVo).collect(Collectors.toList());
-		
+		// 封装 UserCertificateVO 对象列表
+		List<UserCertificateVO> userCertificateVOList = userCertificateList.stream()
+				.map(UserCertificateVO::objToVo)
+				.collect(Collectors.toList());
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
-		// 1. 关联查询用户信息
+		// 提取用户和证书的 ID 集合
 		Set<Long> userIdSet = userCertificateList.stream().map(UserCertificate::getUserId).collect(Collectors.toSet());
-		Set<Long> certificateNumberSet = userCertificateList.stream().map(UserCertificate::getCertificateId).collect(Collectors.toSet());
-		Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-				.collect(Collectors.groupingBy(User::getId));
-		Map<Long, List<Certificate>> certificateNumberCertificateListMap = certificateService.listByIds(certificateNumberSet).stream()
-				.collect(Collectors.groupingBy(Certificate::getId));
-		// 填充信息
-		userCertificateVOList.forEach(userCertificateVO -> {
-			Long userId = userCertificateVO.getUserId();
-			Long certificateId = userCertificateVO.getCertificateId();
-			User user = null;
-			Certificate certificate = null;
-			if (userIdUserListMap.containsKey(userId)) {
-				user = userIdUserListMap.get(userId).get(0);
-			}
-			if (certificateNumberCertificateListMap.containsKey(certificateId)) {
-				certificate = certificateNumberCertificateListMap.get(certificateId).get(0);
-			}
-			userCertificateVO.setUserVO(userService.getUserVO(user, request));
-			userCertificateVO.setCertificateVO(certificateService.getCertificateVO(certificate, request));
-		});
-		// endregion
+		Set<Long> certificateIdSet = userCertificateList.stream().map(UserCertificate::getCertificateId).collect(Collectors.toSet());
+		
+		// 使用 CompletableFuture 并发查询用户和证书信息
+		CompletableFuture<Map<Long, User>> userFuture = CompletableFuture.supplyAsync(() ->
+				userService.listByIds(userIdSet).stream().collect(Collectors.toMap(User::getId, user -> user))
+		);
+		
+		CompletableFuture<Map<Long, Certificate>> certificateFuture = CompletableFuture.supplyAsync(() ->
+				certificateService.listByIds(certificateIdSet).stream().collect(Collectors.toMap(Certificate::getId, certificate -> certificate))
+		);
+		
+		
+		try {
+			// 获取并发任务的结果
+			Map<Long, User> userMap = userFuture.get();
+			Map<Long, Certificate> certificateMap = certificateFuture.get();
+			
+			// 填充 UserCertificateVO 的用户和证书信息
+			userCertificateVOList.forEach(userCertificateVO -> {
+				Long userId = userCertificateVO.getUserId();
+				Long certificateId = userCertificateVO.getCertificateId();
+				
+				User user = userMap.get(userId);
+				Certificate certificate = certificateMap.get(certificateId);
+				
+				if (user != null) {
+					userCertificateVO.setUserVO(userService.getUserVO(user, request));
+				}
+				if (certificate != null) {
+					userCertificateVO.setCertificateVO(certificateService.getCertificateVO(certificate, request));
+				}
+			});
+		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取用户证书封装失败");
+		}
+		
+		// 设置分页结果
 		userCertificateVOPage.setRecords(userCertificateVOList);
 		return userCertificateVOPage;
+		
 	}
 	
-	/**
-	 *
-	 * @param userCertificateQueryRequest userCertificateQueryRequest
-	 * @param current                     current
-	 * @param size                        size
-	 * @return Page<UserCertificate>
-	 */
 	/**
 	 * 分页获取用户证书封装（通过审核）
 	 *

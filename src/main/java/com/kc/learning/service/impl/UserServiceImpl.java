@@ -273,12 +273,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		
 		try {
 			EasyExcel.read(file.getInputStream(), User.class, listener).sheet().doRead();
-		} catch (IOException e) {
+		} catch (IOException | ExcelAnalysisException e) {
 			log.error("文件读取失败: {}", e.getMessage());
 			throw new BusinessException(ErrorCode.OPERATION_ERROR, "文件读取失败");
-		} catch (ExcelAnalysisException e) {
-			log.error("Excel解析失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "Excel解析失败");
 		}
 		
 		// 返回处理结果，包括成功和异常的数据

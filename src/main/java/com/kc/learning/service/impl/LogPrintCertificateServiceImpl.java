@@ -184,6 +184,7 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 			logPrintCertificateVO.setCertificateVO(certificateFuture.get());
 			logPrintCertificateVO.setCourseVO(courseFuture.get());
 		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取打印证书日志封装失败");
 		}
 		// endregion
@@ -248,6 +249,7 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 				logPrintCertificateVO.setCourseVO(courseService.getCourseVO(course, request));
 			});
 		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取打印证书日志封装失败");
 		}
 		

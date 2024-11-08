@@ -168,9 +168,13 @@ public class CertificateController {
 		certificate.setReviewerId(userService.getLoginUser(request).getId());
 		certificate.setReviewTime(new Date());
 		// 操作数据库
-		boolean result = certificateService.updateById(certificate);
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		return ResultUtils.success(true);
+		try {
+			boolean result = certificateService.updateById(certificate);
+			ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+			return ResultUtils.success(true);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "更新失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -182,11 +186,15 @@ public class CertificateController {
 	@GetMapping("/get/vo")
 	public BaseResponse<CertificateVO> getCertificateVOById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR, "id有误");
-		// 查询数据库
-		Certificate certificate = certificateService.getById(id);
-		ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateVO(certificate, request));
+		try {
+			// 查询数据库
+			Certificate certificate = certificateService.getById(id);
+			ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateVO(certificate, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -200,10 +208,14 @@ public class CertificateController {
 	public BaseResponse<Page<Certificate>> listCertificateByPage(@RequestBody CertificateQueryRequest certificateQueryRequest) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		return ResultUtils.success(certificatePage);
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			return ResultUtils.success(certificatePage);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -220,11 +232,15 @@ public class CertificateController {
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	
@@ -244,11 +260,15 @@ public class CertificateController {
 		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	
@@ -271,11 +291,15 @@ public class CertificateController {
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -297,11 +321,15 @@ public class CertificateController {
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	/**
@@ -327,11 +355,15 @@ public class CertificateController {
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-				certificateService.getQueryWrapper(certificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
+		try {
+			// 查询数据库
+			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+					certificateService.getQueryWrapper(certificateQueryRequest));
+			// 获取封装类
+			return ResultUtils.success(certificateService.getCertificateForUserVOPage(certificatePage, request));
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
+		}
 	}
 	
 	// endregion

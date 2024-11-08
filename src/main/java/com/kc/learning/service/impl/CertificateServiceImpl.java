@@ -35,6 +35,8 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -159,7 +161,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// 对象转封装类
 		CertificateVO certificateVO = CertificateVO.objToVo(certificate);
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
-		// region 可选
 		// 1. 关联查询用户信息
 		Long userId = certificate.getUserId();
 		User user = null;
@@ -168,7 +169,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		}
 		UserVO userVO = userService.getUserVO(user, request);
 		certificateVO.setUserVO(userVO);
-		// endregion
 		return certificateVO;
 	}
 	
@@ -187,24 +187,38 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			return certificateVOPage;
 		}
 		// 对象列表 => 封装对象列表
-		List<CertificateVO> certificateVOList = certificateList.stream().map(CertificateVO::objToVo).collect(Collectors.toList());
-		
+		// 1. 异步转换 Certificate -> CertificateVO 列表
+		List<CompletableFuture<CertificateVO>> futures = certificateList.stream()
+				.map(certificate -> CompletableFuture.supplyAsync(() -> getCertificateVO(certificate, request)))
+				.collect(Collectors.toList());
+		// 2. 等待所有 CertificateVO 创建完成
+		List<CertificateVO> certificateVOList = futures.stream()
+				.map(CompletableFuture::join)
+				.collect(Collectors.toList());
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
 		// region 可选
-		// 1. 关联查询用户信息
+		// 3. 并发查询用户信息
 		Set<Long> userIdSet = certificateList.stream().map(Certificate::getUserId).collect(Collectors.toSet());
-		Map<Long, List<User>> userIdUserListMap = userService.listByIds(userIdSet).stream()
-				.collect(Collectors.groupingBy(User::getId));
-		// 填充信息
-		certificateVOList.forEach(certificateVO -> {
-			Long userId = certificateVO.getUserId();
-			User user = null;
-			if (userIdUserListMap.containsKey(userId)) {
-				user = userIdUserListMap.get(userId).get(0);
-			}
-			certificateVO.setUserVO(userService.getUserVO(user, request));
-		});
-		// endregion
+		CompletableFuture<Map<Long, User>> userMapFuture = CompletableFuture.supplyAsync(() ->
+				userService.listByIds(userIdSet).stream()
+						.collect(Collectors.toMap(User::getId, user -> user))
+		);
+		try {
+			// 等待用户信息查询完成
+			Map<Long, User> userIdUserMap = userMapFuture.get();
+			
+			// 填充用户信息至 CertificateVO
+			certificateVOList.forEach(certificateVO -> {
+				Long userId = certificateVO.getUserId();
+				User user = userIdUserMap.get(userId);
+				if (user != null) {
+					certificateVO.setUserVO(userService.getUserVO(user, request));
+				}
+			});
+		} catch (InterruptedException | ExecutionException e) {
+			Thread.currentThread().interrupt();
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "证书获取失败" + e.getMessage());
+		}
 		certificateVOPage.setRecords(certificateVOList);
 		return certificateVOPage;
 	}
@@ -224,10 +238,15 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			return certificateVOPage;
 		}
 		// 对象列表 => 封装对象列表
-		List<CertificateForUserVO> certificateVOList = certificateList.stream().map(CertificateForUserVO::objToVo).collect(Collectors.toList());
-		
-		// endregion
-		certificateVOPage.setRecords(certificateVOList);
+		CompletableFuture<List<CertificateForUserVO>> futures = CompletableFuture.supplyAsync(() -> certificateList.stream()
+				.map(CertificateForUserVO::objToVo)
+				.collect(Collectors.toList()));
+		try {
+			List<CertificateForUserVO> certificateVOList = futures.get();
+			certificateVOPage.setRecords(certificateVOList);
+		} catch (InterruptedException | ExecutionException e) {
+			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "获取证书列表失败" + e.getMessage());
+		}
 		return certificateVOPage;
 	}
 	
@@ -243,14 +262,10 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		CertificateExcelListener listener = new CertificateExcelListener(this, userService, request);
 		try {
 			EasyExcel.read(file.getInputStream(), CertificateImportExcelVO.class, listener).sheet().doRead();
-		} catch (IOException e) {
+		} catch (IOException | ExcelAnalysisException e) {
 			log.error("文件读取失败: {}", e.getMessage());
 			throw new BusinessException(ErrorCode.EXCEL_ERROR, "文件读取失败");
-		} catch (ExcelAnalysisException e) {
-			log.error("Excel解析失败: {}", e.getMessage());
-			throw new BusinessException(ErrorCode.EXCEL_ERROR, "Excel解析失败");
 		}
-		
 		// 返回处理结果，包括成功和异常的数据
 		Map<String, Object> result = new HashMap<>();
 		// 获取异常记录
