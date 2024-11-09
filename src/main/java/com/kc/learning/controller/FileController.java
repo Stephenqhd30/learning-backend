@@ -3,7 +3,6 @@ package com.kc.learning.controller;
 import cn.hutool.core.io.FileUtil;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.FileConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.manager.CosManager;
 import com.kc.learning.model.dto.file.UploadFileRequest;
@@ -11,8 +10,8 @@ import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.FileUploadBizEnum;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ResultUtils;
+import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
@@ -21,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -41,7 +40,7 @@ public class FileController {
 	private CosManager cosManager;
 	
 	/**
-	 * 文件上传
+	 * 文件上传(使用COS对象存储)
 	 *
 	 * @param multipartFile     multipartFile
 	 * @param uploadFileRequest uploadFileRequest
@@ -53,34 +52,23 @@ public class FileController {
 	                                       UploadFileRequest uploadFileRequest, HttpServletRequest request) {
 		String biz = uploadFileRequest.getBiz();
 		FileUploadBizEnum fileUploadBizEnum = FileUploadBizEnum.getEnumByValue(biz);
-		if (fileUploadBizEnum == null) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR);
-		}
+		ThrowUtils.throwIf(fileUploadBizEnum == null, ErrorCode.PARAMS_ERROR, "文件上传有误");
+		
+		// 校验文件类型
 		validFile(multipartFile, fileUploadBizEnum);
 		User loginUser = userService.getLoginUser(request);
+		
 		// 文件目录：根据业务、用户来划分
-		String uuid = RandomStringUtils.randomAlphanumeric(8);
-		String filename = uuid + "-" + multipartFile.getOriginalFilename();
-		String filepath = String.format("/%s/%s/%s/%s", "learning", fileUploadBizEnum.getValue(), loginUser.getId(), filename);
-		File file = null;
+		String path = String.format("/%s/%s/%s", "learning", fileUploadBizEnum.getValue(), loginUser.getId());
+		
 		try {
-			// 上传文件
-			file = File.createTempFile(filepath, null);
-			multipartFile.transferTo(file);
-			cosManager.putObject(filepath, file);
+			// 直接上传文件
+			String s = cosManager.uploadToCos(multipartFile, path);
 			// 返回可访问地址
-			return ResultUtils.success(FileConstant.COS_HOST + filepath);
-		} catch (Exception e) {
-			log.error("file upload error, filepath = " + filepath, e);
+			return ResultUtils.success(s);
+		} catch (IOException e) {
+			log.error("文件上床失败, 文件路径为: {}", path, e);
 			throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
-		} finally {
-			if (file != null) {
-				// 删除临时文件
-				boolean delete = file.delete();
-				if (!delete) {
-					log.error("file delete error, filepath = {}", filepath);
-				}
-			}
 		}
 	}
 	
@@ -90,15 +78,15 @@ public class FileController {
 	 * @param multipartFile     multipartFile
 	 * @param fileUploadBizEnum 业务类型
 	 */
-	private void validFile(MultipartFile multipartFile, FileUploadBizEnum fileUploadBizEnum) {
+	public void validFile(MultipartFile multipartFile, FileUploadBizEnum fileUploadBizEnum) {
 		// 文件大小
 		long fileSize = multipartFile.getSize();
 		// 文件后缀
 		String fileSuffix = FileUtil.getSuffix(multipartFile.getOriginalFilename());
-		final long ONE_M = 1024 * 1024L;
 		if (FileUploadBizEnum.USER_AVATAR.equals(fileUploadBizEnum)) {
+			long ONE_M = 5 * 1024 * 1024L;
 			if (fileSize > ONE_M) {
-				throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小不能超过 1M");
+				throw new BusinessException(ErrorCode.PARAMS_SIZE_ERROR, "文件大小不能超过 5M");
 			}
 			if (!Arrays.asList("jpeg", "jpg", "svg", "png", "webp").contains(fileSuffix)) {
 				throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件类型错误");

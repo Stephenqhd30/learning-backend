@@ -85,6 +85,23 @@ knife4j:
         api-rule-resources:
           - com.kc.learning.controller
 
+# 对象存储配置
+oss:
+  # MinIO OSS配置
+  minio:
+    # todo 是否开启
+    enable: false
+    # 域名（格式：【ip:port】）
+    endpoint: 127.0.0.1:9000
+    # 是否开启TLS
+    enable-tls: false
+    # 用户的 SecretId
+    secret-id: xxxxxxxx
+    # 用户的 SecretKey
+    secret-key: xxxxxxxx
+    # 桶名称
+    bucket-name: xxxxxxxx
+
 
 
     

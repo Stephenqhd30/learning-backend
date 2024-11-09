@@ -97,6 +97,12 @@
             <artifactId>redisson</artifactId>
             <version>3.12.3</version>
         </dependency>
+        <!-- Minio -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+            <version>8.5.12</version>
+        </dependency>
         <!-- 文件上传依赖 -->
         <!-- https://mvnrepository.com/artifact/commons-fileupload/commons-fileupload -->
         <dependency>
