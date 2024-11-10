@@ -354,8 +354,8 @@ public class ExcelController {
 					.doWrite(courseExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 	
@@ -386,8 +386,8 @@ public class ExcelController {
 					.doWrite(courseExcelExampleVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 	
@@ -435,8 +435,8 @@ public class ExcelController {
 					.doWrite(userCertificateExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 	
@@ -492,8 +492,8 @@ public class ExcelController {
 					.doWrite(logPrintCertificateExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 	
@@ -581,8 +581,8 @@ public class ExcelController {
 					.doWrite(userCourseExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 	
@@ -612,8 +612,8 @@ public class ExcelController {
 					.doWrite(userCourseExcelVOList);
 			log.info("文件导出成功");
 		} catch (Exception e) {
-			log.error("导出失败:{}", e.getMessage());
 			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "导出失败");
+			log.error("导出失败:{}", e.getMessage());
 		}
 	}
 }

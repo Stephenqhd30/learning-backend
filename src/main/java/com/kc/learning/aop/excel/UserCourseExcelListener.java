@@ -157,7 +157,7 @@ public class UserCourseExcelListener extends AnalysisEventListener<UserCourseExc
 		List<UserCourse> dataToSave = List.copyOf(cachedDataList);
 		// 异步执行批量保存操作
 		CompletableFuture.runAsync(() -> {
-			log.info("开始批量保存{}条证书数据到数据库...", dataToSave.size());
+			log.info("开始批量保存{}条数据到数据库...", dataToSave.size());
 			try {
 				userCourseService.saveBatch(dataToSave);
 				log.info("批量保存数据库成功！");

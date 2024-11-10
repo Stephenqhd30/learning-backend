@@ -1,5 +1,7 @@
 package com.kc.learning.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
@@ -7,22 +9,33 @@ import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
+import com.kc.learning.manager.CosManager;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
-import com.kc.learning.model.entity.LogPrintCertificate;
-import com.kc.learning.model.entity.User;
+import com.kc.learning.model.entity.*;
+import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.UserGenderEnum;
+import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
-import com.kc.learning.service.LogPrintCertificateService;
-import com.kc.learning.service.UserService;
-import com.kc.learning.utils.ResultUtils;
-import com.kc.learning.utils.ThrowUtils;
+import com.kc.learning.service.*;
+import com.kc.learning.utils.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.disk.DiskFileItem;
 import org.springframework.beans.BeanUtils;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.commons.CommonsMultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.OutputStream;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 打印证书日志接口
@@ -40,6 +53,18 @@ public class LogPrintCertificateController {
 	@Resource
 	private UserService userService;
 	
+	@Resource
+	private CertificateService certificateService;
+	
+	@Resource
+	private CourseService courseService;
+	
+	@Resource
+	private UserCourseService userCourseService;
+	
+	@Resource
+	private CosManager cosManager;
+	
 	// region 增删改查
 	
 	/**
@@ -50,26 +75,95 @@ public class LogPrintCertificateController {
 	 * @return {@link BaseResponse<Long>}
 	 */
 	@PostMapping("/add")
+	@Transactional(rollbackFor = Exception.class)
 	public BaseResponse<Long> addLogPrintCertificate(@RequestBody LogPrintCertificateAddRequest logPrintCertificateAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(logPrintCertificateAddRequest == null, ErrorCode.PARAMS_ERROR);
 		// todo 在此处将实体类和 DTO 进行转换
 		LogPrintCertificate logPrintCertificate = new LogPrintCertificate();
 		BeanUtils.copyProperties(logPrintCertificateAddRequest, logPrintCertificate);
-		// 数据校验
+		// 异步获取证书、课程和用户数据
+		CompletableFuture<Certificate> certificateFuture = CompletableFuture.supplyAsync(() -> certificateService.getById(logPrintCertificateAddRequest.getCertificateId()));
+		CompletableFuture<Course> courseFuture = CompletableFuture.supplyAsync(() -> courseService.getById(logPrintCertificateAddRequest.getCourseId()));
+		CompletableFuture<User> userFuture = CompletableFuture.supplyAsync(() -> userService.getById(logPrintCertificateAddRequest.getUserId()));
+		
 		try {
-			logPrintCertificateService.validLogPrintCertificate(logPrintCertificate, true);
+			// 等待所有异步任务完成
+			CompletableFuture.allOf(certificateFuture, courseFuture, userFuture).join();
+			// // 数据校验
+			Certificate certificate = certificateFuture.get();
+			Course course = courseFuture.get();
+			User user = userFuture.get();
+			ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书未找到");
+			ThrowUtils.throwIf(course == null, ErrorCode.NOT_FOUND_ERROR, "课程未找到");
+			ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户未找到");
+			// 验证用户是否属于课程
+			UserCourse userCourse = CompletableFuture.supplyAsync(() -> {
+				LambdaQueryWrapper<UserCourse> queryWrapper = Wrappers.lambdaQuery(UserCourse.class)
+						.eq(UserCourse::getUserId, user.getId())
+						.eq(UserCourse::getCourseId, course.getId());
+				return userCourseService.getOne(queryWrapper);
+			}).get();
+			ThrowUtils.throwIf(userCourse == null, ErrorCode.NOT_FOUND_ERROR, "用户未加入该课程");
+			// 验证证书是否属于该用户
+			ThrowUtils.throwIf(!certificate.getUserId().equals(user.getId()), ErrorCode.PARAMS_ERROR, "证书不属于该用户");
+			// 生成证书
+			LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
+			logPrintCertificateExcelVO.setUserName(user.getUserName());
+			logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+			logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
+			logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
+			logPrintCertificateExcelVO.setCourseName(course.getCourseName());
+			logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getAcquisitionTime()));
+			logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
+			logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+			
+			// 生成证书文件
+			String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
+			// 创建 File 对象
+			File generatedFile = new File(filePath);
+			// 使用 FileInputStream 读取生成的文件内容
+			FileInputStream fileInputStream = new FileInputStream(generatedFile);
+			// 创建 DiskFileItem 对象，并将 FileInputStream 内容传递给 OutputStream
+			FileItem fileItem = new DiskFileItem(
+					"file", "application/octet-stream", false, generatedFile.getName(), (int) generatedFile.length(), generatedFile.getParentFile());
+			try (OutputStream outputStream = fileItem.getOutputStream()) {
+				byte[] buffer = new byte[1024];
+				int bytesRead;
+				while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+					outputStream.write(buffer, 0, bytesRead);
+				}
+			}
+			// 创建 MultipartFile
+			MultipartFile multipartFile = new CommonsMultipartFile(fileItem);
+			String path = String.format("/%s/%s/%s", "learning", "certificate", logPrintCertificateExcelVO.getUserName() + "_" + logPrintCertificateExcelVO.getCertificateNumber());
+			// 上传到 COS
+			String s = cosManager.uploadToCos(multipartFile, path);
+			// 删除暂缓文件
+			generatedFile.deleteOnExit();
+			// 设置证书路径
+			Certificate newCertificate = new Certificate();
+			newCertificate.setId(certificate.getId());
+			newCertificate.setCertificateUrl(s);
+			newCertificate.setCertificateSituation(CertificateSituationEnum.HAVA.getValue());
+			certificateService.updateById(newCertificate);
+			
 		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, e.getMessage());
+			throw new BusinessException(ErrorCode.PARAMS_ERROR, "证书生成失败" + e.getMessage());
 		}
+		
 		// todo 填充默认值
 		User loginUser = userService.getLoginUser(request);
 		logPrintCertificate.setCreateUserId(loginUser.getId());
-		// 写入数据库
-		boolean result = logPrintCertificateService.save(logPrintCertificate);
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		// 返回新写入的数据 id
-		long newLogPrintCertificateId = logPrintCertificate.getId();
-		return ResultUtils.success(newLogPrintCertificateId);
+		try {
+			// 写入数据库
+			boolean result = logPrintCertificateService.save(logPrintCertificate);
+			ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "证书生成失败");
+			// 返回新写入的数据 id
+			long newLogPrintCertificateId = logPrintCertificate.getId();
+			return ResultUtils.success(newLogPrintCertificateId);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.OPERATION_ERROR, "证书生成失败");
+		}
 	}
 	
 	/**
@@ -99,7 +193,7 @@ public class LogPrintCertificateController {
 	 * 根据 id 获取用户证书（封装类）
 	 *
 	 * @param id id
-	 * @return {@link BaseResponse< UserCertificateVO >}
+	 * @return {@link BaseResponse <{@link UserCertificateVO}> }
 	 */
 	@GetMapping("/get/vo")
 	public BaseResponse<LogPrintCertificateVO> getUserCertificateVOById(long id, HttpServletRequest request) {
@@ -115,7 +209,7 @@ public class LogPrintCertificateController {
 	 * 分页获取打印证书日志列表（仅管理员可用）
 	 *
 	 * @param logPrintCertificateQueryRequest logPrintCertificateQueryRequest
-	 * @return {@link BaseResponse<Page<LogPrintCertificate>>}
+	 * @return {@link BaseResponse <{@link Page} {@link LogPrintCertificate}>}
 	 */
 	@PostMapping("/list/page")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -133,7 +227,7 @@ public class LogPrintCertificateController {
 	 *
 	 * @param logPrintCertificateQueryRequest logPrintCertificateQueryRequest
 	 * @param request                         request
-	 * @return {@link BaseResponse<Page<LogPrintCertificateVO>>}
+	 * @return {@link BaseResponse <{@link Page} {@link LogPrintCertificateVO}>}
 	 */
 	@PostMapping("/list/page/vo")
 	public BaseResponse<Page<LogPrintCertificateVO>> listLogPrintCertificateVOByPage(@RequestBody LogPrintCertificateQueryRequest logPrintCertificateQueryRequest,
@@ -148,31 +242,5 @@ public class LogPrintCertificateController {
 		// 获取封装类
 		return ResultUtils.success(logPrintCertificateService.getLogPrintCertificateVOPage(logPrintCertificatePage, request));
 	}
-	
-	/**
-	 * 分页获取当前登录用户创建的打印证书日志列表
-	 *
-	 * @param logPrintCertificateQueryRequest logPrintCertificateQueryRequest
-	 * @param request                         request
-	 * @return {@link BaseResponse<Page<LogPrintCertificateVO>>}
-	 */
-	@PostMapping("/my/list/page/vo")
-	public BaseResponse<Page<LogPrintCertificateVO>> listMyLogPrintCertificateVOByPage(@RequestBody LogPrintCertificateQueryRequest logPrintCertificateQueryRequest,
-	                                                                                   HttpServletRequest request) {
-		ThrowUtils.throwIf(logPrintCertificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
-		// 补充查询条件，只查询当前登录用户的数据
-		User loginUser = userService.getLoginUser(request);
-		logPrintCertificateQueryRequest.setCreateUserId(loginUser.getId());
-		long current = logPrintCertificateQueryRequest.getCurrent();
-		long size = logPrintCertificateQueryRequest.getPageSize();
-		// 限制爬虫
-		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<LogPrintCertificate> logPrintCertificatePage = logPrintCertificateService.page(new Page<>(current, size),
-				logPrintCertificateService.getQueryWrapper(logPrintCertificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(logPrintCertificateService.getLogPrintCertificateVOPage(logPrintCertificatePage, request));
-	}
-	
 	// endregion
 }

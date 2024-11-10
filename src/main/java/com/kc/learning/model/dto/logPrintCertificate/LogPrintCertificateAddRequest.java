@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 创建打印证书日志请求
@@ -12,31 +13,35 @@ import java.util.Date;
  */
 @Data
 public class LogPrintCertificateAddRequest implements Serializable {
-    
-    /**
-     * 用户id
-     */
-    private Long userId;
-    
-    /**
-     * 证书id
-     */
-    private Long certificateId;
-    
-    /**
-     * 课程id
-     */
-    private Long courseId;
-    
-    /**
-     * 开课时间
-     */
-    private Date acquisitionTime;
-    
-    /**
-     * 证书获得时间
-     */
-    private Date finishTime;
-
-    private static final long serialVersionUID = 1L;
+	/**
+	 * 获取人id
+	 */
+	private Long userId;
+	
+	/**
+	 * 证书id
+	 */
+	private Long certificateId;
+	
+	/**
+	 * 课程id
+	 */
+	private Long courseId;
+	
+	/**
+	 * 开课时间
+	 */
+	private Date acquisitionTime;
+	
+	/**
+	 * 证书获得时间
+	 */
+	private Date finishTime;
+	
+	/**
+	 * 课程id列表
+	 */
+	private List<Long> certificateIds;
+	
+	private static final long serialVersionUID = 1L;
 }

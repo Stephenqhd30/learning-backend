@@ -5,6 +5,7 @@ import com.alibaba.excel.event.AnalysisEventListener;
 import com.alibaba.excel.util.ListUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.model.dto.excel.ErrorRecord;
 import com.kc.learning.model.dto.excel.SuccessRecord;
@@ -15,8 +16,10 @@ import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.certificate.CertificateImportExcelVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserService;
+import com.kc.learning.utils.ThrowUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.BeanUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -95,12 +98,12 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 		User loginUser = userService.getLoginUser(request);
 		
 		try {
-			
 			// 获取当前导入数据的用户
 			LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery(User.class)
 					.eq(User::getUserName, certificateImportExcelVO.getUserName())
 					.eq(User::getUserNumber, certificateImportExcelVO.getUserNumber());
 			User gainUser = userService.getOne(queryWrapper);
+			ThrowUtils.throwIf(gainUser == null, ErrorCode.NOT_FOUND_ERROR, "未找到用户信息");
 			newCertificate.setGainUserId(gainUser.getId());
 			newCertificate.setCertificateSituation(CertificateSituationEnum.NONE.getValue());
 			
@@ -154,7 +157,7 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 	private void saveDataAsync() {
 		List<Certificate> dataToSave = List.copyOf(cachedDataList);
 		CompletableFuture.runAsync(() -> {
-			log.info("开始批量保存{}条证书数据到数据库...", dataToSave.size());
+			log.info("开始批量保存{}条数据到数据库...", dataToSave.size());
 			try {
 				certificateService.saveBatch(dataToSave);
 				log.info("批量保存数据库成功！");
