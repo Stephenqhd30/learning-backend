@@ -22,7 +22,7 @@ public interface CertificateService extends IService<Certificate> {
 	/**
 	 * 校验数据
 	 *
-	 * @param certificate
+	 * @param certificate certificate
 	 * @param add         对创建的数据进行校验
 	 */
 	void validCertificate(Certificate certificate, boolean add);
@@ -30,17 +30,17 @@ public interface CertificateService extends IService<Certificate> {
 	/**
 	 * 获取查询条件
 	 *
-	 * @param certificateQueryRequest
-	 * @return
+	 * @param certificateQueryRequest certificateQueryRequest
+	 * @return {@link QueryWrapper<Certificate>}
 	 */
 	QueryWrapper<Certificate> getQueryWrapper(CertificateQueryRequest certificateQueryRequest);
 	
 	/**
 	 * 获取证书封装
 	 *
-	 * @param certificate
-	 * @param request
-	 * @return
+	 * @param certificate certificate
+	 * @param request     request
+	 * @return {@link CertificateVO}
 	 */
 	CertificateVO getCertificateVO(Certificate certificate, HttpServletRequest request);
 	
@@ -70,4 +70,6 @@ public interface CertificateService extends IService<Certificate> {
 	 * @return @return {@link Map}<{@link String}, {@link Object}>
 	 */
 	Map<String, Object> importCertificates(MultipartFile file, HttpServletRequest request);
+	
+	
 }

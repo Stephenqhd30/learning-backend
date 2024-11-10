@@ -19,7 +19,6 @@ import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.springframework.beans.BeanUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -96,15 +95,14 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 		Certificate newCertificate = new Certificate();
 		BeanUtils.copyProperties(certificateImportExcelVO, newCertificate);
 		User loginUser = userService.getLoginUser(request);
-		
 		try {
 			// 获取当前导入数据的用户
 			LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery(User.class)
 					.eq(User::getUserName, certificateImportExcelVO.getUserName())
 					.eq(User::getUserNumber, certificateImportExcelVO.getUserNumber());
-			User gainUser = userService.getOne(queryWrapper);
-			ThrowUtils.throwIf(gainUser == null, ErrorCode.NOT_FOUND_ERROR, "未找到用户信息");
-			newCertificate.setUserId(gainUser.getId());
+			User user = userService.getOne(queryWrapper);
+			ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "未找到用户信息");
+			newCertificate.setUserId(user.getId());
 			newCertificate.setCertificateSituation(CertificateSituationEnum.NONE.getValue());
 			
 			// 验证证书数据合法性
@@ -116,8 +114,7 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 			// 设置证书的审核状态及其他字段
 			newCertificate.setReviewStatus(ReviewStatusEnum.REVIEWING.getValue());
 			newCertificate.setReviewMessage("管理员导入，请检查审核信息是否正确");
-			newCertificate.setUserId(loginUser.getId());
-			
+			newCertificate.setCreateUserId(loginUser.getId());
 			
 			// 将成功记录缓存到列表
 			cachedDataList.add(newCertificate);

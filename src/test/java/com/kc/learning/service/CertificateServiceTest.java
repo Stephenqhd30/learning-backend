@@ -2,15 +2,7 @@ package com.kc.learning.service;
 
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.utils.WordUtils;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import javax.annotation.Resource;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import java.io.File;
-import java.util.concurrent.ExecutionException;
 
 public class CertificateServiceTest {
     

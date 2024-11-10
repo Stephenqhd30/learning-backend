@@ -120,7 +120,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Long reviewerId = certificateQueryRequest.getReviewerId();
 		Date reviewTime = certificateQueryRequest.getReviewTime();
 		Long userId = certificateQueryRequest.getUserId();
-		Long gainUserId = certificateQueryRequest.getUserId();
+		Long createUserId = certificateQueryRequest.getCreateUserId();
 		String sortField = certificateQueryRequest.getSortField();
 		String sortOrder = certificateQueryRequest.getSortOrder();
 		
@@ -140,7 +140,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		queryWrapper.eq(ObjectUtils.isNotEmpty(certificateSituation), "certificateSituation", certificateSituation);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewerId), "reviewerId", reviewerId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewTime), "reviewTime", reviewTime);
-		queryWrapper.eq(ObjectUtils.isNotEmpty(gainUserId), "gainUserId", gainUserId);
+		queryWrapper.eq(ObjectUtils.isNotEmpty(createUserId), "createUserId", createUserId);
 		
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
@@ -280,7 +280,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Map<String, Object> result = new HashMap<>();
 		// 获取异常记录
 		result.put("errorRecords", listener.getErrorRecords());
-		log.info("成功导入 {} 条用户数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
+		log.info("成功导入 {} 条数据，{} 条错误数据", listener.getSuccessRecords().size(), listener.getErrorRecords().size());
 		return result;
 	}
 	

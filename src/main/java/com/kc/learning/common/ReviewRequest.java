@@ -3,6 +3,7 @@ package com.kc.learning.common;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * @author: stephen qiu
@@ -16,7 +17,6 @@ public class ReviewRequest implements Serializable {
 	 * id
 	 */
 	private Long id;
-	
 	
 	/**
 	 * 审核状态 0-待审核 1-通过 2-拒绝
@@ -32,5 +32,5 @@ public class ReviewRequest implements Serializable {
 	/**
 	 * id列表
 	 */
-	private String idList;
+	private List<Long> idList;
 }

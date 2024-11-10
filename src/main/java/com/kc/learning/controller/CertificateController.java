@@ -1,6 +1,5 @@
 package com.kc.learning.controller;
 
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -8,7 +7,6 @@ import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.certificate.CertificateAddRequest;
@@ -34,7 +32,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -361,102 +358,4 @@ public class CertificateController {
 	}
 	
 	// endregion
-	
-	/**
-	 * 审核证书（仅管理员可用）
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 * @return BaseResponse<Boolean>
-	 */
-	@PostMapping("/review")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	public BaseResponse<Boolean> doCertificateReview(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
-		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
-		// 取出来请求中需要的属性
-		Long id = reviewRequest.getId();
-		Integer reviewStatus = reviewRequest.getReviewStatus();
-		String reviewMessage = reviewRequest.getReviewMessage();
-		ReviewStatusEnum reviewStatusEnum = ReviewStatusEnum.getEnumByValue(reviewStatus);
-		ThrowUtils.throwIf(id == null || reviewStatusEnum == null, ErrorCode.PARAMS_ERROR);
-		// 判断app是否存在
-		Certificate oldCertificate = certificateService.getById(id);
-		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
-		// 判断是否已经审核
-		ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
-		// 更新审核状态
-		User loginUser = userService.getLoginUser(request);
-		Certificate certificate = new Certificate();
-		certificate.setId(id);
-		certificate.setReviewStatus(reviewStatus);
-		certificate.setReviewMessage(reviewMessage);
-		certificate.setReviewerId(loginUser.getId());
-		certificate.setReviewTime(new Date());
-		boolean result = certificateService.updateById(certificate);
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		// 如果审核通过，则关联用户证书关系
-		if (ReviewStatusEnum.PASS.getValue().equals(reviewStatus)) {
-			// 获取更新完之后的信息
-			Certificate newCertificate = certificateService.getById(id);
-			// 如果审核通过，则关联用户证书关系
-			UserCertificate userCertificate = new UserCertificate();
-			userCertificate.setUserId(newCertificate.getUserId());
-			userCertificate.setCertificateId(newCertificate.getId());
-			// 写入数据库
-			boolean save = userCertificateService.save(userCertificate);
-			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-		}
-		return ResultUtils.success(true);
-	}
-	
-	
-	/**
-	 * 批量应用审核
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 * @return BaseResponse<Boolean>
-	 */
-	@PostMapping("/review/batch")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
-	@Transactional(rollbackFor = Exception.class)
-	public BaseResponse<Boolean> doCertificateReviewByBatch(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
-		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
-		// 取出来请求中需要的属性
-		String reviewMessage = reviewRequest.getReviewMessage();
-		Integer reviewStatus = reviewRequest.getReviewStatus();
-		String idList = reviewRequest.getIdList();
-		List<Long> list = JSONUtil.toList(idList, Long.class);
-		if (!list.isEmpty()) {
-			for (Long id : list) {
-				// 判断app是否存在
-				Certificate oldCertificate = certificateService.getById(id);
-				ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
-				// 判断是否已经审核
-				ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
-				// 更新审核状态
-				User loginUser = userService.getLoginUser(request);
-				Certificate certificate = new Certificate();
-				certificate.setId(id);
-				certificate.setReviewStatus(reviewStatus);
-				certificate.setReviewMessage(reviewMessage);
-				certificate.setReviewerId(loginUser.getId());
-				certificate.setReviewTime(new Date());
-				boolean result = certificateService.updateById(certificate);
-				ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-				// 如果审核通过，则关联用户证书关系
-				if (ReviewStatusEnum.PASS.getValue().equals(reviewStatus)) {
-					// 获取更新完之后的信息
-					Certificate newCertificate = certificateService.getById(id);
-					// 如果审核通过，则关联用户证书关系
-					UserCertificate userCertificate = new UserCertificate();
-					userCertificate.setUserId(newCertificate.getUserId());
-					userCertificate.setCertificateId(newCertificate.getId());
-					boolean save = userCertificateService.save(userCertificate);
-					ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-				}
-			}
-		}
-		return ResultUtils.success(true);
-	}
 }

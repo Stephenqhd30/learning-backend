@@ -1,10 +1,12 @@
 package com.kc.learning.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
@@ -16,10 +18,15 @@ import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * 用户证书接口
@@ -36,6 +43,9 @@ public class UserCertificateController {
 	
 	@Resource
 	private UserService userService;
+	
+	// 可根据实际需求调整大小
+	private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 	
 	// region 增删改查
 	
@@ -85,7 +95,7 @@ public class UserCertificateController {
 	 * 分页获取用户证书列表（仅管理员可用）
 	 *
 	 * @param userCertificateQueryRequest userCertificateQueryRequest
-	 * @return {@Link BaseResponse<Page < UserCertificate>>}
+	 * @return {@link  BaseResponse <{@link Page} {@link UserCertificateVO}}>}
 	 */
 	@PostMapping("/list/page")
 	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
@@ -104,7 +114,7 @@ public class UserCertificateController {
 	 *
 	 * @param userCertificateQueryRequest userCertificateQueryRequest
 	 * @param request                     request
-	 * @return BaseResponse<Page < UserCertificateVO>>
+	 * @return {@link  BaseResponse <{@link Page} {@link UserCertificateVO}}>}
 	 */
 	@PostMapping("/list/page/vo")
 	public BaseResponse<Page<UserCertificateVO>> listUserCertificateVOByPage(@RequestBody UserCertificateQueryRequest userCertificateQueryRequest,
@@ -147,4 +157,54 @@ public class UserCertificateController {
 	
 	// endregion
 	
+	/**
+	 * 审核证书（仅管理员可用）
+	 *
+	 * @param reviewRequest reviewRequest
+	 * @param request       request
+	 * @return BaseResponse<Boolean>
+	 */
+	@PostMapping("/review")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	public BaseResponse<Boolean> doCertificateReview(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
+		CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+			// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
+			userCertificateService.validReview(reviewRequest, request);
+		}, executorService);
+		// 等待任务完成
+		future.join();
+		return ResultUtils.success(true);
+	}
+	
+	
+	/**
+	 * 批量应用审核
+	 *
+	 * @param reviewRequest reviewRequest
+	 * @param request       request
+	 * @return BaseResponse<Boolean>
+	 */
+	@PostMapping("/review/batch")
+	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@Transactional(rollbackFor = Exception.class)
+	public BaseResponse<Boolean> doCertificateReviewByBatch(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
+		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
+		String reviewMessage = reviewRequest.getReviewMessage();
+		Integer reviewStatus = reviewRequest.getReviewStatus();
+		List<Long> idList = reviewRequest.getIdList();
+		if (!idList.isEmpty()) {
+			// 等待所有任务完成
+			CompletableFuture.allOf(idList.stream()
+					.map(id -> CompletableFuture.runAsync(() -> {
+						ReviewRequest newReviewRequest = new ReviewRequest();
+						newReviewRequest.setId(id);
+						newReviewRequest.setReviewMessage(reviewMessage);
+						newReviewRequest.setReviewStatus(reviewStatus);
+						// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
+						userCertificateService.validReview(newReviewRequest, request);
+					}, executorService)).toArray(CompletableFuture[]::new)).join();
+		}
+		return ResultUtils.success(true);
+	}
 }
