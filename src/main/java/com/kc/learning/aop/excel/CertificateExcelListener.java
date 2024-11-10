@@ -104,7 +104,7 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 					.eq(User::getUserNumber, certificateImportExcelVO.getUserNumber());
 			User gainUser = userService.getOne(queryWrapper);
 			ThrowUtils.throwIf(gainUser == null, ErrorCode.NOT_FOUND_ERROR, "未找到用户信息");
-			newCertificate.setGainUserId(gainUser.getId());
+			newCertificate.setUserId(gainUser.getId());
 			newCertificate.setCertificateSituation(CertificateSituationEnum.NONE.getValue());
 			
 			// 验证证书数据合法性

@@ -8,17 +8,10 @@
 		<id property="id" column="id" jdbcType="BIGINT"/>
 		<result property="userId" column="userId" jdbcType="BIGINT"/>
 		<result property="certificateId" column="certificateId" jdbcType="BIGINT"/>
-		<result property="certificateNumber" column="certificateNumber" jdbcType="BIGINT"/>
-		<result property="gainTime" column="gainTime" jdbcType="VARCHAR"/>
-		<result property="certificateName" column="certificateName" jdbcType="VARCHAR"/>
-		<result property="gainUserName" column="gainUserName" jdbcType="VARCHAR"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
-		id
-		,certificateName,gainUserName
-		,userId,certificateId,certificateNumber,
-        gainTime,createTime
+		id,userId,certificateId,createTime
 	</sql>
 </mapper>

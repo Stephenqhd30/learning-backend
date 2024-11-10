@@ -22,12 +22,10 @@ import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -61,31 +59,22 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		ThrowUtils.throwIf(userCertificate == null, ErrorCode.PARAMS_ERROR);
 		// todo 从对象中取值
 		Long userId = userCertificate.getUserId();
-		Long certificateNumber = userCertificate.getCertificateId();
-		String gainTime = userCertificate.getGainTime();
-		String certificateName = userCertificate.getCertificateName();
-		String gainUserName = userCertificate.getGainUserName();
+		Long certificateId = userCertificate.getCertificateId();
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
-			ThrowUtils.throwIf(StringUtils.isBlank(gainTime), ErrorCode.PARAMS_ERROR, "获得时间不能为空");
-			ThrowUtils.throwIf(StringUtils.isBlank(certificateName), ErrorCode.PARAMS_ERROR, "证书名称不能为空");
-			ThrowUtils.throwIf(StringUtils.isBlank(gainUserName), ErrorCode.PARAMS_ERROR, "获得人姓名不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(userId), ErrorCode.PARAMS_ERROR, "参数不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateId), ErrorCode.PARAMS_ERROR, "参数不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
-		if (StringUtils.isNotBlank(gainTime)) {
-			int gainYear = Integer.parseInt(gainTime);
-			int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-			ThrowUtils.throwIf(gainYear > currentYear, ErrorCode.PARAMS_ERROR, "证书获取时间不能超过当前时间");
-		}
 		if (ObjectUtils.isNotEmpty(userId)) {
 			User user = userService.getById(userId);
 			ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
 		}
 		
-		if (ObjectUtils.isNotEmpty(certificateNumber)) {
-			Certificate certificate = certificateService.getById(certificateNumber);
+		if (ObjectUtils.isNotEmpty(certificateId)) {
+			Certificate certificate = certificateService.getById(certificateId);
 			ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书不存在");
 		}
 		
@@ -107,24 +96,13 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		Long id = userCertificateQueryRequest.getId();
 		Long userId = userCertificateQueryRequest.getUserId();
 		Long certificateId = userCertificateQueryRequest.getCertificateId();
-		String gainTime = userCertificateQueryRequest.getGainTime();
-		String certificateNumber = userCertificateQueryRequest.getCertificateNumber();
-		String certificateName = userCertificateQueryRequest.getCertificateName();
-		String gainUserName = userCertificateQueryRequest.getGainUserName();
 		String sortField = userCertificateQueryRequest.getSortField();
 		String sortOrder = userCertificateQueryRequest.getSortOrder();
-		
-		
 		// todo 补充需要的查询条件
-		// 模糊查询
-		queryWrapper.like(StringUtils.isNotBlank(certificateName), "certificateName", certificateName);
-		queryWrapper.like(StringUtils.isNotBlank(gainUserName), "gainUserName", gainUserName);
-		queryWrapper.like(StringUtils.isNotBlank(certificateNumber), "certificateNumber", certificateNumber);
 		// 精确查询
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(certificateId), "certificateId", certificateId);
-		queryWrapper.eq(StringUtils.isNotBlank(gainTime), "gainTime", gainTime);
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
 				sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
@@ -236,29 +214,5 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		userCertificateVOPage.setRecords(userCertificateVOList);
 		return userCertificateVOPage;
 		
-	}
-	
-	/**
-	 * 分页获取用户证书封装（通过审核）
-	 *
-	 * @param userCertificateQueryRequest userCertificateQueryRequest
-	 * @param current                     current
-	 * @param size                        size
-	 * @return Page<UserCertificate>
-	 */
-	@Override
-	public Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest userCertificateQueryRequest, long current, long size) {
-		QueryWrapper<UserCertificate> queryWrapper = new QueryWrapper<>();
-		
-		// 如果传入了 certificateId，进一步过滤
-		if (ObjectUtils.isNotEmpty(userCertificateQueryRequest.getCertificateId())) {
-			queryWrapper.eq("certificateId", userCertificateQueryRequest.getCertificateId());
-		}
-		
-		// 关联查询 Certificate 表，过滤掉 review_status 不等于 1 的记录
-		queryWrapper.exists("SELECT 1 FROM certificate WHERE certificate.id = user_certificate.certificateId AND certificate.reviewStatus = 1");
-		
-		// 执行分页查询
-		return this.page(new Page<>(current, size), queryWrapper);
 	}
 }

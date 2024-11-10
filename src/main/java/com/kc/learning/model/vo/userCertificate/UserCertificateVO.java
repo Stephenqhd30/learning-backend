@@ -50,7 +50,7 @@ public class UserCertificateVO implements Serializable {
 	/**
 	 * 获得人名称
 	 */
-	private String gainUserName;
+	private String userName;
 	
 	/**
 	 * 创建时间

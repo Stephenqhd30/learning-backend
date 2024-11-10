@@ -82,7 +82,7 @@ public class Certificate implements Serializable {
 	 * 获得人id
 	 */
 	@ExcelProperty(value = "获得人id")
-	private Long gainUserId;
+	private Long userId;
 	
 	/**
 	 * 证书地址下载地址
@@ -94,7 +94,7 @@ public class Certificate implements Serializable {
 	 * 创建用户id
 	 */
 	@ExcelIgnore
-	private Long userId;
+	private Long createUserId;
 	
 	
 	/**

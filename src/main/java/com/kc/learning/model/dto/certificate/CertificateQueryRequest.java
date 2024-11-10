@@ -67,7 +67,7 @@ public class CertificateQueryRequest extends PageRequest implements Serializable
 	private Date reviewTime;
 	
 	/**
-	 * 创建用户id
+	 * 用户id
 	 */
 	private Long userId;
 	
@@ -77,9 +77,9 @@ public class CertificateQueryRequest extends PageRequest implements Serializable
 	private Integer noId;
 	
 	/**
-	 * 获得人姓名
+	 * 创建人id
 	 */
-	private Long gainUserId;
+	private Long createUserId;
 	
 	/**
 	 * 证书地址

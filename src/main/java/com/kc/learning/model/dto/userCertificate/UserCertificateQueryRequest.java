@@ -21,6 +21,11 @@ public class UserCertificateQueryRequest extends PageRequest implements Serializ
     private Long id;
     
     /**
+     * id
+     */
+    private Long notId;
+    
+    /**
      * 用户id
      */
     private Long userId;
@@ -29,26 +34,6 @@ public class UserCertificateQueryRequest extends PageRequest implements Serializ
      * 证书id
      */
     private Long certificateId;
-    
-    /**
-     * 证书编号
-     */
-    private String certificateNumber;
-    
-    /**
-     * 获得时间
-     */
-    private String gainTime;
-    
-    /**
-     * 证书名称
-     */
-    private String certificateName;
-    
-    /**
-     * 获得人名称
-     */
-    private String gainUserName;
 
     private static final long serialVersionUID = 1L;
 }

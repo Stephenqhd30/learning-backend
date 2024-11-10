@@ -23,7 +23,6 @@ import com.kc.learning.model.vo.certificate.CertificateForUserVO;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.service.CertificateService;
 import com.kc.learning.service.UserCertificateService;
-import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
@@ -57,9 +56,6 @@ public class CertificateController {
 	@Resource
 	private UserService userService;
 	
-	@Resource
-	private UserCourseService userCourseService;
-	
 	// region 增删改查
 	
 	/**
@@ -82,12 +78,12 @@ public class CertificateController {
 		// todo 在此处将实体类和 DTO 进行转换
 		Certificate certificate = new Certificate();
 		BeanUtils.copyProperties(certificateAddRequest, certificate);
-		certificate.setGainUserId(user.getId());
+		certificate.setUserId(user.getId());
 		// 数据校验
 		certificateService.validCertificate(certificate, true);
 		// todo 填充默认值
 		User loginUser = userService.getLoginUser(request);
-		certificate.setUserId(loginUser.getId());
+		certificate.setCreateUserId(loginUser.getId());
 		try {
 			// 写入数据库
 			boolean result = certificateService.save(certificate);
@@ -128,7 +124,7 @@ public class CertificateController {
 			boolean result = certificateService.removeById(id);
 			LambdaQueryWrapper<UserCertificate> queryWrapper = Wrappers.lambdaQuery(UserCertificate.class)
 					.eq(UserCertificate::getCertificateId, id)
-					.eq(UserCertificate::getUserId, oldCertificate.getGainUserId());
+					.eq(UserCertificate::getUserId, oldCertificate.getUserId());
 			UserCertificate userCertificate = userCertificateService.getOne(queryWrapper);
 			if (userCertificate != null) {
 				boolean save = userCertificateService.removeById(userCertificate.getId());
@@ -230,8 +226,6 @@ public class CertificateController {
 	                                                                 HttpServletRequest request) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		// 限制爬虫
-		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
 		try {
 			// 查询数据库
 			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
@@ -285,7 +279,7 @@ public class CertificateController {
 		ThrowUtils.throwIf(certificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
 		// 补充查询条件，只查询当前登录用户的数据
 		User loginUser = userService.getLoginUser(request);
-		certificateQueryRequest.setGainUserId(loginUser.getId());
+		certificateQueryRequest.setUserId(loginUser.getId());
 		certificateQueryRequest.setReviewStatus(1);
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
@@ -345,7 +339,7 @@ public class CertificateController {
 		ThrowUtils.throwIf(certificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
 		// 补充查询条件，只查询当前登录用户的数据
 		User loginUser = userService.getLoginUser(request);
-		certificateQueryRequest.setGainUserId(loginUser.getId());
+		certificateQueryRequest.setUserId(loginUser.getId());
 		// 补充查询条件，如果未传入审核状态默认查询已经过审的证书信息
 		certificateQueryRequest.setReviewStatus(Optional.ofNullable(certificateQueryRequest.getReviewStatus())
 				.orElse(ReviewStatusEnum.PASS.getValue()));
@@ -406,12 +400,8 @@ public class CertificateController {
 			Certificate newCertificate = certificateService.getById(id);
 			// 如果审核通过，则关联用户证书关系
 			UserCertificate userCertificate = new UserCertificate();
-			userCertificate.setUserId(newCertificate.getGainUserId());
+			userCertificate.setUserId(newCertificate.getUserId());
 			userCertificate.setCertificateId(newCertificate.getId());
-			userCertificate.setGainTime(newCertificate.getCertificateYear());
-			userCertificate.setCertificateNumber(newCertificate.getCertificateNumber());
-			userCertificate.setCertificateName(newCertificate.getCertificateName());
-			userCertificate.setGainUserName(userService.getById(newCertificate.getGainUserId()).getUserName());
 			// 写入数据库
 			boolean save = userCertificateService.save(userCertificate);
 			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
@@ -460,13 +450,8 @@ public class CertificateController {
 					Certificate newCertificate = certificateService.getById(id);
 					// 如果审核通过，则关联用户证书关系
 					UserCertificate userCertificate = new UserCertificate();
-					userCertificate.setUserId(newCertificate.getGainUserId());
+					userCertificate.setUserId(newCertificate.getUserId());
 					userCertificate.setCertificateId(newCertificate.getId());
-					userCertificate.setGainTime(newCertificate.getCertificateYear());
-					userCertificate.setCertificateNumber(newCertificate.getCertificateNumber());
-					userCertificate.setCertificateName(newCertificate.getCertificateName());
-					userCertificate.setGainUserName(userService.getById(newCertificate.getGainUserId()).getUserName());
-					// 写入数据库
 					boolean save = userCertificateService.save(userCertificate);
 					ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
 				}

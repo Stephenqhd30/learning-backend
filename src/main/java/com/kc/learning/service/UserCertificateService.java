@@ -49,15 +49,4 @@ public interface UserCertificateService extends IService<UserCertificate> {
 	 * @return
 	 */
 	Page<UserCertificateVO> getUserCertificateVOPage(Page<UserCertificate> userCertificatePage, HttpServletRequest request);
-	
-	/**
-	 * 分页获取用户证书
-	 *
-	 * @param userCertificateQueryRequest userCertificateQueryRequest
-	 * @param current                     current
-	 * @param size                        size
-	 * @return Page<UserCertificate>
-	 */
-	Page<UserCertificate> getUserCertificates(UserCertificateQueryRequest userCertificateQueryRequest, long current, long size);
-	
 }

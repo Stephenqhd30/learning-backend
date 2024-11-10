@@ -16,16 +16,15 @@
 		<result property="reviewTime" column="createTime" jdbcType="TIMESTAMP"/>
 		<result property="reviewerId" column="reviewerId" jdbcType="BIGINT"/>
 		<result property="userId" column="userId" jdbcType="BIGINT"/>
-		<result property="gainUserId" column="gainUserId" jdbcType="BIGINT"/>
+		<result property="createUserId" column="createUserId" jdbcType="BIGINT"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
 		<result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
 		<result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
-		id
-		,certificateNumber
-		,certificateName,certificateType,userId, certificateYear,gainUserId,
+		id,certificateNumber
+		,certificateName,certificateType,createUserId, certificateYear,userId,
 		reviewStatus, reviewMessage, reviewerId, reviewTime,certificateSituation,
         createTime,updateTime,isDelete
 	</sql>

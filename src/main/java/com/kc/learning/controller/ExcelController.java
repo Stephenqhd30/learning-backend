@@ -232,9 +232,9 @@ public class ExcelController {
 			certificateExcelVO.setCertificateUrl(Optional.ofNullable(certificate.getCertificateUrl()).orElse("证书尚未生成"));
 			
 			// 获取证书获得人信息并设置
-			User user = userService.getById(certificate.getGainUserId());
-			certificateExcelVO.setGainUserName(user.getUserName());
-			certificateExcelVO.setGainUserNumber(user.getUserNumber());
+			User user = userService.getById(certificate.getUserId());
+			certificateExcelVO.setUserName(user.getUserName());
+			certificateExcelVO.setUserNumber(user.getUserNumber());
 			return certificateExcelVO;
 		})).collect(Collectors.toList());
 		// 等待并发项目异步执行完成

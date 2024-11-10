@@ -69,14 +69,14 @@ public class CertificateVO implements Serializable {
 	
 	
 	/**
-	 * 创建用户id
+	 * 用户id
 	 */
 	private Long userId;
 	
 	/**
-	 * 获得人姓名
+	 * 创建人id
 	 */
-	private Long gainUserId;
+	private Long createUserId;
 	
 	/**
 	 * 证书地址
@@ -94,9 +94,14 @@ public class CertificateVO implements Serializable {
 	private Date updateTime;
 	
 	/**
-	 * 创建用户信息
+	 * 用户信息
 	 */
 	private UserVO userVO;
+	
+	/**
+	 * 用户信息
+	 */
+	private UserVO createUserVO;
 	
 	/**
 	 * 封装类转对象

@@ -90,14 +90,14 @@ public class CertificateExcelVO implements Serializable {
 	 */
 	@ExcelProperty(value = "获得人姓名")
 	@ColumnWidth(30)
-	private String gainUserName;
+	private String userName;
 	
 	/**
 	 * 获得人学号
 	 */
 	@ExcelProperty(value = "获得人学号")
 	@ColumnWidth(30)
-	private String gainUserNumber;
+	private String userNumber;
 	
 	/**
 	 * 证书地址下载地址

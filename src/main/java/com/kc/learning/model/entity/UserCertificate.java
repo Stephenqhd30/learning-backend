@@ -34,26 +34,6 @@ public class UserCertificate implements Serializable {
     private Long certificateId;
 
     /**
-     * 获得时间
-     */
-    private String gainTime;
-    
-    /**
-     * 证书编号
-     */
-    private String certificateNumber;
-    
-    /**
-     * 证书名称
-     */
-    private String certificateName;
-    
-    /**
-     * 获得人名称
-     */
-    private String gainUserName;
-
-    /**
      * 创建时间
      */
     private Date createTime;

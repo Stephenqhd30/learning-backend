@@ -39,9 +39,9 @@ public class CertificateUpdateRequest implements Serializable {
 	
 	
 	/**
-	 * 获得人姓名
+	 * 获得人id
 	 */
-	private Long gainUserId;
+	private Long userId;
 	
 	/**
 	 * 证书地址

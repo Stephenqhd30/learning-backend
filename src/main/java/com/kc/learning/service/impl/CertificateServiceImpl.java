@@ -65,7 +65,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Integer certificateType = certificate.getCertificateType();
 		String certificateYear = certificate.getCertificateYear();
 		Integer certificateSituation = certificate.getCertificateSituation();
-		Long gainUserId = certificate.getGainUserId();
+		Long userId = certificate.getUserId();
 		String certificateNumber = certificate.getCertificateNumber();
 		// 创建数据时，参数不能为空
 		if (add) {
@@ -75,7 +75,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 			ThrowUtils.throwIf(Integer.parseInt(certificateYear) > DateUtil.year(DateUtil.date()), ErrorCode.PARAMS_ERROR, "获得证书年份不能超过当前年份");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateType), ErrorCode.PARAMS_ERROR, "证书类型不能为空");
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateSituation), ErrorCode.PARAMS_ERROR, "证书获得情况不能为空");
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(gainUserId), ErrorCode.PARAMS_ERROR, "获得人id不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(userId), ErrorCode.PARAMS_ERROR, "获得人id不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(certificateNumber), ErrorCode.PARAMS_ERROR, "证书编号不能为空");
 		}
 		// 修改数据时，有参数则校验
@@ -89,8 +89,8 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		if (ObjectUtils.isEmpty(certificateSituation)) {
 			ThrowUtils.throwIf(CertificateSituationEnum.getEnumByValue(certificateSituation) == null, ErrorCode.PARAMS_ERROR, "证书获得情况有误");
 		}
-		if (ObjectUtils.isEmpty(gainUserId)) {
-			User user = userService.getById(gainUserId);
+		if (ObjectUtils.isEmpty(userId)) {
+			User user = userService.getById(userId);
 			ThrowUtils.throwIf(user == null, ErrorCode.NOT_FOUND_ERROR, "用户不存在");
 		}
 	}
@@ -120,7 +120,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Long reviewerId = certificateQueryRequest.getReviewerId();
 		Date reviewTime = certificateQueryRequest.getReviewTime();
 		Long userId = certificateQueryRequest.getUserId();
-		Long gainUserId = certificateQueryRequest.getGainUserId();
+		Long gainUserId = certificateQueryRequest.getUserId();
 		String sortField = certificateQueryRequest.getSortField();
 		String sortOrder = certificateQueryRequest.getSortOrder();
 		
@@ -199,20 +199,30 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// region 可选
 		// 3. 并发查询用户信息
 		Set<Long> userIdSet = certificateList.stream().map(Certificate::getUserId).collect(Collectors.toSet());
+		Set<Long> createUserIdSet = certificateList.stream().map(Certificate::getCreateUserId).collect(Collectors.toSet());
 		CompletableFuture<Map<Long, User>> userMapFuture = CompletableFuture.supplyAsync(() ->
 				userService.listByIds(userIdSet).stream()
+						.collect(Collectors.toMap(User::getId, user -> user))
+		);
+		CompletableFuture<Map<Long, User>> createUserMapFuture = CompletableFuture.supplyAsync(() ->
+				userService.listByIds(createUserIdSet).stream()
 						.collect(Collectors.toMap(User::getId, user -> user))
 		);
 		try {
 			// 等待用户信息查询完成
 			Map<Long, User> userIdUserMap = userMapFuture.get();
-			
+			Map<Long, User> createUserIdUserMap = createUserMapFuture.get();
 			// 填充用户信息至 CertificateVO
 			certificateVOList.forEach(certificateVO -> {
 				Long userId = certificateVO.getUserId();
+				Long createUserId = certificateVO.getCreateUserId();
 				User user = userIdUserMap.get(userId);
+				User createUser = createUserIdUserMap.get(createUserId);
 				if (user != null) {
 					certificateVO.setUserVO(userService.getUserVO(user, request));
+				}
+				if (createUser != null) {
+					certificateVO.setCreateUserVO(userService.getUserVO(createUser, request));
 				}
 			});
 		} catch (InterruptedException | ExecutionException e) {
