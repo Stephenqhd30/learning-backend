@@ -2,6 +2,7 @@ package com.kc.learning.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
@@ -9,18 +10,13 @@ import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.exception.BusinessException;
 import com.kc.learning.mapper.LogPrintCertificateMapper;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
-import com.kc.learning.model.entity.Certificate;
-import com.kc.learning.model.entity.Course;
-import com.kc.learning.model.entity.LogPrintCertificate;
-import com.kc.learning.model.entity.User;
+import com.kc.learning.model.entity.*;
+import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.course.CourseVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
-import com.kc.learning.service.CertificateService;
-import com.kc.learning.service.CourseService;
-import com.kc.learning.service.LogPrintCertificateService;
-import com.kc.learning.service.UserService;
+import com.kc.learning.service.*;
 import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +51,9 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 	@Resource
 	private CourseService courseService;
 	
+	@Resource
+	private UserCourseService userCourseService;
+	
 	/**
 	 * 校验数据
 	 *
@@ -73,9 +72,9 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(userId), ErrorCode.PARAMS_ERROR, "用户ID不能为空");
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateId), ErrorCode.PARAMS_ERROR, "证书ID不能为空");
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(courseId), ErrorCode.PARAMS_ERROR, "课程ID不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(userId), ErrorCode.PARAMS_ERROR, "用户id不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(certificateId), ErrorCode.PARAMS_ERROR, "证书id不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(courseId), ErrorCode.PARAMS_ERROR, "课程id不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
@@ -89,12 +88,23 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 		if (ObjectUtils.isNotEmpty(certificateId)) {
 			Certificate certificate = certificateService.getById(certificateId);
 			ThrowUtils.throwIf(certificate == null, ErrorCode.NOT_FOUND_ERROR, "证书信息为空");
+			if (ObjectUtils.isNotEmpty(certificate)) {
+				ThrowUtils.throwIf(!certificate.getUserId().equals(userId), ErrorCode.PARAMS_ERROR, "证书不属于该用户");
+				ThrowUtils.throwIf(ReviewStatusEnum.getEnumByValue(certificate.getReviewStatus()) == null, ErrorCode.PARAMS_ERROR, "证书未通过审核");
+			}
 		}
 		if (ObjectUtils.isNotEmpty(courseId)) {
 			Course course = courseService.getById(courseId);
 			ThrowUtils.throwIf(course == null, ErrorCode.NOT_FOUND_ERROR, "课程信息为空");
 		}
-		
+		if (ObjectUtils.isNotEmpty(courseId) && ObjectUtils.isNotEmpty(userId)) {
+			// 验证用户是否属于课程
+			UserCourse userCourse = userCourseService.getOne(Wrappers.lambdaQuery(UserCourse.class)
+					.eq(UserCourse::getUserId, userId)
+					.eq(UserCourse::getCourseId, courseId));
+			ThrowUtils.throwIf(userCourse == null, ErrorCode.NOT_FOUND_ERROR, "用户未加入该课程");
+			
+		}
 	}
 	
 	/**
