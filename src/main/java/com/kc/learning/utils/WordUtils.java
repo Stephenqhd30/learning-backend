@@ -103,32 +103,82 @@ public class WordUtils {
 	 * @param outputFilePath 输出PDF文件路径
 	 */
 	public static void convertToPdf(String inputFilePath, String outputFilePath) {
-		File inputWord = new File(inputFilePath);
-		File outputFile = new File(outputFilePath);
-		try {
-			InputStream docxInputStream = new FileInputStream(inputWord);
-			OutputStream outputStream = new FileOutputStream(outputFile);
-			IConverter converter = LocalConverter.builder().build();
-			// 获取文件类型
-			String fileType = inputFilePath.substring(inputFilePath.lastIndexOf("."));
-			switch (fileType) {
-				case ".docx":
-					converter.convert(docxInputStream).as(DocumentType.DOCX).to(outputStream).as(DocumentType.PDF).execute();
-					break;
-				case ".doc":
-					converter.convert(docxInputStream).as(DocumentType.DOC).to(outputStream).as(DocumentType.PDF).execute();
-					break;
-				case ".xls":
-					converter.convert(docxInputStream).as(DocumentType.XLS).to(outputStream).as(DocumentType.PDF).execute();
-					break;
-				case ".xlsx":
-					converter.convert(docxInputStream).as(DocumentType.XLSX).to(outputStream).as(DocumentType.PDF).execute();
-					break;
-			}
-			log.info("Word 文件已成功转换为 PDF 文件");
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.WORD_ERROR, "证书生成失败: " + e.getMessage());
+		// 获取当前操作系统类型
+		String os = System.getProperty("os.name").toLowerCase();
+		if (os.contains("win")) {
+			// Windows 环境：使用 documents4j 或 LibreOffice 的命令行工具
+			windowsConvertToPdf(inputFilePath, outputFilePath);
+		} else if (os.contains("nix") || os.contains("nux") || os.contains("mac")) {
+			// Linux 环境：使用 LibreOffice 的命令行工具
+			linuxConvertToPdf(inputFilePath, outputFilePath);
+		} else {
+			throw new BusinessException(ErrorCode.WORD_ERROR, "当前操作系统不支持此操作");
 		}
 	}
+	
+	/**
+	 * windows 转换为 pdf
+	 *
+	 * @param inputFilePath  inputFilePath
+	 * @param outputFilePath outputFilePath
+	 */
+	private static void windowsConvertToPdf(String inputFilePath, String outputFilePath) {
+		// 使用 documents4j 进行转换
+		File inputWord = new File(inputFilePath);
+		File outputFile = new File(outputFilePath);
+		try (InputStream docxInputStream = new FileInputStream(inputWord);
+		     OutputStream outputStream = new FileOutputStream(outputFile)) {
+			
+			IConverter converter = LocalConverter.builder().build();
+			converter.convert(docxInputStream)
+					.as(DocumentType.DOCX)
+					.to(outputStream)
+					.as(DocumentType.PDF)
+					.execute();
+			
+			log.info("Word 文件已成功转换为 PDF 文件 (Windows)");
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.WORD_ERROR, "证书生成失败 (Windows): " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * linux 转换为 pdf
+	 *
+	 * @param inputFilePath  inputFilePath
+	 * @param outputFilePath outputFilePath
+	 */
+	private static void linuxConvertToPdf(String inputFilePath, String outputFilePath) {
+		// 构建 LibreOffice 的命令行转换命令
+		String command = String.format(
+				"libreoffice --headless --invisible --convert-to pdf %s --outdir %s",
+				inputFilePath,
+				new File(outputFilePath).getParent()
+		);
+		
+		// 执行转换命令
+		try {
+			executeLinuxCmd(command);
+			log.info("Word 文件已成功转换为 PDF 文件 (Linux)");
+		} catch (Exception e) {
+			throw new BusinessException(ErrorCode.WORD_ERROR, "证书生成失败 (Linux): " + e.getMessage());
+		}
+	}
+	
+	/**
+	 * 执行linux下的命令
+	 *
+	 * @param cmd cmd
+	 */
+	private static void executeLinuxCmd(String cmd) throws IOException {
+		Process process = Runtime.getRuntime().exec(cmd);
+		try {
+			process.waitFor();
+		} catch (InterruptedException e) {
+			log.error("executeLinuxCmd 执行Linux命令异常：", e);
+			Thread.currentThread().interrupt();
+		}
+	}
+	
 }
 
