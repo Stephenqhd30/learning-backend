@@ -1,15 +1,20 @@
 package com.kc.learning.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.collection.CollUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.exception.ExcelAnalysisException;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.excel.UserExcelListener;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.config.secure.utils.DeviceUtils;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.mapper.UserMapper;
 import com.kc.learning.model.dto.user.UserQueryRequest;
 import com.kc.learning.model.entity.User;
@@ -27,6 +32,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -131,68 +137,92 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 			throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
 		}
 		// 3. 记录用户的登录态
-		request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, user);
+		// 使用Sa-Token登录，并指定设备同端登录互斥
+		StpUtil.login(user.getId(), DeviceUtils.getRequestDevice(request));
+		StpUtil.getSession().set(UserConstant.USER_LOGIN_STATE, user);
 		return this.getLoginUserVO(user);
 	}
 	
 	/**
 	 * 获取当前登录用户
 	 *
-	 * @param request
-	 * @return
+	 * @param request request
+	 * @return {@link User}
 	 */
 	@Override
 	public User getLoginUser(HttpServletRequest request) {
-		// 先判断是否已登录
-		Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-		User currentUser = (User) userObj;
-		if (currentUser == null || currentUser.getId() == null) {
-			throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+		// 先判断是否已经登录
+		Object loginUserId = StpUtil.getLoginIdDefaultNull();
+		if (loginUserId == null) {
+			throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
 		}
 		// 从数据库查询（追求性能的话可以注释，直接走缓存）
-		long userId = currentUser.getId();
-		currentUser = this.getById(userId);
-		if (currentUser == null) {
+		// StpUtil.getSession().get(UserConstant.USER_LOGIN_STATE);
+		User currentUser = this.getById((String) loginUserId);
+		if (currentUser == null || currentUser.getId() == null) {
 			throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
 		}
 		return currentUser;
 	}
 	
+	/**
+	 * 获取当前登录用户（允许未登录）
+	 *
+	 * @param request request
+	 * @return {@link User}
+	 */
+	@Override
+	public User getLoginUserPermitNull(HttpServletRequest request) {
+		// 先判断是否已登录
+		User currentUser = (User) StpUtil.getSession().get(UserConstant.USER_LOGIN_STATE);
+		if (currentUser == null || currentUser.getId() == null) {
+			return null;
+		}
+		// 从数据库查询（追求性能的话可以注释，直接走缓存）
+		long userId = currentUser.getId();
+		return this.getById(userId);
+	}
 	
 	/**
 	 * 是否为管理员
 	 *
-	 * @param request
-	 * @return
+	 * @param request request
+	 * @return boolean 是否为管理员
 	 */
 	@Override
 	public boolean isAdmin(HttpServletRequest request) {
 		// 仅管理员可查询
-		Object userObj = request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE);
-		User user = (User) userObj;
+		User user = (User) StpUtil.getSession().get(UserConstant.USER_LOGIN_STATE);
 		return isAdmin(user);
 	}
 	
 	@Override
 	public boolean isAdmin(User user) {
-		return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
+		return user == null || !UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
 	}
 	
 	/**
 	 * 用户注销
 	 *
-	 * @param request
+	 * @param request request
+	 * @return boolean 是否退出成功
 	 */
 	@Override
 	public boolean userLogout(HttpServletRequest request) {
-		if (request.getSession().getAttribute(UserConstant.USER_LOGIN_STATE) == null) {
-			throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
-		}
+		// 判断是否登录
+		StpUtil.checkLogin();
 		// 移除登录态
-		request.getSession().removeAttribute(UserConstant.USER_LOGIN_STATE);
+		StpUtil.logout();
 		return true;
 	}
 	
+	/**
+	 * 获取登录用户视图类
+	 *
+	 * @param user user
+	 * @return {@link LoginUserVO
+	 * }
+	 */
 	@Override
 	public LoginUserVO getLoginUserVO(User user) {
 		if (user == null) {
@@ -201,6 +231,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		// todo 在此处将实体类和 DTO 进行转换
 		LoginUserVO loginUserVO = new LoginUserVO();
 		BeanUtils.copyProperties(user, loginUserVO);
+		// 设置将token保存到登录用户信息中
+		loginUserVO.setToken(StpUtil.getTokenInfo().getTokenValue());
 		return loginUserVO;
 	}
 	
@@ -217,6 +249,27 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 			return new ArrayList<>();
 		}
 		return userList.stream().map(user -> getUserVO(user, request)).collect(Collectors.toList());
+	}
+	
+	/**
+	 * 分页获取用户视图类
+	 *
+	 * @param userPage userPage
+	 * @param request  request
+	 * @return {@link Page {@link UserVO} }
+	 */
+	@Override
+	public Page<UserVO> getUserVOPage(Page<User> userPage, HttpServletRequest request) {
+		List<User> userList = userPage.getRecords();
+		Page<UserVO> userVOPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+		if (CollUtil.isEmpty(userList)) {
+			return userVOPage;
+		}
+		// 填充信息
+		List<UserVO> userVOList = userList.stream().map(UserVO::objToVo).collect(Collectors.toList());
+		userVOPage.setRecords(userVOList);
+		
+		return userVOPage;
 	}
 	
 	@Override

@@ -1,6 +1,7 @@
 package com.kc.learning.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.user.UserQueryRequest;
 import com.kc.learning.model.entity.User;
@@ -44,6 +45,14 @@ public interface UserService extends IService<User> {
 	 * @return {@link User}
 	 */
 	User getLoginUser(HttpServletRequest request);
+	
+	/**
+	 * 获取当前登录用户（允许未登录）
+	 *
+	 * @param request request
+	 * @return {@link User}
+	 */
+	User getLoginUserPermitNull(HttpServletRequest request);
 	
 	/**
 	 * 是否为管理员
@@ -93,6 +102,15 @@ public interface UserService extends IService<User> {
 	 * @return {@link List}<{@link UserVO}>
 	 */
 	List<UserVO> getUserVO(List<User> userList, HttpServletRequest request);
+	
+	/**
+	 * 分页获取用户视图类
+	 *
+	 * @param userPage userPage
+	 * @param request  request
+	 * @return {@link Page {@link UserVO} }
+	 */
+	Page<UserVO> getUserVOPage(Page<User> userPage, HttpServletRequest request);
 	
 	/**
 	 * 获取查询条件

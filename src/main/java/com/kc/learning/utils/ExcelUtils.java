@@ -1,7 +1,7 @@
 package com.kc.learning.utils;
 
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;

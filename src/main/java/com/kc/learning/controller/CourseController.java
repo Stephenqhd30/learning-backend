@@ -1,12 +1,12 @@
 package com.kc.learning.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.dto.course.CourseAddRequest;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.dto.course.CourseUpdateRequest;
@@ -50,7 +50,7 @@ public class CourseController {
 	 * @return {@link BaseResponse<Long>}
 	 */
 	@PostMapping("/add")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Long> addCourse(@RequestBody CourseAddRequest courseAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(courseAddRequest == null, ErrorCode.PARAMS_ERROR);
 		// todo 在此处将实体类和 DTO 进行转换
@@ -81,7 +81,7 @@ public class CourseController {
 	 * @return {@link BaseResponse<Boolean>}
 	 */
 	@PostMapping("/delete")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> deleteCourse(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
 		if (deleteRequest == null || deleteRequest.getId() <= 0) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -108,7 +108,7 @@ public class CourseController {
 	 * @return {@link BaseResponse<Boolean>}
 	 */
 	@PostMapping("/update")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> updateCourse(@RequestBody CourseUpdateRequest courseUpdateRequest) {
 		if (courseUpdateRequest == null || courseUpdateRequest.getId() <= 0) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -139,7 +139,7 @@ public class CourseController {
 	 * @return {@link BaseResponse<CourseVO>}
 	 */
 	@GetMapping("/get/vo")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<CourseVO> getCourseVOById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
@@ -156,7 +156,7 @@ public class CourseController {
 	 * @return {@link BaseResponse<Page<Course>>}
 	 */
 	@PostMapping("/list/page")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<Course>> listCourseByPage(@RequestBody CourseQueryRequest courseQueryRequest) {
 		long current = courseQueryRequest.getCurrent();
 		long size = courseQueryRequest.getPageSize();
@@ -174,7 +174,7 @@ public class CourseController {
 	 * @return {@link BaseResponse {@link Page} {@link CourseVO }}
 	 */
 	@PostMapping("/list/page/vo")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<CourseVO>> listCourseVOByPage(@RequestBody CourseQueryRequest courseQueryRequest,
 	                                                       HttpServletRequest request) {
 		long current = courseQueryRequest.getCurrent();
@@ -196,7 +196,7 @@ public class CourseController {
 	 * @return {@link BaseResponse {@link Page} {@link CourseVO }}
 	 */
 	@PostMapping("/my/list/page/vo")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<CourseVO>> listMyCourseVOByPage(@RequestBody CourseQueryRequest courseQueryRequest,
 	                                                         HttpServletRequest request) {
 		ThrowUtils.throwIf(courseQueryRequest == null, ErrorCode.PARAMS_ERROR);

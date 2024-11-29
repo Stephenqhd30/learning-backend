@@ -3,7 +3,7 @@ package com.kc.learning.controller;
 import cn.hutool.core.io.FileUtil;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.manager.CosManager;
 import com.kc.learning.model.dto.file.UploadFileRequest;
 import com.kc.learning.model.entity.User;

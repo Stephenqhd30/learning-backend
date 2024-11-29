@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.constants.CommonConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.mapper.UserCertificateMapper;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;

@@ -1,12 +1,12 @@
 package com.kc.learning.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.dto.user.*;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.vo.user.LoginUserVO;
@@ -100,7 +100,7 @@ public class UserController {
 	 * @return BaseResponse<Long>
 	 */
 	@PostMapping("/add")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Long> addUser(@RequestBody UserAddRequest userAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(userAddRequest == null, ErrorCode.PARAMS_ERROR);
 		// todo 在此处将实体类和 DTO 进行转换
@@ -153,7 +153,7 @@ public class UserController {
 	 * @return BaseResponse<Boolean>
 	 */
 	@PostMapping("/update")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> updateUser(@RequestBody UserUpdateRequest userUpdateRequest,
 	                                        HttpServletRequest request) {
 		if (userUpdateRequest == null || userUpdateRequest.getId() <= 0) {
@@ -192,7 +192,7 @@ public class UserController {
 	 * @return BaseResponse<User>
 	 */
 	@GetMapping("/get")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<User> getUserById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 		User user = userService.getById(id);
@@ -227,7 +227,7 @@ public class UserController {
 	 * @return BaseResponse<Page < User>>
 	 */
 	@PostMapping("/list/page")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<User>> listUserByPage(@RequestBody UserQueryRequest userQueryRequest,
 	                                               HttpServletRequest request) {
 		long current = userQueryRequest.getCurrent();

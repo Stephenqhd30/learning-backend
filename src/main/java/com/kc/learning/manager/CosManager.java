@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.config.oss.cos.properties.CosProperties;
 import com.kc.learning.constants.FileConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.entity.LogFiles;
 import com.kc.learning.model.enums.OssTypeEnum;
 import com.kc.learning.service.LogFilesService;

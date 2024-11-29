@@ -1,14 +1,14 @@
 package com.kc.learning.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.User;
@@ -139,7 +139,7 @@ public class UserCourseController {
 	 * @return {@link BaseResponse <{@link Page <{@link UserCourse}>}>}
 	 */
 	@PostMapping("/list/page")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<UserCourse>> listUserCourseByPage(@RequestBody UserCourseQueryRequest userCourseQueryRequest) {
 		long current = userCourseQueryRequest.getCurrent();
 		long size = userCourseQueryRequest.getPageSize();

@@ -1,14 +1,13 @@
 package com.kc.learning.controller;
 
-import cn.hutool.json.JSONUtil;
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
@@ -98,7 +97,7 @@ public class UserCertificateController {
 	 * @return {@link  BaseResponse <{@link Page} {@link UserCertificateVO}}>}
 	 */
 	@PostMapping("/list/page")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<UserCertificate>> listUserCertificateByPage(@RequestBody UserCertificateQueryRequest userCertificateQueryRequest) {
 		long current = userCertificateQueryRequest.getCurrent();
 		long size = userCertificateQueryRequest.getPageSize();
@@ -165,7 +164,7 @@ public class UserCertificateController {
 	 * @return BaseResponse<Boolean>
 	 */
 	@PostMapping("/review")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> doCertificateReview(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
 		CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
@@ -186,7 +185,7 @@ public class UserCertificateController {
 	 * @return BaseResponse<Boolean>
 	 */
 	@PostMapping("/review/batch")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	@Transactional(rollbackFor = Exception.class)
 	public BaseResponse<Boolean> doCertificateReviewByBatch(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);

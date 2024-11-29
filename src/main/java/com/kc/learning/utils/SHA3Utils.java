@@ -1,7 +1,7 @@
 package com.kc.learning.utils;
 
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 

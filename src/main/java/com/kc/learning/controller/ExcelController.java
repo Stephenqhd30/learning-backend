@@ -1,12 +1,12 @@
 package com.kc.learning.controller;
 
+import cn.dev33.satoken.annotation.SaCheckRole;
 import com.alibaba.excel.EasyExcel;
-import com.kc.learning.annotation.AuthCheck;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
@@ -77,7 +77,7 @@ public class ExcelController {
 	 */
 	@PostMapping("/user/import")
 	@Transactional(rollbackFor = Exception.class)
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Map<String, Object>> importUserDataByExcel(@RequestPart("file") MultipartFile file) {
 		// 检查文件是否为空
 		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
@@ -106,7 +106,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/user/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadUser(HttpServletResponse response) throws IOException {
 		List<CompletableFuture<UserExcelVO>> futures = userService.list().stream().map(user -> CompletableFuture.supplyAsync(() -> {
 			UserExcelVO userExcelVO = new UserExcelVO();
@@ -144,7 +144,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/user/download/example")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadUserExample(HttpServletResponse response) throws IOException {
 		List<UserExcelExampleVO> userExcelExampleVOList = new ArrayList<>();
 		// 获取数据，根据自身业务修改
@@ -181,7 +181,7 @@ public class ExcelController {
 	 */
 	@PostMapping("/certificate/import")
 	@Transactional(rollbackFor = Exception.class)
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Map<String, Object>> importCertificateDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
 		// 检查文件是否为空
 		ThrowUtils.throwIf(file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件不能为空");
@@ -212,7 +212,7 @@ public class ExcelController {
 	 * @throws IOException 当输出流发生异常时抛出
 	 */
 	@GetMapping("/certificate/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadCertificate(HttpServletResponse response) throws IOException {
 		// 查询证书数据并转换为CertificateExcelVO对象列表
 		List<CompletableFuture<CertificateExcelVO>> futures = certificateService.list().stream().map(certificate -> CompletableFuture.supplyAsync(() -> {
@@ -263,7 +263,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/certificate/download/example")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadCertificateExample(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<CertificateImportExcelVO> certificateImportExcelVOList = new ArrayList<>();
@@ -292,7 +292,7 @@ public class ExcelController {
 	 * @return 导入结果
 	 */
 	@PostMapping("/course/import")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	@Transactional(rollbackFor = Exception.class)
 	public BaseResponse<Map<String, Object>> importCourseDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
 		// 检查文件是否为空
@@ -322,7 +322,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/course/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadCourse(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<CompletableFuture<CourseExcelVO>> futures = courseService.list().stream().map(course -> CompletableFuture.supplyAsync(() -> {
@@ -370,7 +370,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/course/download/example")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadCourseExample(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<CourseExcelExampleVO> courseExcelExampleVOList = new ArrayList<>();
@@ -401,7 +401,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/user/certificate/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadUserCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<CompletableFuture<UserCertificateExcelVO>> futures = userCertificateService.list().stream().map(userCertificate -> CompletableFuture.supplyAsync(() -> {
@@ -450,7 +450,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/log/certificate/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadLogPrintCertificate(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<CompletableFuture<LogPrintCertificateExcelVO>> futures = logPrintCertificateService.list().stream().map(logPrintCertificate -> CompletableFuture.supplyAsync(() -> {
@@ -505,7 +505,7 @@ public class ExcelController {
 	 * @return 导入结果
 	 */
 	@PostMapping("/user/course/import")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	@Transactional(rollbackFor = Exception.class)
 	public BaseResponse<Map<String, Object>> importUserCourseDataByExcel(@RequestPart("file") MultipartFile file, HttpServletRequest request) {
 		// 检查文件是否为空
@@ -535,7 +535,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/user/course/download")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadUserCourse(HttpServletResponse response) throws IOException {
 		// 获取数据，并发处理 userService 和 courseService 的查询操作
 		List<CompletableFuture<UserCourseExcelVO>> futures = userCourseService.list().stream().map(userCourse ->
@@ -596,7 +596,7 @@ public class ExcelController {
 	 * @param response response
 	 */
 	@GetMapping("/uer/course/download/example")
-	@AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public void downloadUserCourseExample(HttpServletResponse response) throws IOException {
 		// 获取数据，根据自身业务修改
 		List<UserCourseExcelVO> userCourseExcelVOList = new ArrayList<>();

@@ -11,7 +11,12 @@ spring:
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
-  #   session 配置
+  # 缓存
+  cache:
+    type: caffeine
+    caffeine:
+      spec: maximumSize=500,expireAfterAccess=600s
+  # session 配置
   session:
     # 开启分布式 session（须先配置 Redis）
     store-type: redis
@@ -19,31 +24,50 @@ spring:
     timeout: 2592000
   # 数据库配置
   datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: ${learning.datasource.url}
-    username: ${learning.datasource.username}
-    password: ${learning.datasource.password}
+    driver-class-name: ${dev.mysql.datasource.driver-class-name}
+    url: ${dev.mysql.datasource.url}
+    username: ${dev.mysql.datasource.username}
+    password: ${dev.mysql.datasource.password}
   # Redis 配置
+  # todo 需替换配置，然后取消注释
   redis:
-    database: 10
-    host: localhost
-    port: 6379
-    timeout: 5000
-    lettuce:
-      pool:
-        max-active: 8
-        max-idle: 8
-        min-idle: 0
+    database: ${dev.redis.database}
+    host: ${dev.redis.host}
+    port: ${dev.redis.port}
+    timeout: ${dev.redis.timeout}
   # Elasticsearch 配置
+  # todo 需替换配置，然后取消注释
   elasticsearch:
-    uris: ${learning.elasticsearch.uris}
+    uris: ${dev.elasticsearch.uris}
+  # RabbitMQ配置
+  rabbitmq:
+    # todo 是否开启RabbitMQ（预先关闭）
+    enable: false
+    host: ${dev.rabbitmq.host}
+    port: ${dev.rabbitmq.port}
+    username: ${dev.rabbitmq.username}
+    password: ${dev.rabbitmq.password}
+    max-await-timeout: 3000
+    # 虚拟主机
+    virtual-host: /
+
+    # 消息确认（ACK）
+    publisher-confirm-type: correlated #确认消息已发送到交换机(Exchange)
+    publisher-returns: true #确认消息已发送到队列(Queue)
+    template:
+      mandatory: true
+    # 是否手动ACK
+    listener:
+      type: simple
+      direct:
+        acknowledge-mode: manual
+      simple:
+        acknowledge-mode: manual
   # 文件上传
   servlet:
     multipart:
       # 大小限制
-      enabled: true
       max-file-size: 10MB
-      max-request-size: 10MB
 server:
   address: 0.0.0.0
   port: 8080
@@ -53,6 +77,7 @@ server:
     session:
       cookie:
         max-age: 2592000
+# MyBatis Plus 配置
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -62,13 +87,17 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
-# 对象存储
+
+# 腾讯云COS对象存储配置
+# todo 是否开启
 cos:
   client:
-    accessKey: ${learning.cos.client.accessKey}
-    secretKey: ${learning.cos.client.secretKey}
-    region: ${learning.cos.client.region}
-    bucket: ${learning.cos.client.bucket}
+    enable: true
+    accessKey: ${dev.cos.client.accessKey}
+    secretKey: ${dev.cos.client.secretKey}
+    region: ${dev.cos.client.region}
+    bucket: ${dev.cos.client.bucket}
+
 # 接口文档配置
 knife4j:
   enable: true
@@ -77,7 +106,7 @@ knife4j:
     version: 1.0
     description: "StephenQiu的接口文档信息。"
     concat: "Stephen Qiu"
-    email: "learningqhd@gmail.com"
+    email: "popcornqhd@gmail.com"
     url: "https://github.com/Stephenqhd30"
     group:
       default:
@@ -85,6 +114,37 @@ knife4j:
         api-rule-resources:
           - com.kc.learning.controller
 
+############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
+sa-token:
+  # todo 是否启用SaToken认证鉴权功能（此处为false并不是禁用SaToken，而是让SaToken相关注解失效，预先开启）
+  enable-sa: true
+  # todo 是否使用JWT格式的Token（建议如果没有开启redis配置就不要开启JWT格式的Token，预先关闭）
+  enable-jwt: true
+  # token 名称（同时也是 cookie 名称）
+  token-name: Authorization
+  # token有效期，单位s 默认30天, -1代表永不过期
+  timeout: 2592000
+  # token 最低活跃频率（单位：秒），如果 token 超过此时间没有访问系统就会被冻结，默认-1 代表不限制，永不冻结
+  active-timeout: -1
+  # 是否允许同一账号多地同时登录 （为 true 时允许一起登录, 为 false 时新登录挤掉旧登录）
+  is-concurrent: false
+  # 在多人登录同一账号时，是否共用一个 token （为 true 时所有登录共用一个 token, 为 false 时每次登录新建一个 token）
+  is-share: true
+  # token 风格（默认可取值：uuid、simple-uuid、random-32、random-64、random-128、tik）
+  token-style: uuid
+  # 是否输出操作日志
+  is-log: true
+  # token前缀  注意必须是 Bearer {token}, Bearer后面加空格
+  token-prefix: Bearer
+  # jwt秘钥
+  jwt-secret-key: ${dev.sa-token.jwt-secret-key}
+
+# Redisson 配置
+redisson:
+  enabled: true
+  database: ${dev.redisson.database}
+  host: ${dev.redisson.host}
+  port: ${dev.redisson.port}
 # 对象存储配置
 oss:
   # MinIO OSS配置
@@ -101,7 +161,3 @@ oss:
     secret-key: xxxxxxxx
     # 桶名称
     bucket-name: xxxxxxxx
-
-
-
-    

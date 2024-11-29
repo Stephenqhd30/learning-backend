@@ -5,7 +5,7 @@ import com.documents4j.api.DocumentType;
 import com.documents4j.api.IConverter;
 import com.documents4j.job.LocalConverter;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.fileupload.FileItem;

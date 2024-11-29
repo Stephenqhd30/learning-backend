@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.ExcelConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.dto.excel.ErrorRecord;
 import com.kc.learning.model.dto.excel.SuccessRecord;
 import com.kc.learning.model.entity.Course;

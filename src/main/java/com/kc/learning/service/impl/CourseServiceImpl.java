@@ -9,7 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.excel.CourseExcelListener;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.CommonConstant;
-import com.kc.learning.exception.BusinessException;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.mapper.CourseMapper;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.entity.Course;

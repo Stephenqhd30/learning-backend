@@ -1,15 +1,15 @@
 package com.kc.learning.config.oss.minio;
 
-
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.config.oss.minio.condition.MinioCondition;
 import com.kc.learning.config.oss.minio.properties.MinioProperties;
-import com.kc.learning.exception.BusinessException;
 import io.minio.MinioClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 
@@ -30,7 +30,7 @@ public class MinioClientConfig {
 	 *
 	 * @return 返回MinioClient客户端
 	 */
-	@Bean
+	@Bean("minioClientBean")
 	public MinioClient getMinioClient() {
 		try {
 			String[] ipAndPort = minioProperties.getEndpoint().split(":");
@@ -42,5 +42,13 @@ public class MinioClientConfig {
 			log.error("MinIO服务器构建异常：{}", e.getMessage());
 			throw new BusinessException(ErrorCode.OPERATION_ERROR, "MinIO服务器构建异常");
 		}
+	}
+	
+	/**
+	 * 依赖注入日志输出
+	 */
+	@PostConstruct
+	private void initDi() {
+		log.info("############ {} Configuration DI.", this.getClass().getSimpleName().split("\\$\\$")[0]);
 	}
 }

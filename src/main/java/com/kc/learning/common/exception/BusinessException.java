@@ -1,4 +1,4 @@
-package com.kc.learning.exception;
+package com.kc.learning.common.exception;
 
 import com.kc.learning.common.ErrorCode;
 import lombok.Getter;
