@@ -6,8 +6,8 @@ import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.ReviewRequest;
-import com.kc.learning.constants.UserConstant;
 import com.kc.learning.common.exception.BusinessException;
+import com.kc.learning.constants.UserConstant;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -167,12 +166,8 @@ public class UserCertificateController {
 	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> doCertificateReview(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
-		CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-			// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
-			userCertificateService.validReview(reviewRequest, request);
-		}, executorService);
-		// 等待任务完成
-		future.join();
+		// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
+		userCertificateService.validReview(reviewRequest, request);
 		return ResultUtils.success(true);
 	}
 	
@@ -192,18 +187,21 @@ public class UserCertificateController {
 		String reviewMessage = reviewRequest.getReviewMessage();
 		Integer reviewStatus = reviewRequest.getReviewStatus();
 		List<Long> idList = reviewRequest.getIdList();
-		if (!idList.isEmpty()) {
-			// 等待所有任务完成
-			CompletableFuture.allOf(idList.stream()
-					.map(id -> CompletableFuture.runAsync(() -> {
-						ReviewRequest newReviewRequest = new ReviewRequest();
-						newReviewRequest.setId(id);
-						newReviewRequest.setReviewMessage(reviewMessage);
-						newReviewRequest.setReviewStatus(reviewStatus);
-						// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
-						userCertificateService.validReview(newReviewRequest, request);
-					}, executorService)).toArray(CompletableFuture[]::new)).join();
+		try {
+			if (!idList.isEmpty()) {
+				for (Long id : idList) {
+					ReviewRequest newReviewRequest = new ReviewRequest();
+					newReviewRequest.setId(id);
+					newReviewRequest.setReviewMessage(reviewMessage);
+					newReviewRequest.setReviewStatus(reviewStatus);
+					// 执行审核信息更新
+					userCertificateService.validReview(newReviewRequest, request);
+				}
+			}
+			return ResultUtils.success(true);
+		} catch (Exception e) {
+			return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
 		}
-		return ResultUtils.success(true);
+		
 	}
 }

@@ -15,7 +15,7 @@ public interface UserConstant {
 	/**
 	 * 用户默认头像地址
 	 */
-	String USER_AVATAR = "https://butterfly-1318299170.cos.ap-shanghai.myqcloud.com/Images/Blog/Avatar/not-login.png";
+	String USER_AVATAR = "http://152.136.235.18:19000/base/R-C.jpg";
 	
 	
 	//  region 权限

@@ -7,7 +7,7 @@ import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.common.exception.BusinessException;
-import com.kc.learning.manager.CosManager;
+import com.kc.learning.manager.MinioManager;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -63,7 +63,7 @@ public class LogPrintCertificateController {
 	private CourseService courseService;
 	
 	@Resource
-	private CosManager cosManager;
+	private MinioManager minioManager;
 	
 	// 自定义线程池
 	private final ExecutorService executor = Executors.newFixedThreadPool(10);
@@ -113,9 +113,9 @@ public class LogPrintCertificateController {
 			String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
 			FileInputStream fileInputStream = new FileInputStream(filePath);
 			MultipartFile multipartFile = WordUtils.convertToMultipartFile(fileInputStream, filePath);
-			String path = String.format("/%s/%s/%s", "learning", "certificate", logPrintCertificateExcelVO.getUserName() + "_" + logPrintCertificateExcelVO.getCertificateNumber());
+			String path = String.format("/%s/%s", "certificate", logPrintCertificateExcelVO.getCertificateNumber());
 			// 上传到 COS
-			String s = cosManager.uploadToCos(multipartFile, path);
+			String s = minioManager.uploadToMinio(multipartFile, path);
 			
 			// 设置证书路径
 			Certificate newCertificate = new Certificate();
@@ -191,9 +191,9 @@ public class LogPrintCertificateController {
 						String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
 						FileInputStream fileInputStream = new FileInputStream(filePath);
 						MultipartFile multipartFile = WordUtils.convertToMultipartFile(fileInputStream, filePath);
-						String path = String.format("/%s/%s/%s", "learning", "certificate", logPrintCertificateExcelVO.getUserName() + "_" + logPrintCertificateExcelVO.getCertificateNumber());
-						// 上传到 COS
-						String s = cosManager.uploadToCos(multipartFile, path);
+						String path = String.format("/%s/%s", "certificate", logPrintCertificateExcelVO.getCertificateNumber());
+						// 上传到 Minio
+						String s = minioManager.uploadToMinio(multipartFile, path);
 						// 设置证书路径
 						Certificate newCertificate = new Certificate();
 						newCertificate.setId(certificate.getId());

@@ -46,7 +46,7 @@ server:
     session:
       cookie:
         max-age: 2592000
-        domain: 152.136.235.18
+        domain: ${prod.server.servlet.session.cookie.domain}
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: false
@@ -57,14 +57,6 @@ mybatis-plus:
       logic-delete-field: isDelete # 全局逻辑删除的实体字段名
       logic-delete-value: 1 # 逻辑已删除值（默认为 1）
       logic-not-delete-value: 0 # 逻辑未删除值（默认为 0）
-# 对象存储
-cos:
-  client:
-    enable: true
-    accessKey: ${prod.cos.client.accessKey}
-    secretKey: ${prod.cos.client.secretKey}
-    region: ${prod.cos.client.region}
-    bucket: ${prod.cos.client.bucket}
 
 # Redisson 配置
 redisson:
@@ -73,23 +65,6 @@ redisson:
   host: ${prod.redisson.host}
   port: ${prod.redisson.port}
   password: ${prod.redisson.password}
-# 对象存储配置
-oss:
-  # MinIO OSS配置
-  minio:
-    # todo 是否开启
-    enable: false
-    # 域名（格式：【ip:port】）
-    endpoint: 127.0.0.1:9000
-    # 是否开启TLS
-    enable-tls: false
-    # 用户的 SecretId
-    secret-id: xxxxxxxx
-    # 用户的 SecretKey
-    secret-key: xxxxxxxx
-    # 桶名称
-    bucket-name: xxxxxxxx
-
 
 ############## Sa-Token 配置 (文档: https://sa-token.cc) ##############
 sa-token:
@@ -115,3 +90,17 @@ sa-token:
   token-prefix: Bearer
   # jwt秘钥
   jwt-secret-key: ${prod.sa-token.jwt-secret-key}
+# 对象存储配置
+oss:
+  # MinIO OSS配置
+  minio:
+    # todo 是否开启
+    enable: true
+    # 域名（格式：【ip:port】）
+    endpoint: ${prod.oss.minio.endpoint}
+    # 用户的 AccessKey
+    accessKey: ${prod.oss.minio.accessKey}
+    # 用户的 SecretKey
+    secretKey: ${prod.oss.minio.secretKey}
+    # 桶名称
+    bucket: ${prod.oss.minio.bucket}

@@ -4,7 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.exception.BusinessException;
-import com.kc.learning.manager.CosManager;
+import com.kc.learning.manager.MinioManager;
 import com.kc.learning.model.dto.file.UploadFileRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.FileUploadBizEnum;
@@ -37,10 +37,10 @@ public class FileController {
 	private UserService userService;
 	
 	@Resource
-	private CosManager cosManager;
+	private MinioManager minioManager;
 	
 	/**
-	 * 文件上传(使用COS对象存储)
+	 * 文件上传(使用Minio对象存储)
 	 *
 	 * @param multipartFile     multipartFile
 	 * @param uploadFileRequest uploadFileRequest
@@ -59,11 +59,11 @@ public class FileController {
 		User loginUser = userService.getLoginUser(request);
 		
 		// 文件目录：根据业务、用户来划分
-		String path = String.format("/%s/%s/%s", "learning", fileUploadBizEnum.getValue(), loginUser.getId());
+		String path = String.format("/%s/%s", fileUploadBizEnum.getValue(), loginUser.getId());
 		
 		try {
 			// 直接上传文件
-			String s = cosManager.uploadToCos(multipartFile, path);
+			String s = minioManager.uploadToMinio(multipartFile, path);
 			// 返回可访问地址
 			return ResultUtils.success(s);
 		} catch (IOException e) {

@@ -1,5 +1,6 @@
 package com.kc.learning.manager;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.config.oss.minio.condition.MinioCondition;
 import com.kc.learning.config.oss.minio.properties.MinioProperties;
@@ -57,27 +58,37 @@ public class MinioManager {
 	@Transactional(rollbackFor = Exception.class)
 	public String uploadToMinio(MultipartFile file, String path) throws IOException {
 		ThrowUtils.throwIf(file == null || file.isEmpty(), ErrorCode.PARAMS_ERROR, "文件为空");
-		
 		// 获取文件的原始名称和后缀
-		String originalName = StringUtils.defaultIfBlank(file.getOriginalFilename(), file.getName());
+		String originalName = file.getOriginalFilename();
 		String suffix = FilenameUtils.getExtension(originalName);
 		long fileSize = file.getSize();
 		
 		// 生成唯一键
 		String uniqueKey = SHA3Utils.encrypt(Arrays.toString(file.getBytes()) + originalName + suffix);
+		
+		// 查询数据库，看文件是否已存在
+		LogFiles existingFile = logFilesService.getOne(
+				new LambdaQueryWrapper<LogFiles>()
+						.eq(LogFiles::getFileKey, uniqueKey)
+						.eq(LogFiles::getFileOssType, OssTypeEnum.COS.getValue())
+		);
+		
+		if (existingFile != null) {
+			// 文件已存在，直接返回 URL
+			return existingFile.getFileUrl();
+		}
+		
 		String fileName = UUID.randomUUID().toString().replace("-", "") + "." + suffix;
-		String filePath = (StringUtils.isBlank(path) ? "" : path + "/") + fileName;
-		
-		
+		String filePath = String.format("%s/%s", path, fileName);
 		try (InputStream inputStream = file.getInputStream()) {
 			// 读取文件内容
 			byte[] dataBytes = inputStream.readAllBytes();
-			String key = StringUtils.isBlank(filePath) ? fileName : filePath + "/" + fileName;
+			String key = StringUtils.isBlank(filePath) ? fileName : filePath;
 			
 			
 			// 上传文件到 MinIO
 			minioClient.putObject(PutObjectArgs.builder()
-					.bucket(minioProperties.getBucketName())
+					.bucket(minioProperties.getBucket())
 					.object(key)
 					.stream(new ByteArrayInputStream(dataBytes), dataBytes.length, -1)
 					.build());
@@ -124,12 +135,12 @@ public class MinioManager {
 	 */
 	private void deleteInMinioByUrl(String url) {
 		ThrowUtils.throwIf(StringUtils.isEmpty(url), ErrorCode.NOT_FOUND_ERROR, "被删除地址为空");
-		String[] split = url.split(minioProperties.getEndpoint() + "/" + minioProperties.getBucketName() + "/");
+		String[] split = url.split(minioProperties.getEndpoint() + "/" + minioProperties.getBucket() + "/");
 		ThrowUtils.throwIf(split.length != 2, ErrorCode.NOT_FOUND_ERROR, "文件不存在");
 		String key = split[1];
 		try {
 			minioClient.removeObject(RemoveObjectArgs.builder()
-					.bucket(minioProperties.getBucketName())
+					.bucket(minioProperties.getBucket())
 					.object(key).build());
 		} catch (Exception e) {
 			throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);

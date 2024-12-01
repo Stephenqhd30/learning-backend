@@ -237,7 +237,7 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
 		ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
 		
-		User loginUser = userService.getLoginUser(request);
+		User loginUser = userService.getLoginUserPermitNull(request);
 		Certificate certificate = new Certificate();
 		certificate.setId(id);
 		certificate.setReviewStatus(reviewStatus);
