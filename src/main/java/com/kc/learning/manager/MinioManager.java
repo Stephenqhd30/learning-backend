@@ -70,7 +70,7 @@ public class MinioManager {
 		LogFiles existingFile = logFilesService.getOne(
 				new LambdaQueryWrapper<LogFiles>()
 						.eq(LogFiles::getFileKey, uniqueKey)
-						.eq(LogFiles::getFileOssType, OssTypeEnum.COS.getValue())
+						.eq(LogFiles::getFileOssType, OssTypeEnum.MINIO.getValue())
 		);
 		
 		if (existingFile != null) {

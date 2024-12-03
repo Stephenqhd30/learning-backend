@@ -45,7 +45,6 @@ spring:
     max-await-timeout: 3000
     # 虚拟主机
     virtual-host: /
-
     # 消息确认（ACK）
     publisher-confirm-type: correlated #确认消息已发送到交换机(Exchange)
     publisher-returns: true #确认消息已发送到队列(Queue)
