@@ -29,11 +29,6 @@ public class LogPrintCertificateAddRequest implements Serializable {
 	private Long courseId;
 	
 	/**
-	 * 开课时间
-	 */
-	private Date acquisitionTime;
-	
-	/**
 	 * 证书获得时间
 	 */
 	private Date finishTime;

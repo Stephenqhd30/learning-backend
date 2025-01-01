@@ -6,29 +6,35 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.common.exception.BusinessException;
+import com.kc.learning.constants.CommonConstant;
+import com.kc.learning.manager.MinioManager;
 import com.kc.learning.mapper.LogPrintCertificateMapper;
+import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.*;
+import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.CertificateStatusEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
+import com.kc.learning.model.enums.UserGenderEnum;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.course.CourseVO;
+import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.*;
-import com.kc.learning.utils.SqlUtils;
-import com.kc.learning.utils.ThrowUtils;
+import com.kc.learning.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -53,6 +59,10 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 	
 	@Resource
 	private UserCourseService userCourseService;
+	
+	@Resource
+	private MinioManager minioManager;
+	
 	
 	/**
 	 * 校验数据
@@ -266,6 +276,34 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 		// 设置分页结果
 		logPrintCertificateVOPage.setRecords(logPrintCertificateVOList);
 		return logPrintCertificateVOPage;
+	}
+	
+	/**
+	 * 上传证书文件到minio
+	 *
+	 * @param filePath          filePath
+	 * @param certificateNumber certificateNumber
+	 * @return {@link String}
+	 */
+	@Override
+	public String uploadCertificateToMinio(String filePath, String certificateNumber) throws IOException {
+		FileInputStream fileInputStream = new FileInputStream(filePath);
+		MultipartFile multipartFile = WordUtils.convertToMultipartFile(fileInputStream, filePath);
+		String path = String.format("/%s/%s", "certificate", certificateNumber);
+		return minioManager.uploadToMinio(multipartFile, path);
+	}
+	
+	/**
+	 * 更新证书url
+	 *
+	 * @param certificate    certificate
+	 * @param certificateUrl certificateUrl
+	 */
+	@Override
+	public void updateCertificateUrl(Certificate certificate, String certificateUrl) {
+		certificate.setCertificateUrl(certificateUrl);
+		certificate.setCertificateSituation(CertificateSituationEnum.HAVA.getValue());
+		certificateService.updateById(certificate);
 	}
 	
 }

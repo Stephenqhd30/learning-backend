@@ -5,9 +5,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.UserConstant;
 import com.kc.learning.common.exception.BusinessException;
-import com.kc.learning.manager.MinioManager;
+import com.kc.learning.constants.UserConstant;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -15,6 +14,7 @@ import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.LogPrintCertificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.CertificateStatusEnum;
 import com.kc.learning.model.enums.UserGenderEnum;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
@@ -28,17 +28,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.io.FileInputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 /**
  * 打印证书日志接口
@@ -61,12 +57,6 @@ public class LogPrintCertificateController {
 	
 	@Resource
 	private CourseService courseService;
-	
-	@Resource
-	private MinioManager minioManager;
-	
-	// 自定义线程池
-	private final ExecutorService executor = Executors.newFixedThreadPool(10);
 	
 	// region 增删改查
 	
@@ -109,18 +99,14 @@ public class LogPrintCertificateController {
 			logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
 			logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
 			
-			// 生成证书文件
+			// 生成证书文件并上传到 Minio
 			String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
-			FileInputStream fileInputStream = new FileInputStream(filePath);
-			MultipartFile multipartFile = WordUtils.convertToMultipartFile(fileInputStream, filePath);
-			String path = String.format("/%s/%s", "certificate", logPrintCertificateExcelVO.getCertificateNumber());
-			// 上传到 COS
-			String s = minioManager.uploadToMinio(multipartFile, path);
+			String certificateUrl = logPrintCertificateService.uploadCertificateToMinio(filePath, logPrintCertificateExcelVO.getCertificateNumber());
 			
 			// 设置证书路径
 			Certificate newCertificate = new Certificate();
 			newCertificate.setId(certificate.getId());
-			newCertificate.setCertificateUrl(s);
+			newCertificate.setCertificateUrl(certificateUrl);
 			newCertificate.setCertificateSituation(CertificateSituationEnum.HAVA.getValue());
 			certificateService.updateById(newCertificate);
 			
@@ -143,77 +129,91 @@ public class LogPrintCertificateController {
 		}
 	}
 	
+	
 	/**
-	 * 批量创建打印证书日志
+	 * 批量生成证书
 	 *
 	 * @param logPrintCertificateAddRequest logPrintCertificateAddRequest
 	 * @param request                       request
-	 * @return {@link BaseResponse <{@link List} <{@link Long}>>}
+	 * @return {@link BaseResponse<List<Long>> }
 	 */
 	@PostMapping("/add/batch")
 	@Transactional(rollbackFor = Exception.class)
-	public BaseResponse<List<Long>> addLogPrintCertificates(@RequestBody LogPrintCertificateAddRequest logPrintCertificateAddRequest, HttpServletRequest request) {
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
+	public BaseResponse<List<Long>> addLogPrintCertificatesByBatch(@RequestBody LogPrintCertificateAddRequest logPrintCertificateAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(logPrintCertificateAddRequest == null, ErrorCode.PARAMS_ERROR);
+		
+		// 获取当前登录用户
 		User loginUser = userService.getLoginUser(request);
 		List<Long> certificateIds = logPrintCertificateAddRequest.getCertificateIds();
-		// 使用 CompletableFuture 异步处理每个证书生成
-		List<CompletableFuture<Long>> futures = certificateIds.stream()
-				.map(certificateId -> CompletableFuture.supplyAsync(() -> {
-					try {
-						// 生成每个证书的请求数据
-						LogPrintCertificate logPrintCertificate = new LogPrintCertificate();
-						BeanUtils.copyProperties(logPrintCertificateAddRequest, logPrintCertificate);
-						logPrintCertificate.setCertificateId(certificateId);
-						logPrintCertificate.setCreateUserId(loginUser.getId());
-						// 异步获取证书和课程数据
-						CompletableFuture<Certificate> certificateFuture = CompletableFuture.supplyAsync(() -> certificateService.getById(certificateId));
-						CompletableFuture<Course> courseFuture = CompletableFuture.supplyAsync(() -> courseService.getById(logPrintCertificate.getCourseId()));
-						CompletableFuture.allOf(certificateFuture, courseFuture).join();
-						Certificate certificate = certificateFuture.get();
-						Course course = courseFuture.get();
-						// 从证书中获取用户
-						User user = userService.getById(certificate.getUserId());
-						logPrintCertificate.setUserId(user.getId());
-						// 校验数据
-						logPrintCertificateService.validLogPrintCertificate(logPrintCertificate, true);
-						// 生成证书
-						LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
-						logPrintCertificateExcelVO.setUserName(user.getUserName());
-						logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
-						logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
-						logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
-						logPrintCertificateExcelVO.setCourseName(course.getCourseName());
-						logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getAcquisitionTime()));
-						logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
-						logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
-						
-						// 生成证书文件
-						String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
-						FileInputStream fileInputStream = new FileInputStream(filePath);
-						MultipartFile multipartFile = WordUtils.convertToMultipartFile(fileInputStream, filePath);
-						String path = String.format("/%s/%s", "certificate", logPrintCertificateExcelVO.getCertificateNumber());
-						// 上传到 Minio
-						String s = minioManager.uploadToMinio(multipartFile, path);
-						// 设置证书路径
-						Certificate newCertificate = new Certificate();
-						newCertificate.setId(certificate.getId());
-						newCertificate.setCertificateUrl(s);
-						newCertificate.setCertificateSituation(CertificateSituationEnum.HAVA.getValue());
-						certificateService.updateById(newCertificate);
-						
-						boolean result = logPrintCertificateService.save(logPrintCertificate);
-						ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR, "证书保存失败");
-						
-						return logPrintCertificate.getId();
-					} catch (Exception e) {
-						throw new BusinessException(ErrorCode.OPERATION_ERROR, "证书生成失败: " + e.getMessage());
-					}
-				}, executor)).collect(Collectors.toList());
+		List<Long> generatedIds = new ArrayList<>();
 		
-		// 等待所有异步任务完成并收集生成的ID
-		List<Long> generatedIds = futures.stream().map(CompletableFuture::join).collect(Collectors.toList());
+		for (Long certificateId : certificateIds) {
+			// 创建单个证书的生成请求
+			LogPrintCertificate logPrintCertificate = new LogPrintCertificate();
+			BeanUtils.copyProperties(logPrintCertificateAddRequest, logPrintCertificate);
+			// 校验数据
+			logPrintCertificateService.validLogPrintCertificate(logPrintCertificate, true);
+			
+			// 设置当前用户ID
+			logPrintCertificate.setCreateUserId(loginUser.getId());
+			
+			// 保存生成的打印证书日志
+			boolean saveResult = logPrintCertificateService.save(logPrintCertificate);
+			if (!saveResult) {
+				throw new BusinessException(ErrorCode.OPERATION_ERROR, "保存日志失败");
+			}
+			
+			try {
+				// 设置初始状态为运行中
+				logPrintCertificate.setStatus(CertificateStatusEnum.RUNNING.getValue());
+				logPrintCertificate.setExecutorMessage(CertificateStatusEnum.RUNNING.getText());
+				logPrintCertificateService.updateById(logPrintCertificate);
+				
+				// 获取证书、课程和用户数据
+				Certificate certificate = certificateService.getById(certificateId);
+				Course course = courseService.getById(logPrintCertificateAddRequest.getCourseId());
+				User user = userService.getById(logPrintCertificateAddRequest.getUserId());
+				
+				// 填充证书信息
+				logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
+				
+				// 生成证书
+				LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
+				logPrintCertificateExcelVO.setUserName(user.getUserName());
+				logPrintCertificateExcelVO.setUserIdCard(EncryptionUtils.decrypt(user.getUserIdCard()));
+				logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
+				logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
+				logPrintCertificateExcelVO.setCourseName(course.getCourseName());
+				logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getAcquisitionTime()));
+				logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
+				
+				// 生成证书文件并上传到 Minio
+				String filePath = WordUtils.generateCertificate(logPrintCertificateExcelVO);
+				String certificateUrl = logPrintCertificateService.uploadCertificateToMinio(filePath, logPrintCertificateExcelVO.getCertificateNumber());
+				
+				// 更新证书路径
+				logPrintCertificateService.updateCertificateUrl(certificate, certificateUrl);
+				
+				// 更新证书状态为完成
+				logPrintCertificate.setStatus(CertificateStatusEnum.SUCCEED.getValue());
+				logPrintCertificate.setExecutorMessage(CertificateStatusEnum.SUCCEED.getText());
+				logPrintCertificateService.updateById(logPrintCertificate);
+				
+				// 将生成的证书ID加入列表
+				generatedIds.add(logPrintCertificate.getId());
+			} catch (Exception e) {
+				// 如果出错，更新状态为失败并记录错误
+				logPrintCertificate.setStatus(CertificateStatusEnum.FAILED.getValue());
+				logPrintCertificate.setExecutorMessage("生成失败: " + e.getMessage());
+				logPrintCertificateService.updateById(logPrintCertificate);
+			}
+		}
+		
+		// 返回生成的证书 ID 列表
 		return ResultUtils.success(generatedIds);
 	}
+	
 	
 	/**
 	 * 删除打印证书日志
@@ -279,8 +279,9 @@ public class LogPrintCertificateController {
 	 * @return {@link BaseResponse <{@link Page} {@link LogPrintCertificateVO}>}
 	 */
 	@PostMapping("/list/page/vo")
-	public BaseResponse<Page<LogPrintCertificateVO>> listLogPrintCertificateVOByPage(@RequestBody LogPrintCertificateQueryRequest logPrintCertificateQueryRequest,
-	                                                                                 HttpServletRequest request) {
+	public BaseResponse<Page<LogPrintCertificateVO>> listLogPrintCertificateVOByPage(
+			@RequestBody LogPrintCertificateQueryRequest logPrintCertificateQueryRequest,
+			HttpServletRequest request) {
 		long current = logPrintCertificateQueryRequest.getCurrent();
 		long size = logPrintCertificateQueryRequest.getPageSize();
 		// 限制爬虫

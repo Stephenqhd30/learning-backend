@@ -12,13 +12,15 @@
 		<result property="acquisitionTime" column="acquisitionTime" jdbcType="TIMESTAMP"/>
 		<result property="finishTime" column="finishTime" jdbcType="TIMESTAMP"/>
 		<result property="createUserId" column="createUserId" jdbcType="BIGINT"/>
+		<result property="status" column="status" jdbcType="VARCHAR"/>
+		<result property="executorMessage" column="executorMessage" jdbcType="VARCHAR"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
 	</resultMap>
 
 	<sql id="Base_Column_List">
 		id
 		,userId,certificateId,
-        courseId,createUserId,
+        courseId,createUserId,status, executorMessage,
         acquisitionTime,finishTime,createTime
 	</sql>
 </mapper>
