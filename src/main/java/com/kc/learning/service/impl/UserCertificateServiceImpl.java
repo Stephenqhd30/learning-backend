@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.mapper.UserCertificateMapper;
@@ -13,7 +12,6 @@ import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
-import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
@@ -28,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -217,44 +214,5 @@ public class UserCertificateServiceImpl extends ServiceImpl<UserCertificateMappe
 		userCertificateVOPage.setRecords(userCertificateVOList);
 		return userCertificateVOPage;
 		
-	}
-	
-	/**
-	 * 审核证书
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 */
-	@Override
-	public void validReview(ReviewRequest reviewRequest, HttpServletRequest request) {
-		Long id = reviewRequest.getId();
-		Integer reviewStatus = reviewRequest.getReviewStatus();
-		String reviewMessage = reviewRequest.getReviewMessage();
-		ReviewStatusEnum reviewStatusEnum = ReviewStatusEnum.getEnumByValue(reviewStatus);
-		ThrowUtils.throwIf(id == null || reviewStatusEnum == null, ErrorCode.PARAMS_ERROR);
-		
-		Certificate oldCertificate = certificateService.getById(id);
-		ThrowUtils.throwIf(oldCertificate == null, ErrorCode.NOT_FOUND_ERROR);
-		ThrowUtils.throwIf(oldCertificate.getReviewStatus().equals(reviewStatus), ErrorCode.PARAMS_ERROR, "请勿重复审核");
-		
-		User loginUser = userService.getLoginUserPermitNull(request);
-		Certificate certificate = new Certificate();
-		certificate.setId(id);
-		certificate.setReviewStatus(reviewStatus);
-		certificate.setReviewMessage(reviewMessage);
-		certificate.setReviewerId(loginUser.getId());
-		certificate.setReviewTime(new Date());
-		
-		boolean result = certificateService.updateById(certificate);
-		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-		// 审核通过，则将证书添加到用户证书表中
-		if (ReviewStatusEnum.PASS.getValue().equals(reviewStatus)) {
-			Certificate newCertificate = certificateService.getById(id);
-			UserCertificate userCertificate = new UserCertificate();
-			userCertificate.setUserId(newCertificate.getUserId());
-			userCertificate.setCertificateId(newCertificate.getId());
-			boolean save = this.save(userCertificate);
-			ThrowUtils.throwIf(!save, ErrorCode.OPERATION_ERROR);
-		}
 	}
 }

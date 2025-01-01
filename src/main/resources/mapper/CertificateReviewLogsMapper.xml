@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+		PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+		"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kc.learning.mapper.CertificateReviewLogsMapper">
+
+	<resultMap id="BaseResultMap" type="com.kc.learning.model.entity.CertificateReviewLogs">
+		<id property="id" column="id" jdbcType="BIGINT"/>
+		<result property="certificateId" column="certificate_id" jdbcType="BIGINT"/>
+		<result property="reviewerId" column="reviewer_id" jdbcType="BIGINT"/>
+		<result property="reviewStatus" column="review_status" jdbcType="INTEGER"/>
+		<result property="reviewMessage" column="review_message" jdbcType="VARCHAR"/>
+		<result property="reviewTime" column="review_time" jdbcType="TIMESTAMP"/>
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		id
+		,certificate_id,reviewer_id,
+        review_status,review_message,review_time
+	</sql>
+</mapper>

@@ -3,7 +3,6 @@ package com.kc.learning.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
@@ -50,12 +49,4 @@ public interface UserCertificateService extends IService<UserCertificate> {
 	 * @return {@link Page<UserCertificateVO> }
 	 */
 	Page<UserCertificateVO> getUserCertificateVOPage(Page<UserCertificate> userCertificatePage, HttpServletRequest request);
-	
-	/**
-	 * 审核
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 */
-	void validReview(ReviewRequest reviewRequest, HttpServletRequest request);
 }

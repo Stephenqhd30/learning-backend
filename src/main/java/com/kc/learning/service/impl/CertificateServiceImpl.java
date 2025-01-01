@@ -9,8 +9,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.excel.CertificateExcelListener;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.common.exception.BusinessException;
+import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.mapper.CertificateMapper;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
@@ -120,7 +120,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Long reviewerId = certificateQueryRequest.getReviewerId();
 		Date reviewTime = certificateQueryRequest.getReviewTime();
 		Long userId = certificateQueryRequest.getUserId();
-		Long createUserId = certificateQueryRequest.getCreateUserId();
 		String sortField = certificateQueryRequest.getSortField();
 		String sortOrder = certificateQueryRequest.getSortOrder();
 		
@@ -140,7 +139,6 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		queryWrapper.eq(ObjectUtils.isNotEmpty(certificateSituation), "certificateSituation", certificateSituation);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewerId), "reviewerId", reviewerId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewTime), "reviewTime", reviewTime);
-		queryWrapper.eq(ObjectUtils.isNotEmpty(createUserId), "createUserId", createUserId);
 		
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
@@ -169,6 +167,14 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		}
 		UserVO userVO = userService.getUserVO(user, request);
 		certificateVO.setUserVO(userVO);
+		// 2. 关联查询审核人信息
+		Long reviewerId = certificate.getReviewerId();
+		User reviewer = null;
+		if (reviewerId != null && reviewerId > 0) {
+			reviewer = userService.getById(reviewerId);
+		}
+		UserVO reviewerVO = userService.getUserVO(reviewer, request);
+		certificateVO.setReviewerVO(reviewerVO);
 		return certificateVO;
 	}
 	
@@ -199,30 +205,30 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		// region 可选
 		// 3. 并发查询用户信息
 		Set<Long> userIdSet = certificateList.stream().map(Certificate::getUserId).collect(Collectors.toSet());
-		Set<Long> createUserIdSet = certificateList.stream().map(Certificate::getCreateUserId).collect(Collectors.toSet());
+		Set<Long> reviewerIdSet = certificateList.stream().map(Certificate::getReviewerId).collect(Collectors.toSet());
 		CompletableFuture<Map<Long, User>> userMapFuture = CompletableFuture.supplyAsync(() ->
 				userService.listByIds(userIdSet).stream()
 						.collect(Collectors.toMap(User::getId, user -> user))
 		);
-		CompletableFuture<Map<Long, User>> createUserMapFuture = CompletableFuture.supplyAsync(() ->
-				userService.listByIds(createUserIdSet).stream()
+		CompletableFuture<Map<Long, User>> reviewerMapFuture = CompletableFuture.supplyAsync(() ->
+				userService.listByIds(reviewerIdSet).stream()
 						.collect(Collectors.toMap(User::getId, user -> user))
 		);
 		try {
 			// 等待用户信息查询完成
 			Map<Long, User> userIdUserMap = userMapFuture.get();
-			Map<Long, User> createUserIdUserMap = createUserMapFuture.get();
+			Map<Long, User> userIdReviewerMap = reviewerMapFuture.get();
 			// 填充用户信息至 CertificateVO
 			certificateVOList.forEach(certificateVO -> {
 				Long userId = certificateVO.getUserId();
-				Long createUserId = certificateVO.getCreateUserId();
+				Long reviewerId = certificateVO.getReviewerId();
 				User user = userIdUserMap.get(userId);
-				User createUser = createUserIdUserMap.get(createUserId);
+				User reviewer = userIdReviewerMap.get(reviewerId);
 				if (user != null) {
 					certificateVO.setUserVO(userService.getUserVO(user, request));
 				}
-				if (createUser != null) {
-					certificateVO.setCreateUserVO(userService.getUserVO(createUser, request));
+				if (reviewer != null) {
+					certificateVO.setReviewerVO(userService.getUserVO(reviewer, request));
 				}
 			});
 		} catch (InterruptedException | ExecutionException e) {

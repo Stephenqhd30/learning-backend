@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.common.ReviewRequest;
 import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.model.dto.userCertificate.UserCertificateQueryRequest;
-import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.vo.userCertificate.UserCertificateVO;
 import com.kc.learning.service.UserCertificateService;
@@ -17,14 +15,10 @@ import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 用户证书接口
@@ -41,9 +35,6 @@ public class UserCertificateController {
 	
 	@Resource
 	private UserService userService;
-	
-	// 可根据实际需求调整大小
-	private final ExecutorService executorService = Executors.newFixedThreadPool(10);
 	
 	// region 增删改查
 	
@@ -128,80 +119,5 @@ public class UserCertificateController {
 		return ResultUtils.success(userCertificateService.getUserCertificateVOPage(userCertificatePage, request));
 	}
 	
-	/**
-	 * 分页获取当前登录用户创建的用户证书列表
-	 *
-	 * @param userCertificateQueryRequest userCertificateQueryRequest
-	 * @param request                     request
-	 * @return {@link BaseResponse <{@link Page <{@link UserCertificateVO}>}>}
-	 */
-	@PostMapping("/my/list/page/vo")
-	public BaseResponse<Page<UserCertificateVO>> listMyUserCertificateVOByPage(@RequestBody UserCertificateQueryRequest userCertificateQueryRequest,
-	                                                                           HttpServletRequest request) {
-		ThrowUtils.throwIf(userCertificateQueryRequest == null, ErrorCode.PARAMS_ERROR);
-		// 补充查询条件，只查询当前登录用户的数据
-		User loginUser = userService.getLoginUser(request);
-		userCertificateQueryRequest.setUserId(loginUser.getId());
-		long current = userCertificateQueryRequest.getCurrent();
-		long size = userCertificateQueryRequest.getPageSize();
-		// 限制爬虫
-		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		// 查询数据库
-		Page<UserCertificate> userCertificatePage = userCertificateService.page(new Page<>(current, size),
-				userCertificateService.getQueryWrapper(userCertificateQueryRequest));
-		// 获取封装类
-		return ResultUtils.success(userCertificateService.getUserCertificateVOPage(userCertificatePage, request));
-	}
-	
 	// endregion
-	
-	/**
-	 * 审核证书（仅管理员可用）
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 * @return BaseResponse<Boolean>
-	 */
-	@PostMapping("/review")
-	@SaCheckRole(UserConstant.ADMIN_ROLE)
-	public BaseResponse<Boolean> doCertificateReview(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
-		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
-		// 审核信息并更新证书状态，若审核信息通过更新到用户证书表中
-		userCertificateService.validReview(reviewRequest, request);
-		return ResultUtils.success(true);
-	}
-	
-	
-	/**
-	 * 批量应用审核
-	 *
-	 * @param reviewRequest reviewRequest
-	 * @param request       request
-	 * @return BaseResponse<Boolean>
-	 */
-	@PostMapping("/review/batch")
-	@SaCheckRole(UserConstant.ADMIN_ROLE)
-	@Transactional(rollbackFor = Exception.class)
-	public BaseResponse<Boolean> doCertificateReviewByBatch(@RequestBody ReviewRequest reviewRequest, HttpServletRequest request) {
-		ThrowUtils.throwIf(reviewRequest == null, ErrorCode.PARAMS_ERROR);
-		String reviewMessage = reviewRequest.getReviewMessage();
-		Integer reviewStatus = reviewRequest.getReviewStatus();
-		List<Long> idList = reviewRequest.getIdList();
-		try {
-			if (!idList.isEmpty()) {
-				for (Long id : idList) {
-					ReviewRequest newReviewRequest = new ReviewRequest();
-					newReviewRequest.setId(id);
-					newReviewRequest.setReviewMessage(reviewMessage);
-					newReviewRequest.setReviewStatus(reviewStatus);
-					// 执行审核信息更新
-					userCertificateService.validReview(newReviewRequest, request);
-				}
-			}
-			return ResultUtils.success(true);
-		} catch (Exception e) {
-			return ResultUtils.error(ErrorCode.SYSTEM_ERROR);
-		}
-		
-	}
 }

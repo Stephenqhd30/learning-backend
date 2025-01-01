@@ -231,6 +231,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		return loginUserVO;
 	}
 	
+	/**
+	 * 获取用户VO封装类
+	 *
+	 * @param user    user
+	 * @param request request
+	 * @return {@link UserVO}
+	 */
 	@Override
 	public UserVO getUserVO(User user, HttpServletRequest request) {
 		// 对象转封装类
@@ -238,6 +245,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 	}
 	
 	
+	/**
+	 * 获得用户视图类列表
+	 *
+	 * @param userList userList
+	 * @param request  request
+	 * @return {@link List<UserVO>}
+	 */
 	@Override
 	public List<UserVO> getUserVO(List<User> userList, HttpServletRequest request) {
 		if (CollUtil.isEmpty(userList)) {

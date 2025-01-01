@@ -94,7 +94,6 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 	public void invoke(CertificateImportExcelVO certificateImportExcelVO, AnalysisContext context) {
 		Certificate newCertificate = new Certificate();
 		BeanUtils.copyProperties(certificateImportExcelVO, newCertificate);
-		User loginUser = userService.getLoginUser(request);
 		try {
 			// 获取当前导入数据的用户
 			LambdaQueryWrapper<User> queryWrapper = Wrappers.lambdaQuery(User.class)
@@ -114,7 +113,6 @@ public class CertificateExcelListener extends AnalysisEventListener<CertificateI
 			// 设置证书的审核状态及其他字段
 			newCertificate.setReviewStatus(ReviewStatusEnum.REVIEWING.getValue());
 			newCertificate.setReviewMessage("管理员导入，请检查审核信息是否正确");
-			newCertificate.setCreateUserId(loginUser.getId());
 			
 			// 将成功记录缓存到列表
 			cachedDataList.add(newCertificate);

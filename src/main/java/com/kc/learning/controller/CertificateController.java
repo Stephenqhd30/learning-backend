@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.DeleteRequest;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.UserConstant;
 import com.kc.learning.common.exception.BusinessException;
+import com.kc.learning.constants.UserConstant;
 import com.kc.learning.model.dto.certificate.CertificateAddRequest;
 import com.kc.learning.model.dto.certificate.CertificateQueryRequest;
 import com.kc.learning.model.dto.certificate.CertificateUpdateRequest;
@@ -80,17 +80,17 @@ public class CertificateController {
 		certificateService.validCertificate(certificate, true);
 		// todo 填充默认值
 		User loginUser = userService.getLoginUser(request);
-		certificate.setCreateUserId(loginUser.getId());
-		try {
-			// 写入数据库
-			boolean result = certificateService.save(certificate);
-			ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
-			// 返回新写入的数据 id
-			long newCertificateId = certificate.getId();
-			return ResultUtils.success(newCertificateId);
-		} catch (Exception e) {
-			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "添加证书失败" + e.getMessage());
-		}
+		certificate.setReviewStatus(ReviewStatusEnum.REVIEWING.getValue());
+		certificate.setReviewMessage(ReviewStatusEnum.REVIEWING.getText());
+		certificate.setReviewerId(loginUser.getId());
+		certificate.setReviewTime(new Date());
+		// 写入数据库
+		boolean result = certificateService.save(certificate);
+		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
+		// 返回新写入的数据 id
+		long newCertificateId = certificate.getId();
+		return ResultUtils.success(newCertificateId);
+		
 	}
 	
 	/**
@@ -223,15 +223,12 @@ public class CertificateController {
 	                                                                 HttpServletRequest request) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		try {
-			// 查询数据库
-			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-					certificateService.getQueryWrapper(certificateQueryRequest));
-			// 获取封装类
-			return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
-		} catch (Exception e) {
-			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
-		}
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		// 获取封装类
+		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		
 	}
 	
 	
@@ -277,20 +274,18 @@ public class CertificateController {
 		// 补充查询条件，只查询当前登录用户的数据
 		User loginUser = userService.getLoginUser(request);
 		certificateQueryRequest.setUserId(loginUser.getId());
-		certificateQueryRequest.setReviewStatus(1);
+		certificateQueryRequest.setReviewStatus(ReviewStatusEnum.PASS.getValue());
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
 		// 限制爬虫
 		ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
-		try {
-			// 查询数据库
-			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-					certificateService.getQueryWrapper(certificateQueryRequest));
-			// 获取封装类
-			return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
-		} catch (Exception e) {
-			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
-		}
+		
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		// 获取封装类
+		return ResultUtils.success(certificateService.getCertificateVOPage(certificatePage, request));
+		
 	}
 	
 	/**

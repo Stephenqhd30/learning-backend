@@ -77,11 +77,6 @@ public class CertificateQueryRequest extends PageRequest implements Serializable
 	private Integer noId;
 	
 	/**
-	 * 创建人id
-	 */
-	private Long createUserId;
-	
-	/**
 	 * 证书地址
 	 */
 	private String certificateUrl;

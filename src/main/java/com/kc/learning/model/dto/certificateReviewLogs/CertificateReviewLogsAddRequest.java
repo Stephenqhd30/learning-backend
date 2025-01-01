@@ -1,4 +1,4 @@
-package com.kc.learning.common;
+package com.kc.learning.model.dto.certificateReviewLogs;
 
 import lombok.Data;
 
@@ -6,23 +6,24 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * @author: stephen qiu
- * @create: 2024-08-09 14:44
- **/
+ * 创建证书审核日志请求
+ *
+ * @author stephen qiu
+ */
 @Data
-public class ReviewRequest implements Serializable {
+public class CertificateReviewLogsAddRequest implements Serializable {
 	
 	private static final long serialVersionUID = 1973973718590531783L;
+	
 	/**
-	 * id
+	 * 证书ID，关联certificate表
 	 */
-	private Long id;
+	private Long certificateId;
 	
 	/**
 	 * 审核状态 0-待审核 1-通过 2-拒绝
 	 */
 	private Integer reviewStatus;
-	
 	
 	/**
 	 * 审核信息

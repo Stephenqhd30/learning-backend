@@ -91,13 +91,6 @@ public class Certificate implements Serializable {
 	private String certificateUrl;
 	
 	/**
-	 * 创建用户id
-	 */
-	@ExcelIgnore
-	private Long createUserId;
-	
-	
-	/**
 	 * 创建时间
 	 */
 	@ExcelIgnore
