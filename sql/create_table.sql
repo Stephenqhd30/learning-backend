@@ -11,20 +11,21 @@ use learning;
 -- 用户表
 create table user
 (
-    id          bigint auto_increment comment 'id'
+    id             bigint auto_increment comment 'id'
         primary key,
-    userIdCard  varchar(512)                           not null comment '身份证号',
-    userName    varchar(256)                           null comment '用户昵称',
-    userAvatar  varchar(1024)                          null comment '用户头像',
-    userProfile varchar(512)                           null comment '用户简介',
-    userGender  int          default 2                 not null comment '用户性别（0-男,1-女,2-保密）',
-    userRole    varchar(256) default 'user'            not null comment '用户角色：user/admin/ban',
-    userPhone   varchar(256)                           null comment '手机号码',
-    userEmail   varchar(256)                           null comment '用户邮箱',
-    userNumber  varchar(256)                           not null comment '学号',
-    createTime  datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime  datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete    tinyint      default 0                 not null comment '是否删除',
+    userIdCard     varchar(512)                           not null comment '身份证号',
+    userName       varchar(256)                           null comment '用户昵称',
+    userAvatar     varchar(1024)                          null comment '用户头像',
+    userGender     int          default 2                 not null comment '用户性别（0-男,1-女,2-保密）',
+    userRole       varchar(128) default 'user'            not null comment '用户角色：user/admin/ban',
+    userPhone      varchar(256)                           null comment '手机号码',
+    userNumber     varchar(256)                           not null comment '学号',
+    userDepartment varchar(256)                           not null comment '院系',
+    userGrade      varchar(10)                            not null comment '年级（例如2024）',
+    userMajor      varchar(256)                           not null comment '专业',
+    createTime     datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime     datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    isDelete       tinyint      default 0                 not null comment '是否删除',
     constraint user_pk
         unique (userIdCard),
     constraint user_pk_2

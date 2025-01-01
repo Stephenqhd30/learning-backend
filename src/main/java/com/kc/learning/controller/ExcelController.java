@@ -4,9 +4,9 @@ import cn.dev33.satoken.annotation.SaCheckRole;
 import com.alibaba.excel.EasyExcel;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
@@ -149,13 +149,6 @@ public class ExcelController {
 		List<UserExcelExampleVO> userExcelExampleVOList = new ArrayList<>();
 		// 获取数据，根据自身业务修改
 		UserExcelExampleVO userExcelExampleVO = new UserExcelExampleVO();
-		userExcelExampleVO.setUserName("用户的姓名(必填)");
-		userExcelExampleVO.setUserIdCard("用户的身份证号(必填)");
-		userExcelExampleVO.setUserGender("用户的性别(0-男， 1-女)(必填)");
-		userExcelExampleVO.setUserProfile("用户的简介(可以为空)");
-		userExcelExampleVO.setUserEmail("用户的邮箱(可以为空)");
-		userExcelExampleVO.setUserPhone("用户的电话(必填)");
-		userExcelExampleVO.setUserNumber("用户的学号(必填)");
 		userExcelExampleVOList.add(userExcelExampleVO);
 		// 设置导出名称
 		ExcelUtils.setExcelResponseProp(response, ExcelConstant.USER_EXCEL_EXAMPLE);
@@ -552,7 +545,6 @@ public class ExcelController {
 					try {
 						User user = userFuture.get();
 						Course course = courseFuture.get();
-						
 						userCourseExcelVO.setUserName(user.getUserName());
 						userCourseExcelVO.setUserNumber(user.getUserNumber());
 						userCourseExcelVO.setCourseName(course.getCourseName());

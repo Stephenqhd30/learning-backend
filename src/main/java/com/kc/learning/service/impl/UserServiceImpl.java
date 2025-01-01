@@ -9,10 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.excel.UserExcelListener;
 import com.kc.learning.common.ErrorCode;
+import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.config.secure.utils.DeviceUtils;
 import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.constants.UserConstant;
-import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.mapper.UserMapper;
 import com.kc.learning.model.dto.user.UserQueryRequest;
 import com.kc.learning.model.entity.User;
@@ -63,10 +63,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		String userIdCard = user.getUserIdCard();
 		String userName = user.getUserName();
 		Integer userGender = user.getUserGender();
-		String userProfile = user.getUserProfile();
-		String userEmail = user.getUserEmail();
 		String userPhone = user.getUserPhone();
 		String userNumber = user.getUserNumber();
+		String userDepartment = user.getUserDepartment();
+		String userGrade = user.getUserGrade();
+		String userMajor = user.getUserMajor();
 		
 		// 创建数据时，参数不能为空
 		if (add) {
@@ -74,6 +75,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 			ThrowUtils.throwIf(StringUtils.isBlank(userName), ErrorCode.PARAMS_ERROR, "姓名不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(userIdCard), ErrorCode.PARAMS_ERROR, "身份证号不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(userNumber), ErrorCode.PARAMS_ERROR, "学号不能为空");
+			ThrowUtils.throwIf(StringUtils.isBlank(userDepartment), ErrorCode.PARAMS_ERROR, "院系不能为空");
+			ThrowUtils.throwIf(StringUtils.isBlank(userGrade), ErrorCode.PARAMS_ERROR, "入学年份不能为空");
+			ThrowUtils.throwIf(StringUtils.isBlank(userMajor), ErrorCode.PARAMS_ERROR, "专业不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
@@ -85,12 +89,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		}
 		if (StringUtils.isNotBlank(userNumber)) {
 			ThrowUtils.throwIf(!RegexUtils.checkSchoolNumber(userNumber), ErrorCode.PARAMS_ERROR, "学号输入有误");
-		}
-		if (StringUtils.isNotBlank(userProfile)) {
-			ThrowUtils.throwIf(userProfile.length() > 50, ErrorCode.PARAMS_ERROR, "用户简介不能多余50字");
-		}
-		if (StringUtils.isNotBlank(userEmail)) {
-			ThrowUtils.throwIf(!RegexUtils.checkEmail(userEmail), ErrorCode.PARAMS_ERROR, "用户邮箱有误");
 		}
 		if (StringUtils.isNotBlank(userPhone)) {
 			ThrowUtils.throwIf(!RegexUtils.checkMobile(userPhone), ErrorCode.PARAMS_ERROR, "用户手机号码有误");
@@ -281,13 +279,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		}
 		String userName = userQueryRequest.getUserName();
 		Integer userGender = userQueryRequest.getUserGender();
-		String userProfile = userQueryRequest.getUserProfile();
 		String userRole = userQueryRequest.getUserRole();
-		String userEmail = userQueryRequest.getUserEmail();
 		String userPhone = userQueryRequest.getUserPhone();
 		String sortField = userQueryRequest.getSortField();
 		String sortOrder = userQueryRequest.getSortOrder();
 		String userNumber = userQueryRequest.getUserNumber();
+		String userDepartment = userQueryRequest.getUserDepartment();
+		String userGrade = userQueryRequest.getUserGrade();
+		String userMajor = userQueryRequest.getUserMajor();
+		
 		
 		QueryWrapper<User> queryWrapper = new QueryWrapper<>();
 		
@@ -298,11 +298,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userGender), "userGender", userGender);
 		
 		// 模糊查询
-		queryWrapper.like(StringUtils.isNotBlank(userProfile), "userProfile", userProfile);
 		queryWrapper.like(StringUtils.isNotBlank(userNumber), "userNumber", userNumber);
 		queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
-		queryWrapper.like(StringUtils.isNotBlank(userEmail), "userEmail", userEmail);
 		queryWrapper.like(StringUtils.isNotBlank(userPhone), "userPhone", userPhone);
+		queryWrapper.like(StringUtils.isNotBlank(userDepartment), "userDepartment", userDepartment);
+		queryWrapper.like(StringUtils.isNotBlank(userGrade), "userGrade", userGrade);
+		queryWrapper.like(StringUtils.isNotBlank(userMajor), "userMajor", userMajor);
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
 				sortField);
 		return queryWrapper;

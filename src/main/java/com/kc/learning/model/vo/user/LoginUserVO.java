@@ -1,5 +1,6 @@
 package com.kc.learning.model.vo.user;
 
+import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -30,11 +31,6 @@ public class LoginUserVO implements Serializable {
 	private String userAvatar;
 	
 	/**
-	 * 用户简介
-	 */
-	private String userProfile;
-	
-	/**
 	 * 性别（0-男，1-女，2-保密）
 	 */
 	private Integer userGender;
@@ -43,11 +39,6 @@ public class LoginUserVO implements Serializable {
 	 * 用户角色：user/admin/ban
 	 */
 	private String userRole;
-	
-	/**
-	 * 用户邮箱
-	 */
-	private String userEmail;
 	
 	/**
 	 * 手机号码
@@ -60,14 +51,19 @@ public class LoginUserVO implements Serializable {
 	private String userNumber;
 	
 	/**
-	 * 创建时间
+	 * 院系
 	 */
-	private Date createTime;
+	private String userDepartment;
 	
 	/**
-	 * 更新时间
+	 * 年级（例如2024）
 	 */
-	private Date updateTime;
+	private String userGrade;
+	
+	/**
+	 * 专业
+	 */
+	private String userMajor;
 	
 	/**
 	 *  token

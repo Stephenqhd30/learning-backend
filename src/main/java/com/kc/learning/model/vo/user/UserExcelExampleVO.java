@@ -37,6 +37,26 @@ public class UserExcelExampleVO implements Serializable {
 	@ColumnWidth(30)
 	private String userNumber;
 	
+	/**
+	 * 院系
+	 */
+	@ExcelProperty("院系")
+	@ColumnWidth(30)
+	private String userDepartment;
+	
+	/**
+	 * 年级（例如2024）
+	 */
+	@ExcelProperty("年级（例如2024）")
+	@ColumnWidth(30)
+	private String userGrade;
+	
+	/**
+	 * 专业
+	 */
+	@ExcelProperty("专业")
+	@ColumnWidth(40)
+	private String userMajor;
 	
 	/**
 	 * 性别（0-男，1-女，2-保密）
@@ -44,21 +64,6 @@ public class UserExcelExampleVO implements Serializable {
 	@ColumnWidth(35)
 	@ExcelProperty("性别（0-男，1-女，2-保密）")
 	private String userGender;
-	
-	/**
-	 * 用户简介
-	 */
-	@ExcelProperty("用户简介")
-	@ColumnWidth(35)
-	private String userProfile;
-	
-	
-	/**
-	 * 用户邮箱
-	 */
-	@ExcelProperty("用户邮箱")
-	@ColumnWidth(30)
-	private String userEmail;
 	
 	/**
 	 * 手机号码

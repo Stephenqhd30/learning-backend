@@ -86,15 +86,8 @@ public class UserExcelListener extends AnalysisEventListener<User> {
 			userService.validUser(user, true);
 			newUser.setUserGender(Optional.ofNullable(newUser.getUserGender())
 					.orElse(UserGenderEnum.SECURITY.getValue()));
-			newUser.setUserEmail(Optional.ofNullable(newUser.getUserEmail())
-					.orElse("该用户很懒没有设置邮箱"));
-			newUser.setUserPhone(Optional.ofNullable(newUser.getUserPhone())
-					.orElse("该用户很懒没有设置电话"));
 			newUser.setUserAvatar(UserConstant.USER_AVATAR);
 			newUser.setUserIdCard(EncryptionUtils.encrypt(newUser.getUserIdCard()));
-			newUser.setCreateTime(new Date());
-			newUser.setUpdateTime(new Date());
-			newUser.setIsDelete(0);
 			newUser.setUserRole(UserConstant.DEFAULT_ROLE);
 			cachedDataList.add(newUser);
 			successRecords.add(new SuccessRecord<>(newUser, "成功导入"));

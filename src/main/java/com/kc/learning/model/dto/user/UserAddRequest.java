@@ -34,19 +34,9 @@ public class UserAddRequest implements Serializable {
 	private Integer userGender;
 	
 	/**
-	 * 用户简介
-	 */
-	private String userProfile;
-	
-	/**
 	 * 用户角色：user/admin/ban
 	 */
 	private String userRole;
-	
-	/**
-	 * 用户邮箱
-	 */
-	private String userEmail;
 	
 	/**
 	 * 手机号码
@@ -57,5 +47,20 @@ public class UserAddRequest implements Serializable {
 	 * 学号
 	 */
 	private String userNumber;
+	
+	/**
+	 * 院系
+	 */
+	private String userDepartment;
+	
+	/**
+	 * 年级（例如2024）
+	 */
+	private String userGrade;
+	
+	/**
+	 * 专业
+	 */
+	private String userMajor;
 	
 }

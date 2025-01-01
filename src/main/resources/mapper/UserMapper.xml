@@ -6,26 +6,26 @@
 
     <resultMap id="BaseResultMap" type="com.kc.learning.model.entity.User">
             <id property="id" column="id" jdbcType="BIGINT"/>
-            <result property="userName" column="userName" jdbcType="VARCHAR"/>
             <result property="userIdCard" column="userIdCard" jdbcType="VARCHAR"/>
             <result property="userName" column="userName" jdbcType="VARCHAR"/>
-            <result property="userGender" column="userGender" jdbcType="TINYINT"/>
-            <result property="userPhone" column="userPhone" jdbcType="VARCHAR"/>
             <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
-            <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
+            <result property="userGender" column="userGender" jdbcType="INTEGER"/>
             <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
-            <result property="userEmail" column="userEmail" jdbcType="VARCHAR"/>
+            <result property="userPhone" column="userPhone" jdbcType="VARCHAR"/>
             <result property="userNumber" column="userNumber" jdbcType="VARCHAR"/>
+            <result property="userDepartment" column="userDepartment" jdbcType="VARCHAR"/>
+            <result property="userGrade" column="userGrade" jdbcType="VARCHAR"/>
+            <result property="userMajor" column="userMajor" jdbcType="VARCHAR"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-	    id,userName,userIdCard,
-        userName,userGender,userNumber,
-        userPhone,userAvatar,userProfile,
-        userRole,userEmail,createTime,
+        id,userIdCard,userName,
+        userAvatar,userGender,userRole,
+        userPhone,userNumber,userDepartment,
+        userGrade,userMajor,createTime,
         updateTime,isDelete
     </sql>
 </mapper>
