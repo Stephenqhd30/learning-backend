@@ -64,6 +64,7 @@ public class CertificateController {
 	 */
 	@PostMapping("/add")
 	@Transactional(rollbackFor = Exception.class)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Long> addCertificate(@RequestBody CertificateAddRequest certificateAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(certificateAddRequest == null, ErrorCode.PARAMS_ERROR);
 		// 构建查询条件
@@ -102,6 +103,7 @@ public class CertificateController {
 	 */
 	@PostMapping("/delete")
 	@Transactional(rollbackFor = Exception.class)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Boolean> deleteCertificate(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
 		if (deleteRequest == null || deleteRequest.getId() <= 0) {
 			throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -201,14 +203,11 @@ public class CertificateController {
 	public BaseResponse<Page<Certificate>> listCertificateByPage(@RequestBody CertificateQueryRequest certificateQueryRequest) {
 		long current = certificateQueryRequest.getCurrent();
 		long size = certificateQueryRequest.getPageSize();
-		try {
-			// 查询数据库
-			Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
-					certificateService.getQueryWrapper(certificateQueryRequest));
-			return ResultUtils.success(certificatePage);
-		} catch (Exception e) {
-			return ResultUtils.error(ErrorCode.SYSTEM_ERROR, "获取证书失败" + e.getMessage());
-		}
+		// 查询数据库
+		Page<Certificate> certificatePage = certificateService.page(new Page<>(current, size),
+				certificateService.getQueryWrapper(certificateQueryRequest));
+		return ResultUtils.success(certificatePage);
+		
 	}
 	
 	/**

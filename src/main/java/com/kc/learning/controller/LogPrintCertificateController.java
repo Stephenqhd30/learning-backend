@@ -95,8 +95,8 @@ public class LogPrintCertificateController {
 			logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
 			logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
 			logPrintCertificateExcelVO.setCourseName(course.getCourseName());
-			logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getAcquisitionTime()));
-			logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
+			logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getStartTime()));
+			logPrintCertificate.setAcquisitionTime(course.getEndTime());
 			logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
 			
 			// 生成证书文件并上传到 Minio
@@ -176,7 +176,7 @@ public class LogPrintCertificateController {
 				User user = userService.getById(logPrintCertificateAddRequest.getUserId());
 				
 				// 填充证书信息
-				logPrintCertificate.setAcquisitionTime(course.getAcquisitionTime());
+				logPrintCertificate.setAcquisitionTime(course.getStartTime());
 				
 				// 生成证书
 				LogPrintCertificateExcelVO logPrintCertificateExcelVO = new LogPrintCertificateExcelVO();
@@ -185,7 +185,7 @@ public class LogPrintCertificateController {
 				logPrintCertificateExcelVO.setUserGender(Objects.requireNonNull(UserGenderEnum.getEnumByValue(user.getUserGender())).getText());
 				logPrintCertificateExcelVO.setCertificateNumber(certificate.getCertificateNumber());
 				logPrintCertificateExcelVO.setCourseName(course.getCourseName());
-				logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getAcquisitionTime()));
+				logPrintCertificateExcelVO.setAcquisitionTime(ExcelUtils.dateToExcelString(course.getEndTime()));
 				logPrintCertificateExcelVO.setFinishTime(ExcelUtils.dateToExcelString(logPrintCertificate.getFinishTime()));
 				
 				// 生成证书文件并上传到 Minio

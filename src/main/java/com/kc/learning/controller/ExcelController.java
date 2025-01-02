@@ -327,8 +327,9 @@ public class ExcelController {
 			try {
 				User user = userFuture.get();
 				userExcelVO.setUserName(user.getUserName());
-				userExcelVO.setAcquisitionTime(ExcelUtils.dateToString(course.getAcquisitionTime()));
-				userExcelVO.setFinishTime(ExcelUtils.dateToString(course.getFinishTime()));
+				userExcelVO.setStartTime(ExcelUtils.dateToString(course.getStartTime()));
+				userExcelVO.setEndTime(ExcelUtils.dateToString(course.getEndTime()));
+				userExcelVO.setStatus(Objects.requireNonNull(CourseStatusEnum.getEnumByValue(course.getStatus())).getText());
 			} catch (InterruptedException | ExecutionException e) {
 				log.error("数据获取失败: {}", e.getMessage());
 				Thread.currentThread().interrupt();

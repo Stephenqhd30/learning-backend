@@ -1,5 +1,6 @@
 package com.kc.learning.model.vo.userCertificate;
 
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.kc.learning.model.entity.UserCertificate;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.user.UserVO;
@@ -56,6 +57,17 @@ public class UserCertificateVO implements Serializable {
 	 * 创建时间
 	 */
 	private Date createTime;
+	
+	/**
+	 * 更新时间
+	 */
+	private Date updateTime;
+	
+	/**
+	 * 是否删除(0-正常,1删除)
+	 */
+	@TableLogic
+	private Integer isDelete;
 	
 	/**
 	 * 创建用户信息

@@ -7,6 +7,7 @@ import com.kc.learning.constants.ExcelConstant;
 import com.kc.learning.model.dto.excel.ErrorRecord;
 import com.kc.learning.model.dto.excel.SuccessRecord;
 import com.kc.learning.model.entity.Course;
+import com.kc.learning.model.enums.CourseStatusEnum;
 import com.kc.learning.service.CourseService;
 import com.kc.learning.service.UserService;
 import lombok.Getter;
@@ -16,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -94,8 +96,9 @@ public class CourseExcelListener extends AnalysisEventListener<Course> {
 			newCourse.setCourseNumber(course.getCourseNumber());
 			newCourse.setCourseName(course.getCourseName());
 			newCourse.setUserId(userService.getLoginUser(request).getId());
-			newCourse.setAcquisitionTime(course.getAcquisitionTime());
-			newCourse.setFinishTime(course.getFinishTime());
+			newCourse.setStartTime(course.getStartTime());
+			newCourse.setEndTime(course.getEndTime());
+			newCourse.setStatus(Optional.ofNullable(course.getStatus()).orElse(CourseStatusEnum.WAIT.getValue()));
 			newCourse.setCreateTime(new Date());
 			newCourse.setUpdateTime(new Date());
 			newCourse.setIsDelete(0);

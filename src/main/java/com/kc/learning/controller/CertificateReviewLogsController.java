@@ -66,6 +66,7 @@ public class CertificateReviewLogsController {
 	 */
 	@PostMapping("/add")
 	@Transactional(rollbackFor = Exception.class)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Long> addCertificateReviewLogs(@RequestBody CertificateReviewLogsAddRequest certificateReviewLogsAddRequest, HttpServletRequest request) {
 		ThrowUtils.throwIf(certificateReviewLogsAddRequest == null, ErrorCode.PARAMS_ERROR);
 		// todo 在此处将实体类和 DTO 进行转换
@@ -117,6 +118,7 @@ public class CertificateReviewLogsController {
 	 */
 	@PostMapping("/add/batch")
 	@Transactional(rollbackFor = Exception.class)
+	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<List<Long>> addCertificateReviewLogsByBatch(@RequestBody CertificateReviewLogsAddRequest certificateReviewLogsAddRequest, HttpServletRequest request) {
 		// 参数校验
 		ThrowUtils.throwIf(certificateReviewLogsAddRequest == null || CollectionUtils.isEmpty(certificateReviewLogsAddRequest.getIdList()), ErrorCode.PARAMS_ERROR);
@@ -124,20 +126,20 @@ public class CertificateReviewLogsController {
 		List<CertificateReviewLogs> certificateReviewLogsList = new ArrayList<>();
 		// 用于批量关联证书和用户
 		List<Long> certificateIds = new ArrayList<>();
-		for (Long certificate : certificateReviewLogsAddRequest.getIdList()) {
+		User loginUser = userService.getLoginUser(request);
+		for (Long certificateId : certificateReviewLogsAddRequest.getIdList()) {
 			// todo 在此处将实体类和 DTO 进行转换
 			CertificateReviewLogs certificateReviewLogs = new CertificateReviewLogs();
 			BeanUtils.copyProperties(certificateReviewLogsAddRequest, certificateReviewLogs);
-			certificateReviewLogs.setCertificateId(certificate);
+			certificateReviewLogs.setCertificateId(certificateId);
 			// 数据校验
 			certificateReviewLogsService.validCertificateReviewLogs(certificateReviewLogs, true);
 			// todo 填充默认值
-			User loginUser = userService.getLoginUser(request);
 			certificateReviewLogs.setReviewerId(loginUser.getId());
 			// 将审核日志添加到待保存列表
 			certificateReviewLogsList.add(certificateReviewLogs);
 			// 收集证书ID用于后续关联
-			certificateIds.add(certificate);
+			certificateIds.add(certificateId);
 		}
 		// 批量写入数据库
 		boolean result = certificateReviewLogsService.saveBatch(certificateReviewLogsList);
@@ -153,7 +155,8 @@ public class CertificateReviewLogsController {
 				// 更新证书的审核状态
 				certificate.setReviewStatus(reviewStatus);
 				certificate.setReviewMessage(certificateReviewLogsAddRequest.getReviewMessage());
-				certificate.setReviewerId(certificateReviewLogsAddRequest.getCertificateId());
+				// 正确设置审核人
+				certificate.setReviewerId(loginUser.getId());
 				certificate.setReviewTime(new Date());
 				boolean updateResult = certificateService.updateById(certificate);
 				ThrowUtils.throwIf(!updateResult, ErrorCode.OPERATION_ERROR);

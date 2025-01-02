@@ -133,7 +133,6 @@ create table user_course
     userId     bigint                                                         not null comment '用户id',
     courseId   bigint                                                         not null comment '课程id',
     createTime datetime default CURRENT_TIMESTAMP                             not null comment '创建时间',
-    updateTime datetime default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP not null comment '更新时间', -- 可选字段：更新时间
     constraint user_course_pk
         unique (userId, courseId),
     constraint user_course_course_id_fk
@@ -149,13 +148,13 @@ create table log_print_certificate
 (
     id              bigint auto_increment comment 'id'
         primary key,
-    userId          bigint                   not null comment '用户id',
-    certificateId   bigint                   not null comment '证书id',
-    courseId        bigint                   not null comment '课程id',
-    acquisitionTime datetime                 not null comment '开课时间',
-    finishTime      datetime                 not null comment ' 证书发放时间',
-    createUserId    bigint                   not null comment '创建人id',
-    createTime      datetime default (now()) not null comment '创建时间',
+    userId          bigint                             not null comment '用户id',
+    certificateId   bigint                             not null comment '证书id',
+    courseId        bigint                             not null comment '课程id',
+    acquisitionTime datetime                           not null comment '开课时间',
+    finishTime      datetime                           not null comment '证书发放时间',
+    createdBy       bigint                             not null comment '创建人id',
+    createTime      datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     constraint log_print_certificate_certificate_id_fk
         foreign key (certificateId) references certificate (id),
     constraint log_print_certificate_course_id_fk
@@ -164,6 +163,12 @@ create table log_print_certificate
         foreign key (userId) references user (id)
 )
     comment '打印证书记录表';
+
+-- 创建索引（根据需要添加）
+create index idx_log_print_certificate_user_id on log_print_certificate (userId);
+create index idx_log_print_certificate_certificate_id on log_print_certificate (certificateId);
+create index idx_log_print_certificate_course_id on log_print_certificate (courseId);
+
 
 -- 文件上传日志记录表
 create table log_files

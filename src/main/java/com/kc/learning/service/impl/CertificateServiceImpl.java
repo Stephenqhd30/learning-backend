@@ -203,7 +203,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 				.collect(Collectors.toList());
 		// todo 可以根据需要为封装对象补充值，不需要的内容可以删除
 		// region 可选
-		// 3. 并发查询用户信息
+		// 3. 并发查询用户信息和审核人信息
 		Set<Long> userIdSet = certificateList.stream().map(Certificate::getUserId).collect(Collectors.toSet());
 		Set<Long> reviewerIdSet = certificateList.stream().map(Certificate::getReviewerId).collect(Collectors.toSet());
 		CompletableFuture<Map<Long, User>> userMapFuture = CompletableFuture.supplyAsync(() ->
@@ -215,7 +215,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 						.collect(Collectors.toMap(User::getId, user -> user))
 		);
 		try {
-			// 等待用户信息查询完成
+			// 等待用户信息和审核人信息查询完成
 			Map<Long, User> userIdUserMap = userMapFuture.get();
 			Map<Long, User> userIdReviewerMap = reviewerMapFuture.get();
 			// 填充用户信息至 CertificateVO
