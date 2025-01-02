@@ -78,8 +78,6 @@ public class UserCourseController {
 		UserCourse oldUserCourse = userCourseService.getOne(userCourseLambdaQueryWrapper);
 		ThrowUtils.throwIf(oldUserCourse != null, ErrorCode.PARAMS_ERROR, "用户已经加入课程");
 		// todo 补充默认信息
-		User loginUser = userService.getLoginUser(request);
-		userCourse.setCreateUserId(loginUser.getId());
 		// 写入数据库
 		boolean result = userCourseService.save(userCourse);
 		ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);

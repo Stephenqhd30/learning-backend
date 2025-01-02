@@ -34,11 +34,6 @@ public class UserCourseVO implements Serializable {
 	private Long courseId;
 	
 	/**
-	 * 创建人id
-	 */
-	private Long createUserId;
-	
-	/**
 	 * 创建时间
 	 */
 	private Date createTime;

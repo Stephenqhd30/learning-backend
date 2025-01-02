@@ -98,7 +98,6 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		Long notId = userCourseQueryRequest.getNotId();
 		Long userId = userCourseQueryRequest.getUserId();
 		Long courseId = userCourseQueryRequest.getCourseId();
-		Long createUserId = userCourseQueryRequest.getCreateUserId();
 		String sortField = userCourseQueryRequest.getSortField();
 		String sortOrder = userCourseQueryRequest.getSortOrder();
 		// todo 补充需要的查询条件
@@ -107,7 +106,6 @@ public class UserCourseServiceImpl extends ServiceImpl<UserCourseMapper, UserCou
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(courseId), "userId", userId);
-		queryWrapper.eq(ObjectUtils.isNotEmpty(createUserId), "createUserId", createUserId);
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
 				sortOrder.equals(CommonConstant.SORT_ORDER_ASC),

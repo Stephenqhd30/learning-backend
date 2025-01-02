@@ -120,9 +120,6 @@ public class UserCourseExcelListener extends AnalysisEventListener<UserCourseExc
 			if (userCourseService.count(userCourseLambdaQueryWrapper) > 0) {
 				throw new BusinessException(ErrorCode.EXCEL_ERROR, "用户课程已存在");
 			}
-			// 获取当前登录用户信息
-			User loginUser = userService.getLoginUser(request);
-			userCourse.setCreateUserId(loginUser.getId());
 			cachedDataList.add(userCourse);
 			successRecords.add(new SuccessRecord<>(userCourse, "成功导入"));
 		} catch (Exception e) {
