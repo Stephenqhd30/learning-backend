@@ -37,8 +37,6 @@ public class UserVO implements Serializable {
 	private String userAvatar;
 	
 	
-	
-	
 	/**
 	 * 用户角色：user/admin/ban
 	 */

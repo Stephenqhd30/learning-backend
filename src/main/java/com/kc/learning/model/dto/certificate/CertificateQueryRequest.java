@@ -81,5 +81,10 @@ public class CertificateQueryRequest extends PageRequest implements Serializable
 	 */
 	private String certificateUrl;
 	
+	/**
+	 * 证书执行状态
+	 */
+	private String status;
+	
 	private static final long serialVersionUID = 1L;
 }

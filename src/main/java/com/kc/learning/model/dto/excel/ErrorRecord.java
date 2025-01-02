@@ -6,8 +6,9 @@ import lombok.NoArgsConstructor;
 
 /**
  * 错误记录
- * @author stephen qiu
+ *
  * @param <T> 导入数据的类型
+ * @author stephen qiu
  */
 @Data
 @AllArgsConstructor

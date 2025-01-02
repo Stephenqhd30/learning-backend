@@ -58,6 +58,13 @@ public class CertificateExcelVO implements Serializable {
 	private String certificateSituation;
 	
 	/**
+	 * 证书执行状态(wait，running，succeed，failed)
+	 */
+	@ExcelProperty(value = "证书执行状态(wait，running，succeed，failed)")
+	@ColumnWidth(20)
+	private String status;
+	
+	/**
 	 * 证书状态(0-待审核,1-通过,2-拒绝)
 	 */
 	@ExcelProperty(value = "证书状态(0-待审核,1-通过,2-拒绝)")

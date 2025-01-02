@@ -55,6 +55,12 @@ public class Certificate implements Serializable {
 	private Integer certificateSituation;
 	
 	/**
+	 * 证书执行状态(wait，running，succeed，failed)
+	 */
+	@ExcelIgnore
+	private String status;
+	
+	/**
 	 * 证书状态(0-待审核,1-通过,2-拒绝)
 	 */
 	@ExcelIgnore

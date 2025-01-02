@@ -117,6 +117,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		Integer certificateSituation = certificateQueryRequest.getCertificateSituation();
 		Integer reviewStatus = certificateQueryRequest.getReviewStatus();
 		String reviewMessage = certificateQueryRequest.getReviewMessage();
+		String status = certificateQueryRequest.getStatus();
 		Long reviewerId = certificateQueryRequest.getReviewerId();
 		Date reviewTime = certificateQueryRequest.getReviewTime();
 		Long userId = certificateQueryRequest.getUserId();
@@ -139,6 +140,7 @@ public class CertificateServiceImpl extends ServiceImpl<CertificateMapper, Certi
 		queryWrapper.eq(ObjectUtils.isNotEmpty(certificateSituation), "certificateSituation", certificateSituation);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewerId), "reviewerId", reviewerId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(reviewTime), "reviewTime", reviewTime);
+		queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 		
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),

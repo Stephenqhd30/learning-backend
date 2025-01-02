@@ -15,46 +15,46 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class CourseQueryRequest extends PageRequest implements Serializable {
-    
-    /**
-     * id
-     */
-    private Long id;
-    
-    /**
-     * 需要过滤的id
-     */
-    private Long notId;
-    
-    /**
-     * 课程号
-     */
-    private Integer courseNumber;
-    
-    /**
-     * 开课时间
-     */
-    private Date startTime;
-    
-    /**
-     * 结课时间
-     */
-    private Date endTime;
-    
-    /**
-     * 课程状态(0-未开始, 1-进行中, 2-已结束)
-     */
-    private String status;
-    
-    /**
-     * 课程名称
-     */
-    private String courseName;
-    
-    /**
-     * 创建用户id
-     */
-    private Long userId;
-
-    private static final long serialVersionUID = 1L;
+	
+	/**
+	 * id
+	 */
+	private Long id;
+	
+	/**
+	 * 需要过滤的id
+	 */
+	private Long notId;
+	
+	/**
+	 * 课程号
+	 */
+	private Integer courseNumber;
+	
+	/**
+	 * 开课时间
+	 */
+	private Date startTime;
+	
+	/**
+	 * 结课时间
+	 */
+	private Date endTime;
+	
+	/**
+	 * 课程状态(0-未开始, 1-进行中, 2-已结束)
+	 */
+	private String status;
+	
+	/**
+	 * 课程名称
+	 */
+	private String courseName;
+	
+	/**
+	 * 创建用户id
+	 */
+	private Long userId;
+	
+	private static final long serialVersionUID = 1L;
 }

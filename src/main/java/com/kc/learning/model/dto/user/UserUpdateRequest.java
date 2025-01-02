@@ -37,12 +37,11 @@ public class UserUpdateRequest implements Serializable {
 	private Integer userGender;
 	
 	
-	
 	/**
 	 * 用户角色：user/admin/ban
 	 */
 	private String userRole;
-
+	
 	
 	/**
 	 * 手机号码

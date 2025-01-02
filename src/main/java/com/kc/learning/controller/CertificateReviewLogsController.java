@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.constants.UserConstant;
 import com.kc.learning.model.dto.certificateReviewLogs.CertificateReviewLogsAddRequest;
 import com.kc.learning.model.dto.certificateReviewLogs.CertificateReviewLogsQueryRequest;

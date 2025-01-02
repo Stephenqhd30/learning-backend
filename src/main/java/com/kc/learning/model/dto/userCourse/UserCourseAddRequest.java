@@ -11,21 +11,21 @@ import java.io.Serializable;
  */
 @Data
 public class UserCourseAddRequest implements Serializable {
-    
-    /**
-     * 姓名
-     */
-    private String userName;
-    
-    /**
-     * 学号
-     */
-    private String userNumber;
-    
-    /**
-     * 课程id
-     */
-    private Long courseId;
-
-    private static final long serialVersionUID = 1L;
+	
+	/**
+	 * 姓名
+	 */
+	private String userName;
+	
+	/**
+	 * 学号
+	 */
+	private String userNumber;
+	
+	/**
+	 * 课程id
+	 */
+	private Long courseId;
+	
+	private static final long serialVersionUID = 1L;
 }

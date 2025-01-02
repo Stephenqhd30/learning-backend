@@ -214,6 +214,7 @@ public class ExcelController {
 			
 			// 转换证书及相关字段信息
 			certificateExcelVO.setId(String.valueOf(certificate.getId()));
+			certificateExcelVO.setStatus(Objects.requireNonNull(CertificateStatusEnum.getEnumByValue(certificate.getStatus())).getText());
 			certificateExcelVO.setCertificateType(
 					Objects.requireNonNull(CertificateTypeEnum.getEnumByValue(certificate.getCertificateType())).getText());
 			certificateExcelVO.setCertificateSituation(

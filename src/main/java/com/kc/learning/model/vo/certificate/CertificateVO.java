@@ -48,6 +48,11 @@ public class CertificateVO implements Serializable {
 	private Integer certificateSituation;
 	
 	/**
+	 * 证书执行状态(wait，running，succeed，failed)
+	 */
+	private String status;
+	
+	/**
 	 * 证书状态(0-待审核,1-通过,2-拒绝)
 	 */
 	private Integer reviewStatus;

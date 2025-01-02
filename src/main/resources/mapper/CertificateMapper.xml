@@ -15,6 +15,7 @@
 		<result property="reviewMessage" column="reviewMessage" jdbcType="VARCHAR"/>
 		<result property="reviewTime" column="createTime" jdbcType="TIMESTAMP"/>
 		<result property="reviewerId" column="reviewerId" jdbcType="BIGINT"/>
+		<result property="status" column="status" jdbcType="VARCHAR"/>
 		<result property="userId" column="userId" jdbcType="BIGINT"/>
 		<result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
 		<result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
@@ -22,7 +23,8 @@
 	</resultMap>
 
 	<sql id="Base_Column_List">
-		id,certificateNumber
+		id
+		,certificateNumber,status
 		,certificateName,certificateType, certificateYear,userId,
 		reviewStatus, reviewMessage, reviewerId, reviewTime,certificateSituation,
         createTime,updateTime,isDelete

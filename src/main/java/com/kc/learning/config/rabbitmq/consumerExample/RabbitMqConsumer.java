@@ -1,11 +1,11 @@
 package com.kc.learning.config.rabbitmq.consumerExample;
 
 import cn.hutool.json.JSONUtil;
-import com.rabbitmq.client.Channel;
 import com.kc.learning.config.rabbitmq.consumerExample.model.RabbitMessage;
 import com.kc.learning.config.rabbitmq.defaultMq.DefaultRabbitMq;
 import com.kc.learning.config.rabbitmq.defaultMq.DefaultRabbitMqWithDelay;
 import com.kc.learning.config.rabbitmq.defaultMq.DefaultRabbitMqWithDlx;
+import com.rabbitmq.client.Channel;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.RabbitHandler;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;

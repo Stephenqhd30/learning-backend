@@ -1,10 +1,8 @@
 package com.kc.learning.model.vo.user;
 
-import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.Date;
 
 /**
  * 已登录用户视图（脱敏）
@@ -66,7 +64,7 @@ public class LoginUserVO implements Serializable {
 	private String userMajor;
 	
 	/**
-	 *  token
+	 * token
 	 */
 	private String token;
 	

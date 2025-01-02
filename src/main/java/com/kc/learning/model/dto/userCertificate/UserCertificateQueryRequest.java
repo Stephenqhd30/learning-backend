@@ -14,26 +14,26 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class UserCertificateQueryRequest extends PageRequest implements Serializable {
-
-    /**
-     * id
-     */
-    private Long id;
-    
-    /**
-     * id
-     */
-    private Long notId;
-    
-    /**
-     * 用户id
-     */
-    private Long userId;
-    
-    /**
-     * 证书id
-     */
-    private Long certificateId;
-
-    private static final long serialVersionUID = 1L;
+	
+	/**
+	 * id
+	 */
+	private Long id;
+	
+	/**
+	 * id
+	 */
+	private Long notId;
+	
+	/**
+	 * 用户id
+	 */
+	private Long userId;
+	
+	/**
+	 * 证书id
+	 */
+	private Long certificateId;
+	
+	private static final long serialVersionUID = 1L;
 }

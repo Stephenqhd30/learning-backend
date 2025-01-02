@@ -3,13 +3,9 @@ package com.kc.learning.service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateAddRequest;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
-import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.LogPrintCertificate;
-import com.kc.learning.model.entity.User;
-import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateExcelVO;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 
 import javax.servlet.http.HttpServletRequest;
