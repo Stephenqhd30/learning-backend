@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.Certificate;
 import com.kc.learning.model.entity.LogPrintCertificate;
+import com.kc.learning.model.entity.User;
 import com.kc.learning.model.vo.logPrintCertificate.LogPrintCertificateVO;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,4 +69,18 @@ public interface LogPrintCertificateService extends IService<LogPrintCertificate
 	 * @param certificateUrl certificateUrl
 	 */
 	void updateCertificateUrl(Certificate certificate, String certificateUrl);
+	
+	/**
+	 * 限流
+	 *
+	 * @param loginUser loginUser
+	 */
+	void doRateLimit(User loginUser);
+	
+	/**
+	 * 生成服务调用失败处理
+	 *
+	 * @param certificateId   certificateId
+	 */
+	void executorError(Long certificateId);
 }

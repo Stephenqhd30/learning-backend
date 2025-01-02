@@ -8,11 +8,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.exception.BusinessException;
 import com.kc.learning.constants.CommonConstant;
-import com.kc.learning.manager.MinioManager;
+import com.kc.learning.constants.UserConstant;
+import com.kc.learning.manager.oss.MinioManager;
+import com.kc.learning.manager.redis.RedisLimiterManager;
 import com.kc.learning.mapper.LogPrintCertificateMapper;
 import com.kc.learning.model.dto.logPrintCertificate.LogPrintCertificateQueryRequest;
 import com.kc.learning.model.entity.*;
 import com.kc.learning.model.enums.CertificateSituationEnum;
+import com.kc.learning.model.enums.CertificateStatusEnum;
 import com.kc.learning.model.enums.ReviewStatusEnum;
 import com.kc.learning.model.vo.certificate.CertificateVO;
 import com.kc.learning.model.vo.course.CourseVO;
@@ -22,6 +25,7 @@ import com.kc.learning.service.*;
 import com.kc.learning.utils.SqlUtils;
 import com.kc.learning.utils.ThrowUtils;
 import com.kc.learning.utils.WordUtils;
+import com.kc.learning.utils.redisson.rateLimit.model.TimeModel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.springframework.stereotype.Service;
@@ -37,6 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -62,6 +67,9 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 	
 	@Resource
 	private MinioManager minioManager;
+	
+	@Resource
+	private RedisLimiterManager redisLimiterManager;
 	
 	
 	/**
@@ -304,6 +312,33 @@ public class LogPrintCertificateServiceImpl extends ServiceImpl<LogPrintCertific
 		certificate.setCertificateUrl(certificateUrl);
 		certificate.setCertificateSituation(CertificateSituationEnum.HAVA.getValue());
 		certificateService.updateById(certificate);
+	}
+	
+	/**
+	 * 限流
+	 *
+	 * @param loginUser loginUser
+	 */
+	@Override
+	public void doRateLimit(User loginUser) {
+		// 限流
+		String key = "add:certificate:" + loginUser.getId();
+		redisLimiterManager.doRateLimit(key, new TimeModel(1L, TimeUnit.MINUTES), 2L, 1L);
+		
+	}
+	
+	/**
+	 * AI 服务调用失败处理
+	 *
+	 * @param chartId chartId
+	 */
+	@Override
+	public void executorError(Long chartId) {
+		Certificate certificate = new Certificate();
+		certificate.setId(chartId);
+		certificate.setStatus(CertificateStatusEnum.FAILED.getValue());
+		boolean b = certificateService.updateById(certificate);
+		ThrowUtils.throwIf(!b, ErrorCode.SYSTEM_ERROR, "数据更新失败");
 	}
 	
 }

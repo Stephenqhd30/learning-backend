@@ -36,7 +36,7 @@ public class LogPrintCertificateAddRequest implements Serializable {
 	/**
 	 * 课程id列表
 	 */
-	private List<Long> certificateIds;
+	private List<Long> certificateIdList;
 	
 	private static final long serialVersionUID = 1L;
 }

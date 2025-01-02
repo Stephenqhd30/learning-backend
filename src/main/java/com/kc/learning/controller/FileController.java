@@ -4,7 +4,7 @@ import cn.hutool.core.io.FileUtil;
 import com.kc.learning.common.BaseResponse;
 import com.kc.learning.common.ErrorCode;
 import com.kc.learning.common.exception.BusinessException;
-import com.kc.learning.manager.MinioManager;
+import com.kc.learning.manager.oss.MinioManager;
 import com.kc.learning.model.dto.file.UploadFileRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.enums.FileUploadBizEnum;

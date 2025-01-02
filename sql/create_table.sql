@@ -130,15 +130,15 @@ create table user_course
 (
     id         bigint auto_increment comment 'id'
         primary key,
-    userId     bigint                                                         not null comment '用户id',
-    courseId   bigint                                                         not null comment '课程id',
-    createTime datetime default CURRENT_TIMESTAMP                             not null comment '创建时间',
+    userId     bigint                             not null comment '用户id',
+    courseId   bigint                             not null comment '课程id',
+    createTime datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     constraint user_course_pk
         unique (userId, courseId),
     constraint user_course_course_id_fk
-        foreign key (courseId) references course (id) on delete cascade,                                   -- 增加级联删除
+        foreign key (courseId) references course (id) on delete cascade, -- 增加级联删除
     constraint user_course_user_id_fk
-        foreign key (userId) references user (id) on delete cascade                                        -- 增加级联删除
+        foreign key (userId) references user (id) on delete cascade      -- 增加级联删除
 )
     comment '用户课程表(硬删除)';
 
@@ -153,7 +153,6 @@ create table log_print_certificate
     courseId        bigint                             not null comment '课程id',
     acquisitionTime datetime                           not null comment '开课时间',
     finishTime      datetime                           not null comment '证书发放时间',
-    createdBy       bigint                             not null comment '创建人id',
     createTime      datetime default CURRENT_TIMESTAMP not null comment '创建时间',
     constraint log_print_certificate_certificate_id_fk
         foreign key (certificateId) references certificate (id),

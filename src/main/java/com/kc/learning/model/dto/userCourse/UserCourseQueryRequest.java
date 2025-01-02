@@ -35,5 +35,10 @@ public class UserCourseQueryRequest extends PageRequest implements Serializable 
 	 */
 	private Long courseId;
 	
+	/**
+	 * 课程状态
+	 */
+	private String status;
+	
 	private static final long serialVersionUID = 1L;
 }

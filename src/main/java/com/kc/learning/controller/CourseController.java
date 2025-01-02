@@ -57,11 +57,7 @@ public class CourseController {
 		Course course = new Course();
 		BeanUtils.copyProperties(courseAddRequest, course);
 		// 数据校验
-		try {
-			courseService.validCourse(course, true);
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, e.getMessage());
-		}
+		courseService.validCourse(course, true);
 		// todo 填充默认值
 		User loginUser = userService.getLoginUser(request);
 		course.setUserId(loginUser.getId());
@@ -139,7 +135,6 @@ public class CourseController {
 	 * @return {@link BaseResponse<CourseVO>}
 	 */
 	@GetMapping("/get/vo")
-	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<CourseVO> getCourseVOById(long id, HttpServletRequest request) {
 		ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 		// 查询数据库
@@ -189,14 +184,13 @@ public class CourseController {
 	}
 	
 	/**
-	 * 分页获取当前登录课程创建的课程列表
+	 * 分页获取当前登录用户的课程列表
 	 *
 	 * @param courseQueryRequest courseQueryRequest
 	 * @param request            request
 	 * @return {@link BaseResponse {@link Page} {@link CourseVO }}
 	 */
 	@PostMapping("/my/list/page/vo")
-	@SaCheckRole(UserConstant.ADMIN_ROLE)
 	public BaseResponse<Page<CourseVO>> listMyCourseVOByPage(@RequestBody CourseQueryRequest courseQueryRequest,
 	                                                         HttpServletRequest request) {
 		ThrowUtils.throwIf(courseQueryRequest == null, ErrorCode.PARAMS_ERROR);

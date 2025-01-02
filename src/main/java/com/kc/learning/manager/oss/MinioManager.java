@@ -1,4 +1,4 @@
-package com.kc.learning.manager;
+package com.kc.learning.manager.oss;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.kc.learning.common.ErrorCode;

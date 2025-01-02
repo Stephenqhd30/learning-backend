@@ -13,17 +13,22 @@ import com.kc.learning.model.dto.userCourse.UserCourseAddRequest;
 import com.kc.learning.model.dto.userCourse.UserCourseQueryRequest;
 import com.kc.learning.model.entity.User;
 import com.kc.learning.model.entity.UserCourse;
+import com.kc.learning.model.enums.CourseStatusEnum;
 import com.kc.learning.model.vo.userCourse.UserCourseVO;
 import com.kc.learning.service.UserCourseService;
 import com.kc.learning.service.UserService;
 import com.kc.learning.utils.ResultUtils;
 import com.kc.learning.utils.ThrowUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 用户课程接口
@@ -66,11 +71,8 @@ public class UserCourseController {
 		BeanUtils.copyProperties(userCourseAddRequest, userCourse);
 		userCourse.setUserId(user.getId());
 		// 数据校验
-		try {
-			userCourseService.validUserCourse(userCourse, true);
-		} catch (Exception e) {
-			throw new BusinessException(ErrorCode.PARAMS_ERROR, e.getMessage());
-		}
+		userCourseService.validUserCourse(userCourse, true);
+		
 		// 避免重复添加信息
 		LambdaQueryWrapper<UserCourse> userCourseLambdaQueryWrapper = Wrappers.lambdaQuery(UserCourse.class)
 				.eq(UserCourse::getUserId, userCourse.getUserId())
@@ -169,7 +171,7 @@ public class UserCourseController {
 	}
 	
 	/**
-	 * 分页获取当前登录用户创建的用户课程列表
+	 * 分页获取用户的课程列表
 	 *
 	 * @param userCourseQueryRequest userCourseQueryRequest
 	 * @param request                request
@@ -179,9 +181,10 @@ public class UserCourseController {
 	public BaseResponse<Page<UserCourseVO>> listMyUserCourseVOByPage(@RequestBody UserCourseQueryRequest userCourseQueryRequest,
 	                                                                 HttpServletRequest request) {
 		ThrowUtils.throwIf(userCourseQueryRequest == null, ErrorCode.PARAMS_ERROR);
-		// 补充查询条件，只查询当前登录用户的数据
+		// 补充查询条件，未指定查询用户的话查询当前登录用的信息
 		User loginUser = userService.getLoginUser(request);
-		userCourseQueryRequest.setUserId(loginUser.getId());
+		Long userId = Optional.ofNullable(userCourseQueryRequest.getUserId()).orElse(loginUser.getId());
+		userCourseQueryRequest.setUserId(userId);
 		long current = userCourseQueryRequest.getCurrent();
 		long size = userCourseQueryRequest.getPageSize();
 		// 限制爬虫
@@ -190,7 +193,19 @@ public class UserCourseController {
 		Page<UserCourse> userCoursePage = userCourseService.page(new Page<>(current, size),
 				userCourseService.getQueryWrapper(userCourseQueryRequest));
 		// 获取封装类
-		return ResultUtils.success(userCourseService.getUserCourseVOPage(userCoursePage, request));
+		Page<UserCourseVO> userCourseVOPage = userCourseService.getUserCourseVOPage(userCoursePage, request);
+		
+		if (StringUtils.isNotBlank(userCourseQueryRequest.getStatus())) {
+			// 过滤查询状态为已开始的课程，并生成新的列表
+			List<UserCourseVO> filteredRecords = userCourseVOPage.getRecords().stream()
+					.filter(userCourseVO -> userCourseVO.getCourseVO().getStatus().equals(CourseStatusEnum.BEGIN.getValue()))
+					.collect(Collectors.toList());
+			
+			// 将过滤后的结果设置回分页对象
+			userCourseVOPage.setRecords(filteredRecords);
+		}
+		
+		return ResultUtils.success(userCourseVOPage);
 	}
 	
 	// endregion

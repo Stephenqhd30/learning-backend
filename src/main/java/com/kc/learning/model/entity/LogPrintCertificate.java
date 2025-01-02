@@ -50,21 +50,6 @@ public class LogPrintCertificate implements Serializable {
 	private Date finishTime;
 	
 	/**
-	 * 证书状态(wait,running,succeed,failed)
-	 */
-	private String status;
-	
-	/**
-	 * 执行信息
-	 */
-	private String executorMessage;
-	
-	/**
-	 * 创建用户id
-	 */
-	private Long createUserId;
-	
-	/**
 	 * 创建时间
 	 */
 	private Date createTime;
