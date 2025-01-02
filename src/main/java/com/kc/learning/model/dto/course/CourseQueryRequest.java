@@ -34,12 +34,17 @@ public class CourseQueryRequest extends PageRequest implements Serializable {
     /**
      * 开课时间
      */
-    private Date acquisitionTime;
+    private Date startTime;
     
     /**
      * 结课时间
      */
-    private Date finishTime;
+    private Date endTime;
+    
+    /**
+     * 课程状态(0-未开始, 1-进行中, 2-已结束)
+     */
+    private String status;
     
     /**
      * 课程名称

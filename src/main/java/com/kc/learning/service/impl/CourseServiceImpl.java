@@ -8,12 +8,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kc.learning.aop.excel.CourseExcelListener;
 import com.kc.learning.common.ErrorCode;
-import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.common.exception.BusinessException;
+import com.kc.learning.constants.CommonConstant;
 import com.kc.learning.mapper.CourseMapper;
 import com.kc.learning.model.dto.course.CourseQueryRequest;
 import com.kc.learning.model.entity.Course;
 import com.kc.learning.model.entity.User;
+import com.kc.learning.model.enums.CourseStatusEnum;
 import com.kc.learning.model.vo.course.CourseVO;
 import com.kc.learning.model.vo.user.UserVO;
 import com.kc.learning.service.CourseService;
@@ -58,16 +59,20 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		// todo 从对象中取值
 		Integer courseNumber = course.getCourseNumber();
 		String courseName = course.getCourseName();
-		Date acquisitionTime = course.getAcquisitionTime();
-		Date finishTime = course.getFinishTime();
+		Long userId = course.getUserId();
+		Date startTime = course.getStartTime();
+		Date endTime = course.getEndTime();
+		String status = course.getStatus();
+		
 		
 		// 创建数据时，参数不能为空
 		if (add) {
 			// todo 补充校验规则
 			ThrowUtils.throwIf(ObjectUtils.isEmpty(courseNumber), ErrorCode.PARAMS_ERROR, "课程号不能为空");
 			ThrowUtils.throwIf(StringUtils.isBlank(courseName), ErrorCode.PARAMS_ERROR, "课程名不能为空");
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(acquisitionTime), ErrorCode.PARAMS_ERROR, "开课时间不能为空");
-			ThrowUtils.throwIf(ObjectUtils.isEmpty(finishTime), ErrorCode.PARAMS_ERROR, "结课时间不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(startTime), ErrorCode.PARAMS_ERROR, "开课时间不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(endTime), ErrorCode.PARAMS_ERROR, "结课时间不能为空");
+			ThrowUtils.throwIf(ObjectUtils.isEmpty(status), ErrorCode.PARAMS_ERROR, "课程状态不能为空");
 		}
 		// 修改数据时，有参数则校验
 		// todo 补充校验规则
@@ -77,8 +82,11 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		if (StringUtils.isNotBlank(courseName)) {
 			ThrowUtils.throwIf(courseName.length() > 256, ErrorCode.PARAMS_ERROR, "课程名称过长");
 		}
-		if (ObjectUtils.isNotEmpty(acquisitionTime) && ObjectUtils.isNotEmpty(finishTime)) {
-			ThrowUtils.throwIf(finishTime.before(acquisitionTime), ErrorCode.PARAMS_ERROR, "完成时间必须晚于获取时间");
+		if (ObjectUtils.isNotEmpty(startTime) && ObjectUtils.isNotEmpty(endTime)) {
+			ThrowUtils.throwIf(endTime.before(startTime), ErrorCode.PARAMS_ERROR, "结课时间不能早于开课时间");
+		}
+		if (ObjectUtils.isNotEmpty(status)) {
+			ThrowUtils.throwIf(CourseStatusEnum.getEnumByValue(status) == null, ErrorCode.PARAMS_ERROR, "课程状态异常");
 		}
 		
 	}
@@ -100,21 +108,24 @@ public class CourseServiceImpl extends ServiceImpl<CourseMapper, Course> impleme
 		Long notId = courseQueryRequest.getNotId();
 		Integer courseNumber = courseQueryRequest.getCourseNumber();
 		String courseName = courseQueryRequest.getCourseName();
-		Date acquisitionTime = courseQueryRequest.getAcquisitionTime();
-		Date finishTime = courseQueryRequest.getFinishTime();
+		Date startTime = courseQueryRequest.getStartTime();
+		Date endTime = courseQueryRequest.getEndTime();
 		Long userId = courseQueryRequest.getUserId();
+		String status = courseQueryRequest.getStatus();
 		String sortField = courseQueryRequest.getSortField();
 		String sortOrder = courseQueryRequest.getSortOrder();
+		
 		// todo 补充需要的查询条件
 		// 模糊查询
 		queryWrapper.like(StringUtils.isNotBlank(courseName), "courseName", courseName);
-		queryWrapper.ne(ObjectUtils.isNotEmpty(acquisitionTime), "acquisitionTime", acquisitionTime);
-		queryWrapper.ne(ObjectUtils.isNotEmpty(finishTime), "finishTime", finishTime);
+		queryWrapper.ne(ObjectUtils.isNotEmpty(startTime), "startTime", startTime);
+		queryWrapper.ne(ObjectUtils.isNotEmpty(endTime), "endTime", endTime);
 		// 精确查询
 		queryWrapper.ne(ObjectUtils.isNotEmpty(notId), "id", notId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(id), "id", id);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(userId), "userId", userId);
 		queryWrapper.eq(ObjectUtils.isNotEmpty(courseNumber), "courseNumber", courseNumber);
+		queryWrapper.eq(ObjectUtils.isNotEmpty(status), "status", status);
 		// 排序规则
 		queryWrapper.orderBy(SqlUtils.validSortField(sortField),
 				sortOrder.equals(CommonConstant.SORT_ORDER_ASC),

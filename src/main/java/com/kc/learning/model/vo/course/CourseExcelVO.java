@@ -41,15 +41,22 @@ public class CourseExcelVO implements Serializable {
 	 * 开课时间
 	 */
 	@ExcelProperty(value = "开课时间")
-	@ColumnWidth(40)
 	@DateTimeFormat("yyyy年MM月dd日")
-	private String acquisitionTime;
+	@ColumnWidth(50)
+	private String startTime;
 	
 	/**
 	 * 结课时间
 	 */
 	@ExcelProperty(value = "结课时间")
-	@ColumnWidth(40)
 	@DateTimeFormat("yyyy年MM月dd日")
-	private String finishTime;
+	@ColumnWidth(50)
+	private String endTime;
+	
+	/**
+	 * 课程状态(0-未开始, 1-进行中, 2-已结束)
+	 */
+	@ExcelProperty(value = "课程状态")
+	@ColumnWidth(30)
+	private String status;
 }

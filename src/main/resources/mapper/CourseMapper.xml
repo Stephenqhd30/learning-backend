@@ -2,24 +2,26 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.kc.learning.mapper.CourseMapper">
+<mapper namespace="generator.mapper.CourseMapper">
 
-    <resultMap id="BaseResultMap" type="com.kc.learning.model.entity.Course">
+    <resultMap id="BaseResultMap" type="generator.domain.Course">
             <id property="id" column="id" jdbcType="BIGINT"/>
             <result property="courseNumber" column="courseNumber" jdbcType="INTEGER"/>
             <result property="courseName" column="courseName" jdbcType="VARCHAR"/>
             <result property="userId" column="userId" jdbcType="BIGINT"/>
-            <result property="acquisitionTime" column="acquisitionTime" jdbcType="TIMESTAMP"/>
-            <result property="finishTime" column="finishTime" jdbcType="TIMESTAMP"/>
+            <result property="startTime" column="startTime" jdbcType="TIMESTAMP"/>
+            <result property="endTime" column="endTime" jdbcType="TIMESTAMP"/>
             <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
+            <result property="status" column="status" jdbcType="VARCHAR"/>
+            <result property="description" column="description" jdbcType="VARCHAR"/>
             <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-	    id
-	    ,courseNumber,courseName,userId,
-        acquisitionTime,finishTime,
-        createTime,updateTime,isDelete
+        id,courseNumber,courseName,
+        userId,startTime,endTime,
+        createTime,updateTime,status,
+        description,isDelete
     </sql>
 </mapper>

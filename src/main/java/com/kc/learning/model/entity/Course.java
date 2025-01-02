@@ -48,14 +48,20 @@ public class Course implements Serializable {
 	 */
 	@ExcelProperty(value = "开课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
-	private Date acquisitionTime;
+	private Date startTime;
 	
 	/**
 	 * 结课时间
 	 */
 	@ExcelProperty(value = "结课时间")
 	@DateTimeFormat("yyyy年MM月dd日")
-	private Date finishTime;
+	private Date endTime;
+	
+	/**
+	 * 课程状态(0-未开始, 1-进行中, 2-已结束)
+	 */
+	@ExcelProperty(value = "课程状态")
+	private String status;
 	
 	/**
 	 * 创建时间
@@ -75,6 +81,7 @@ public class Course implements Serializable {
 	@TableLogic
 	@ExcelIgnore
 	private Integer isDelete;
+	
 	
 	@TableField(exist = false)
 	private static final long serialVersionUID = 1L;

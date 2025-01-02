@@ -39,29 +39,6 @@ create index user_userName_index
 -- 证书表
 create table certificate
 (
-    id                   bigint auto_increment comment 'id'
-        primary key,
-    certificateNumber    varchar(512)                       not null comment '证书编号',
-    certificateName      varchar(512)                       not null comment '证书名称',
-    certificateType      tinyint                            not null comment '证书类型(0-干部培训,1-其他)',
-    certificateYear      varchar(128)                       not null comment '证书获得时间',
-    certificateSituation int      default 1                 not null comment '证书获得情况(0-有,1-没有)',
-    certificateUrl       varchar(512)                       null comment '证书地址',
-    reviewStatus         int      default 0                 not null comment '证书状态(0-待审核,1-通过,2-拒绝)',
-    reviewMessage        varchar(512)                       null comment '审核信息',
-    reviewerId           bigint                             null comment '审核人信息',
-    reviewTime           datetime default CURRENT_TIMESTAMP not null comment '审核时间',
-    userId               bigint                             not null comment '获得人id',
-    createTime           datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    isDelete             tinyint  default 0                 not null comment '是否删除(0-正常,1删除)',
-    constraint certificate_pk
-        unique (certificateNumber)
-)
-    comment '证书表';
-
--- 证书表
-create table certificate
-(
     id                   bigint auto_increment comment '证书ID'
         primary key,
     certificateNumber    varchar(512)       not null comment '证书编号',
@@ -85,29 +62,43 @@ create table certificate
     comment '证书表';
 
 -- 证书审核记录表
-CREATE TABLE certificate_review_logs
+create table certificate_review_logs
 (
-    id             bigint AUTO_INCREMENT PRIMARY KEY COMMENT '审核记录ID',
-    certificate_id bigint                             NOT NULL COMMENT '证书ID，关联certificate表',
-    reviewer_id    bigint                             NOT NULL COMMENT '审核人ID，关联用户表',
-    review_status  int                                NOT NULL COMMENT '审核状态（0-待审核，1-通过，2-拒绝）',
-    review_message varchar(512)                       NULL COMMENT '审核意见',
-    review_time    datetime DEFAULT CURRENT_TIMESTAMP NOT NULL COMMENT '审核时间',
-    FOREIGN KEY (certificate_id) REFERENCES certificate (id),
-    FOREIGN KEY (reviewer_id) REFERENCES user (id)
+    id            bigint auto_increment comment '审核记录ID'
+        primary key,
+    certificateId bigint                             not null comment '证书ID，关联certificate表',
+    reviewerId    bigint                             not null comment '审核人ID，关联用户表',
+    reviewStatus  int                                not null comment '审核状态（0-待审核，1-通过，2-拒绝）',
+    reviewMessage varchar(512)                       null comment '审核意见',
+    reviewTime    datetime default CURRENT_TIMESTAMP not null comment '审核时间',
+    constraint certificate_review_logs_ibfk_1
+        foreign key (certificateId) references certificate (id),
+    constraint certificate_review_logs_ibfk_2
+        foreign key (reviewerId) references user (id)
 );
+
+create index certificate_id
+    on certificate_review_logs (certificateId);
+
+create index reviewer_id
+    on certificate_review_logs (reviewerId);
 
 -- 用户证书关联表
 create table user_certificate
 (
     id            bigint auto_increment comment 'id'
         primary key,
-    userId        bigint                             not null comment '用户id',
-    certificateId bigint                             not null comment '证书id',
-    createTime    datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    isDelete      tinyint  default 0                 not null comment '是否删除(0-正常,1删除)',
+    userId        bigint                                                         not null comment '用户id',
+    certificateId bigint                                                         not null comment '证书id',
+    createTime    datetime default CURRENT_TIMESTAMP                             not null comment '创建时间',
+    updateTime    datetime default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP not null comment '更新时间', -- 可选字段：更新时间
+    isDelete      tinyint  default 0                                             not null comment '是否删除(0-正常,1删除)',
     constraint unique_user_certificate
-        unique (userId, certificateId) -- 确保同一个用户只能有一个证书关联
+        unique (userId, certificateId),
+    constraint user_certificate_user_id_fk
+        foreign key (userId) references user (id) on delete cascade,                                          -- 增加外键约束，级联删除
+    constraint user_certificate_certificate_id_fk
+        foreign key (certificateId) references certificate (id) on delete cascade                             -- 增加外键约束，级联删除
 )
     comment '用户证书关联表';
 
@@ -115,36 +106,40 @@ create table user_certificate
 -- 课程表
 create table course
 (
-    id              bigint auto_increment comment 'id'
+    id           bigint auto_increment comment 'id'
         primary key,
-    courseNumber    int                                not null comment '课程号',
-    courseName      varchar(256)                       not null comment '课程名称',
-    userId          bigint                             not null comment '创建用户id',
-    acquisitionTime datetime                           null comment '开课时间',
-    finishTime      datetime                           null comment '结课时间',
-    createTime      datetime default CURRENT_TIMESTAMP not null comment '创建时间',
-    updateTime      datetime default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
-    isDelete        tinyint  default 0                 not null comment '是否删除(0-未删除，1-删除)',
+    courseNumber int                                    not null comment '课程号',
+    courseName   varchar(256)                           not null comment '课程名称',
+    userId       bigint                                 not null comment '创建用户id',
+    startTime    datetime                               null comment '开课时间',
+    endTime      datetime                               null comment '结课时间',
+    createTime   datetime     default CURRENT_TIMESTAMP not null comment '创建时间',
+    updateTime   datetime     default CURRENT_TIMESTAMP not null on update CURRENT_TIMESTAMP comment '更新时间',
+    status       varchar(128) default 'wait'            not null comment '课程状态(0-未开始, 1-进行中, 2-已结束)',
+    description  text                                   null comment '课程描述',
+    isDelete     tinyint      default 0                 not null comment '是否删除(0-未删除，1-删除)',
     constraint course_number
-        unique (courseNumber)
+        unique (courseNumber),
+    foreign key (userId) references user (id)
 )
     comment '课程表';
+
 
 -- 用户课程表(硬删除)
 create table user_course
 (
-    id           bigint auto_increment comment 'id'
+    id         bigint auto_increment comment 'id'
         primary key,
-    userId       bigint                             not null comment '用户id',
-    courseId     bigint                             not null comment '课程id',
-    createUserId mediumtext                         not null comment '创建人id',
-    createTime   datetime default CURRENT_TIMESTAMP not null comment '创建时间',
+    userId     bigint                                                         not null comment '用户id',
+    courseId   bigint                                                         not null comment '课程id',
+    createTime datetime default CURRENT_TIMESTAMP                             not null comment '创建时间',
+    updateTime datetime default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP not null comment '更新时间', -- 可选字段：更新时间
     constraint user_course_pk
         unique (userId, courseId),
     constraint user_course_course_id_fk
-        foreign key (courseId) references course (id),
+        foreign key (courseId) references course (id) on delete cascade,                                   -- 增加级联删除
     constraint user_course_user_id_fk
-        foreign key (userId) references user (id)
+        foreign key (userId) references user (id) on delete cascade                                        -- 增加级联删除
 )
     comment '用户课程表(硬删除)';
 
