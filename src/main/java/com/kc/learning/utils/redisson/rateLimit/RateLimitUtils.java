@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import java.util.concurrent.TimeUnit;
+import java.time.Duration;
 
 /**
  * 限流工具类，提供基于 Redisson 的令牌桶限流功能
@@ -85,7 +85,7 @@ public class RateLimitUtils {
 	 * @param permit       每次操作消耗的令牌数，不能超过 rate
 	 * @param expire       限流器键值的过期时间
 	 */
-	public static void doRateLimitAndExpire(String key, TimeModel rateInterval, Long rate, Long permit, TimeModel expire) {
+	public static void doRateLimitAndExpire(String key, TimeModel rateInterval, Long rate, Long permit, Duration expire) {
 		// 执行限流操作
 		doRateLimit(key, rateInterval, rate, permit);
 		String baseKey = KeyPrefixConstants.RATE_LIMIT_UTILS_PREFIX + key;
@@ -93,6 +93,6 @@ public class RateLimitUtils {
 		// 计算过期时间，确保时间大于限流单位时间
 		long expireMillis = Math.max(expire.toMillis(), rateInterval.toMillis());
 		// 为限流器设置过期时间
-		REDISSON_CLIENT.getBucket(baseKey).expire(expireMillis, TimeUnit.MILLISECONDS);
+		REDISSON_CLIENT.getBucket(baseKey).expire(Duration.ofMillis(expireMillis));
 	}
 }

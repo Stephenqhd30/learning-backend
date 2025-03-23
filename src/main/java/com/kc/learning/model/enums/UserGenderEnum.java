@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
+ * 用户性别枚举
  * @author stephen qiu
  */
 

@@ -149,3 +149,5 @@ fabric.properties
 /src/main/resources/application-prod.properties
 /src/main/resources/temp
 /src/main/resources/template
+
+src/main/java/com/kc/learning/constants/SaltConstant.java

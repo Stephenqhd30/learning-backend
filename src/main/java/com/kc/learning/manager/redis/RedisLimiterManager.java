@@ -9,6 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+
 /**
  * 基于 Redisson 实现的 Redis 限流管理器
  *
@@ -48,7 +50,7 @@ public class RedisLimiterManager {
 	 * @param permit       每次操作消耗的令牌数，不能超过 rate
 	 * @param expire       限流器键值的过期时间
 	 */
-	public void doRateLimitAndExpire(String key, TimeModel rateInterval, Long rate, Long permit, TimeModel expire) {
+	public void doRateLimitAndExpire(String key, TimeModel rateInterval, Long rate, Long permit, Duration expire) {
 		try {
 			RateLimitUtils.doRateLimitAndExpire(key, rateInterval, rate, permit, expire);
 			log.info("Rate limit with expiration succeeded for key: {}, rateInterval: {}, rate: {}, permit: {}, expire: {}",
